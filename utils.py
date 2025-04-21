@@ -3,8 +3,10 @@
 import pyautogui
 import numpy as np
 
-# 判断deltaforce是否窗口化，如果存在就返回True，否则返回False
 def is_windowized(window_title:str):
+    '''
+    判断目标是否窗口化
+    '''
     # 获取当前所有窗口的标题
     window_titles = [window.title for window in pyautogui.getAllWindows()]
     
@@ -15,7 +17,9 @@ def is_windowized(window_title:str):
         return False
 
 def get_window_postion(target_app:str):
-    # 获取目标窗口的坐标
+    '''
+    获取目标窗口的坐标
+    '''
     window_info = pyautogui.getWindowsWithTitle(target_app)[0]
     return [window_info.left, window_info.top, window_info.right, window_info.bottom]
 
@@ -33,6 +37,8 @@ def get_screenshot(debug_mode = False):
 def get_windowshot(range:list, debug_mode = False):
     '''
     范围截图函数
+
+    range：截图范围，[left, top, right, bottom]
     '''
     # 对范围内截图
     if range[0] < 1:
@@ -47,13 +53,22 @@ def get_windowshot(range:list, debug_mode = False):
         screenshot.save('screenshot.png')
     return screenshot_array
 
-def mouse_click(x, y, num:int = 1):
+def mouse_click(positon:list, num:int = 1):
+    '''
+    postion：鼠标点击位置，[x, y]
+
+    num：点击次数，默认点击一次
+    '''
+    x = positon[0]
+    y = positon[1]
     if x < 1:
         screen_size = pyautogui.size()
         x = int(screen_size.width * x)
         y = int(screen_size.height * y)
     for i in range(num):
-        pyautogui.click(x, y)
+        pyautogui.moveTo(x, y)
+        pyautogui.mouseDown()
+        pyautogui.mouseUp()
 
 def main():
     target_app = '三角洲行动'
