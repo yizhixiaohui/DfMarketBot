@@ -16,7 +16,7 @@ reader = easyocr.Reader(['ch_sim','en'], gpu=True)
 range_lowest_price = [0.1042, 0.8638, 0.1222, 0.8833]
 postion_max_shopping_number = [0.9085, 0.7222]
 postion_buy_button = [0.8535, 0.7979]
-ideal_price = 50
+ideal_price = 638
 
 def _start_loop():
     global is_running
@@ -77,18 +77,19 @@ def main():
                 print('当前最低价格：',lowest_price)
             except IndexError:
                 print('识别失败')
+                continue
             
-            if lowest_price < ideal_price:
+            if lowest_price <= ideal_price:
                 print('当前价格低于理想价格，开始购买')
                 # 选择最大商品数量
                 mouse_click(x = postion_max_shopping_number[0], y = postion_max_shopping_number[1], num = 3)
                 time.sleep(0.1)
                 # 下单
-                mouse_click(x = postion_buy_button[0], y = postion_buy_button[1], num = 2)
+                mouse_click(x = postion_buy_button[0], y = postion_buy_button[1], num = 4)
+                time.sleep(0.2)
             
             # 点击esc返回到商品列表界面
             pyautogui.press('esc')
-
             # 之后每次刷新使用第一次获取到的商品offset进行点击
         else:
             # 暂停时降低循环频率
