@@ -20,7 +20,7 @@ class BuyBot:
     
     def detect_price(self):
         try:
-            self._screenshot = get_windowshot(self.range_lowest_price, debug_mode=True)
+            self._screenshot = get_windowshot(self.range_lowest_price, debug_mode=False)
             # 识别最低价格
             result = self.reader.readtext(np.array(self._screenshot))
             self.lowest_price = int(result[0][1])
