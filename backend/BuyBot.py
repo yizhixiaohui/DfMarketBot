@@ -33,15 +33,11 @@ class BuyBot:
     def buy(self):
         # 选择最大商品数量
         mouse_click(self.postion_max_shopping_number)
-        time.sleep(0.4)
         # 下单
         mouse_click(self.postion_buy_button)
-        time.sleep(0.2)      
             
     def refresh(self):
         # 选择最小商品数量
         mouse_click(self.postion_min_shopping_number)
-        time.sleep(0.4)
         # 下单
         mouse_click(self.postion_buy_button)
-        time.sleep(0.2)
