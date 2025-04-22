@@ -31,8 +31,7 @@ def get_screenshot(debug_mode = False):
     screenshot = pyautogui.screenshot()
     if debug_mode:
         screenshot.save('screenshot.png')
-    screenshot_array = np.array(screenshot)
-    return screenshot_array
+    return screenshot
 
 def get_windowshot(range:list, debug_mode = False):
     '''
@@ -48,10 +47,9 @@ def get_windowshot(range:list, debug_mode = False):
                  int(screen_size.width * range[2]), 
                  int(screen_size.height * range[3])]
     screenshot = pyautogui.screenshot(region=(range[0], range[1], range[2]-range[0], range[3]-range[1]))
-    screenshot_array = np.array(screenshot)
     if debug_mode:
         screenshot.save('screenshot.png')
-    return screenshot_array
+    return screenshot
 
 def mouse_click(positon:list, num:int = 1):
     '''
@@ -71,8 +69,7 @@ def mouse_click(positon:list, num:int = 1):
         pyautogui.mouseUp()
 
 def main():
-    target_app = '三角洲行动'
-    print(is_windowized(target_app))
+    get_screenshot(debug_mode=True)
 
 if __name__ == "__main__":
     main()
