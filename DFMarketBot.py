@@ -31,6 +31,8 @@ class Worker(QThread):
         self.lock = QtCore.QMutex()
         self.ideal_price = 0
         self.unacceptable_price = 0
+        self.is_convertible = True
+        self.is_key_mode = False
         self.param_lock = QtCore.QMutex()  # 参数专用锁
 
     def run(self):
@@ -50,28 +52,29 @@ class Worker(QThread):
                     # print(f"当前使用参数：ideal={current_ideal} unacceptable={current_unacceptable}")  # 调试输出
                     
                     # 检测逻辑
-                    lowest_price = self.buybot.detect_price()
+                    lowest_price = self.buybot.detect_price(is_convertible=self.is_convertible, debug_mode=True)
                     self.update_signal.emit(lowest_price)
 
                     if lowest_price <= current_ideal:
                         print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
-                        self.buybot.buy()
+                        self.buybot.buy(is_convertible=self.is_convertible)
                     else:
                         print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
-                        self.buybot.refresh()
-
+                        self.buybot.refresh(is_convertible=self.is_convertible)
                 except Exception as e:
                     print(f"操作失败: {str(e)}")
                 self.msleep(100)
             else:
                 self.msleep(100)
 
-    def update_params(self, ideal, unacceptable):
+    def update_params(self, ideal, unacceptable, convertible, key_mode):
         """线程安全更新参数"""
         self.param_lock.lock()
         self.ideal_price = ideal
         self.unacceptable_price = unacceptable
-        # print(f"Worker内部参数更新：ideal={self.ideal_price} unacceptable={self.unacceptable_price}")  # 调试输出
+        self.is_convertible = convertible
+        self.is_key_mode = key_mode
+        # print(f"Worker内部参数更新：ideal={self.ideal_price} unacceptable={self.unacceptable_price} convertible={self.is_convertible} key_mode={self.is_key_mode}")  # 调试输出
         self.param_lock.unlock()
 
     def set_running(self, state):
@@ -85,15 +88,14 @@ def runApp():
     window = QtWidgets.QMainWindow()
     mainWindow = Ui_MainWindow()
     mainWindow.setupUi(window)
-    
-    # 初始化图形视图
-    scene = QtWidgets.QGraphicsScene()
-    mainWindow.graphicsView.setScene(scene)
-    mainWindow.graphicsView.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
 
-    # 初始化理想价格和最高价格
+    # 初始化输入部分
     mainWindow.textEdit_ideal_price.setText('0')
     mainWindow.textEdit_unacceptable_price.setText('0')
+    mainWindow.is_convertiable.setChecked(True)
+    # 钥匙卡模式还没做出来，先禁用掉
+    mainWindow.is_key_mode.setCheckable(False)
+    mainWindow.is_key_mode.setChecked(False)
 
     # 创建监控线程
     key_monitor = KeyMonitor()
@@ -106,15 +108,19 @@ def runApp():
         try:
             ideal = int(mainWindow.textEdit_ideal_price.toPlainText())
             unaccept = int(mainWindow.textEdit_unacceptable_price.toPlainText())
-            worker.update_params(ideal, unaccept)  # 确保传递两个参数
+            is_convertible = mainWindow.is_convertiable.isChecked()
+            is_key_mode = mainWindow.is_key_mode.isChecked()
+            worker.update_params(ideal, unaccept, is_convertible, is_key_mode)
             mainWindow.label_lowest_price_value.setStyleSheet("color: black;")
-            # print(f"参数已更新：理想价{ideal} 最高价{unaccept}")  # 调试输出
+            # print(f"参数已更新：理想价{ideal} 最高价{unaccept}物品是否可兑换{is_convertible} 钥匙卡模式{is_key_mode}")  # 调试输出
         except ValueError:
             mainWindow.label_lowest_price_value.setStyleSheet("color: red;")
 
     # 确保两个输入框都连接
     mainWindow.textEdit_ideal_price.textChanged.connect(handle_text_change)
     mainWindow.textEdit_unacceptable_price.textChanged.connect(handle_text_change)
+    mainWindow.is_convertiable.stateChanged.connect(handle_text_change)
+    mainWindow.is_key_mode.stateChanged.connect(handle_text_change)
 
     window.show()
     worker.start()

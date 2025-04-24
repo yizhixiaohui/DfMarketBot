@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>478</width>
-    <height>163</height>
+    <width>442</width>
+    <height>168</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
     <property name="geometry">
      <rect>
       <x>280</x>
-      <y>110</y>
+      <y>120</y>
       <width>71</width>
       <height>31</height>
      </rect>
@@ -79,7 +79,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>110</y>
+      <y>120</y>
       <width>221</width>
       <height>31</height>
      </rect>
@@ -136,22 +136,12 @@
      </font>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="graphicsView">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>20</y>
-      <width>201</width>
-      <height>81</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_lowest_price_value">
     <property name="geometry">
      <rect>
       <x>350</x>
-      <y>110</y>
-      <width>91</width>
+      <y>120</y>
+      <width>81</width>
       <height>31</height>
      </rect>
     </property>
@@ -165,6 +155,54 @@
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="is_convertiable">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>20</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>物品可兑换</string>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="is_key_mode">
+    <property name="geometry">
+     <rect>
+      <x>280</x>
+      <y>70</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>钥匙卡模式</string>
     </property>
    </widget>
   </widget>
