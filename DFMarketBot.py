@@ -58,6 +58,7 @@ class Worker(QThread):
                     current_ideal = self.ideal_price
                     current_unacceptable = self.unacceptable_price
                     current_convertible = self.is_convertible
+                    current_key_mode = self.is_key_mode
                     self.param_lock.unlock()
                     
                     # 进入商品页面
@@ -66,16 +67,29 @@ class Worker(QThread):
                     # 检测逻辑
                     lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
                     self.update_signal.emit(lowest_price)
-
-                    if lowest_price <= current_ideal:
-                        print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
-                        self.buybot.buy(is_convertible=current_convertible)
-                    elif lowest_price <= current_unacceptable:
-                        print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
-                        self.buybot.refresh(is_convertible=current_convertible)
+                    
+                    if current_key_mode:
+                        # 钥匙卡模式
+                        if lowest_price > current_ideal:
+                            print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，免费刷新价格')
+                            self.buybot.freerefresh(good_postion=self.mouse_position)
+                        else:
+                            print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，购买一张后循环结束')
+                            self.buybot.fresh(is_convertible=False)
+                            self.lock.lock()
+                            running = False
+                            self.lock.unlock()
                     else:
-                        print('当前价格：', lowest_price, '高于最高价格', current_ideal, '，刷新价格')
-                        self.buybot.freerefresh(good_postion=self.mouse_position)
+                        # 正常模式
+                        if lowest_price > current_unacceptable:
+                            print('当前价格：', lowest_price, '高于最高价格', current_ideal, '，免费刷新价格')
+                            self.buybot.freerefresh(good_postion=self.mouse_position)
+                        elif lowest_price > current_ideal:
+                            print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
+                            self.buybot.buy(is_convertible=current_convertible)
+                        else:
+                            print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
+                            self.buybot.buy(is_convertible=current_convertible)
                 except Exception as e:
                     print(f"操作失败: {str(e)}")
                 self.msleep(100)
@@ -106,8 +120,6 @@ def runApp():
     mainWindow.textEdit_ideal_price.setText('0')
     mainWindow.textEdit_unacceptable_price.setText('0')
     mainWindow.is_convertiable.setChecked(True)
-    # 钥匙卡模式还没做出来，先禁用掉
-    mainWindow.is_key_mode.setCheckable(False)
     mainWindow.is_key_mode.setChecked(False)
 
     # 创建监控线程
