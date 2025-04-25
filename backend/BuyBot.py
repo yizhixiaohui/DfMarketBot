@@ -36,7 +36,6 @@ class BuyBot:
             if debug_mode:
                 print(result)
             self.lowest_price = int(result[-1][1].replace(',', ''))
-            print('当前最低价格：',self.lowest_price)
         except:
             self.lowest_price = None
             print('识别失败, 建议检查物品是否可兑换')

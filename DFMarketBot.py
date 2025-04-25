@@ -49,10 +49,9 @@ class Worker(QThread):
                     current_ideal = self.ideal_price
                     current_unacceptable = self.unacceptable_price
                     self.param_lock.unlock()
-                    # print(f"当前使用参数：ideal={current_ideal} unacceptable={current_unacceptable}")  # 调试输出
                     
                     # 检测逻辑
-                    lowest_price = self.buybot.detect_price(is_convertible=self.is_convertible, debug_mode=True)
+                    lowest_price = self.buybot.detect_price(is_convertible=self.is_convertible, debug_mode=False)
                     self.update_signal.emit(lowest_price)
 
                     if lowest_price <= current_ideal:
@@ -74,9 +73,7 @@ class Worker(QThread):
         self.unacceptable_price = unacceptable
         self.is_convertible = convertible
         self.is_key_mode = key_mode
-        # print(f"Worker内部参数更新：ideal={self.ideal_price} unacceptable={self.unacceptable_price} convertible={self.is_convertible} key_mode={self.is_key_mode}")  # 调试输出
         self.param_lock.unlock()
-
     def set_running(self, state):
         """线程安全更新运行状态"""
         self.lock.lock()
@@ -112,7 +109,6 @@ def runApp():
             is_key_mode = mainWindow.is_key_mode.isChecked()
             worker.update_params(ideal, unaccept, is_convertible, is_key_mode)
             mainWindow.label_lowest_price_value.setStyleSheet("color: black;")
-            # print(f"参数已更新：理想价{ideal} 最高价{unaccept}物品是否可兑换{is_convertible} 钥匙卡模式{is_key_mode}")  # 调试输出
         except ValueError:
             mainWindow.label_lowest_price_value.setStyleSheet("color: red;")
 
@@ -130,5 +126,5 @@ def main():
     return runApp()
 
 if __name__ == "__main__":
-    print("Starting")
+    print("正在初始化")
     sys.exit(main())
