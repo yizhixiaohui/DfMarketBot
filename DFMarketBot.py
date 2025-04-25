@@ -57,21 +57,22 @@ class Worker(QThread):
                     self.param_lock.lock()
                     current_ideal = self.ideal_price
                     current_unacceptable = self.unacceptable_price
+                    current_convertible = self.is_convertible
                     self.param_lock.unlock()
                     
                     # 进入商品页面
                     mouse_click(self.mouse_position, num = 1)
 
                     # 检测逻辑
-                    lowest_price = self.buybot.detect_price(is_convertible=self.is_convertible, debug_mode=False)
+                    lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
                     self.update_signal.emit(lowest_price)
 
                     if lowest_price <= current_ideal:
                         print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
-                        self.buybot.buy(is_convertible=self.is_convertible)
+                        self.buybot.buy(is_convertible=current_convertible)
                     elif lowest_price <= current_unacceptable:
                         print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
-                        self.buybot.refresh(is_convertible=self.is_convertible)
+                        self.buybot.refresh(is_convertible=current_convertible)
                     else:
                         print('当前价格：', lowest_price, '高于最高价格', current_ideal, '，刷新价格')
                         self.buybot.freerefresh(good_postion=self.mouse_position)
