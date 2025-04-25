@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QThread
 from GUI.AppGUI import Ui_MainWindow
 from backend.BuyBot import BuyBot
+from backend.utils import *
 import keyboard
 
 class KeyMonitor(QObject):
@@ -33,7 +34,15 @@ class Worker(QThread):
         self.unacceptable_price = 0
         self.is_convertible = True
         self.is_key_mode = False
+        self.mouse_position = []
+        self.mouse_position_lock = QtCore.QMutex()
         self.param_lock = QtCore.QMutex()  # 参数专用锁
+
+    def record_mouse_position(self):
+        """记录鼠标位置"""
+        self.mouse_position_lock.lock()
+        self.mouse_position = get_mouse_position()
+        self.mouse_position_lock.unlock()
 
     def run(self):
         while True:
@@ -50,6 +59,9 @@ class Worker(QThread):
                     current_unacceptable = self.unacceptable_price
                     self.param_lock.unlock()
                     
+                    # 进入商品页面
+                    mouse_click(self.mouse_position, num = 1)
+
                     # 检测逻辑
                     lowest_price = self.buybot.detect_price(is_convertible=self.is_convertible, debug_mode=False)
                     self.update_signal.emit(lowest_price)
@@ -57,9 +69,12 @@ class Worker(QThread):
                     if lowest_price <= current_ideal:
                         print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
                         self.buybot.buy(is_convertible=self.is_convertible)
-                    else:
+                    elif lowest_price <= current_unacceptable:
                         print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
                         self.buybot.refresh(is_convertible=self.is_convertible)
+                    else:
+                        print('当前价格：', lowest_price, '高于最高价格', current_ideal, '，刷新价格')
+                        self.buybot.freerefresh(good_postion=self.mouse_position)
                 except Exception as e:
                     print(f"操作失败: {str(e)}")
                 self.msleep(100)
@@ -99,7 +114,12 @@ def runApp():
     worker = Worker(BuyBot())
     
     # 信号连接
-    key_monitor.key_pressed.connect(lambda x: worker.set_running(x == 0))
+    def handle_key_event(x):
+        if x == 0:
+            worker.record_mouse_position()
+        worker.set_running(x == 0)
+
+    key_monitor.key_pressed.connect(handle_key_event)
     
     def handle_text_change():
         try:

@@ -25,7 +25,7 @@ class BuyBot:
         self.lowest_price = None
         print('初始化完成')
     
-    def detect_price(self, is_convertible = False, debug_mode = False):
+    def detect_price(self, is_convertible, debug_mode = False):
         try:
             if is_convertible:
                 self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=debug_mode)
@@ -41,7 +41,7 @@ class BuyBot:
             print('识别失败, 建议检查物品是否可兑换')
         return self.lowest_price
 
-    def buy(self, is_convertible = False):
+    def buy(self, is_convertible):
         if is_convertible:
             mouse_click(self.postion_isconvertible_max_shopping_number)
             mouse_click(self.postion_isconvertible_buy_button)
@@ -49,13 +49,19 @@ class BuyBot:
             mouse_click(self.postion_notconvertiable_max_shopping_number)
             mouse_click(self.postion_notconvertiable_buy_button)
             
-    def refresh(self, is_convertible = False):
+    def refresh(self, is_convertible):
         if is_convertible:
             mouse_click(self.postion_isconvertible_min_shopping_number)
             mouse_click(self.postion_isconvertible_buy_button)
         else:
             mouse_click(self.postion_notconvertiable_min_shopping_number)
             mouse_click(self.postion_notconvertiable_buy_button)
+
+    def freerefresh(self, good_postion):
+        # esc回到商店页面
+        pyautogui.press('esc')
+        # 点击回到商品页面
+        mouse_click(good_postion)
 
 def main():
     bot = BuyBot()

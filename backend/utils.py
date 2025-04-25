@@ -68,6 +68,12 @@ def mouse_click(positon:list, num:int = 1):
         pyautogui.mouseDown()
         pyautogui.mouseUp()
 
+def get_mouse_position():
+    '''
+    获取鼠标当前位置
+    '''
+    return list(pyautogui.position())
+
 def main():
     get_screenshot(debug_mode=True)
 
