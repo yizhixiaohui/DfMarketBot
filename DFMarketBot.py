@@ -32,6 +32,7 @@ class Worker(QThread):
         self.lock = QtCore.QMutex()
         self.ideal_price = 0
         self.unacceptable_price = 0
+        self.loop_gap = 0
         self.is_convertible = True
         self.is_key_mode = False
         self.mouse_position = []
@@ -78,15 +79,16 @@ class Worker(QThread):
                         self.buybot.freerefresh(good_postion=self.mouse_position)
                 except Exception as e:
                     print(f"操作失败: {str(e)}")
-                self.msleep(100)
+                self.msleep(self.loop_gap)
             else:
                 self.msleep(100)
 
-    def update_params(self, ideal, unacceptable, convertible, key_mode):
+    def update_params(self, ideal, unacceptable, convertible, key_mode, loop_gap):
         """线程安全更新参数"""
         self.param_lock.lock()
         self.ideal_price = ideal
         self.unacceptable_price = unacceptable
+        self.loop_gap = loop_gap
         self.is_convertible = convertible
         self.is_key_mode = key_mode
         self.param_lock.unlock()
@@ -105,6 +107,7 @@ def runApp():
     # 初始化输入部分
     mainWindow.textEdit_ideal_price.setText('0')
     mainWindow.textEdit_unacceptable_price.setText('0')
+    mainWindow.textEdit_loop_gap.setText('150')
     mainWindow.is_convertiable.setChecked(True)
     # 钥匙卡模式还没做出来，先禁用掉
     mainWindow.is_key_mode.setCheckable(False)
@@ -126,9 +129,10 @@ def runApp():
         try:
             ideal = int(mainWindow.textEdit_ideal_price.toPlainText())
             unaccept = int(mainWindow.textEdit_unacceptable_price.toPlainText())
+            loop_gap = int(mainWindow.textEdit_loop_gap.toPlainText())
             is_convertible = mainWindow.is_convertiable.isChecked()
             is_key_mode = mainWindow.is_key_mode.isChecked()
-            worker.update_params(ideal, unaccept, is_convertible, is_key_mode)
+            worker.update_params(ideal, unaccept, is_convertible, is_key_mode, loop_gap)
             mainWindow.label_lowest_price_value.setStyleSheet("color: black;")
         except ValueError:
             mainWindow.label_lowest_price_value.setStyleSheet("color: red;")
@@ -136,6 +140,7 @@ def runApp():
     # 确保两个输入框都连接
     mainWindow.textEdit_ideal_price.textChanged.connect(handle_text_change)
     mainWindow.textEdit_unacceptable_price.textChanged.connect(handle_text_change)
+    mainWindow.textEdit_loop_gap.textChanged.connect(handle_text_change)
     mainWindow.is_convertiable.stateChanged.connect(handle_text_change)
     mainWindow.is_key_mode.stateChanged.connect(handle_text_change)
 
