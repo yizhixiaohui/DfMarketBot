@@ -87,7 +87,7 @@ class Worker(QThread):
                             self.buybot.freerefresh(good_postion=self.mouse_position)
                         elif lowest_price > current_ideal:
                             print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
-                            self.buybot.buy(is_convertible=current_convertible)
+                            self.buybot.fresh(is_convertible=current_convertible)
                         else:
                             print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，开始购买')
                             self.buybot.buy(is_convertible=current_convertible)
