@@ -77,9 +77,7 @@ class Worker(QThread):
                         else:
                             print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，购买一张后循环结束')
                             self.buybot.refresh(is_convertible=False)
-                            self.lock.lock()
-                            running = False
-                            self.lock.unlock()
+                            self.set_running(False)
                     else:
                         # 正常模式
                         if lowest_price > current_unacceptable:
