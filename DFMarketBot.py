@@ -76,14 +76,14 @@ class Worker(QThread):
                             self.buybot.freerefresh(good_postion=self.mouse_position)
                         else:
                             print('当前价格：', lowest_price, '低于理想价格', current_ideal, '，购买一张后循环结束')
-                            self.buybot.fresh(is_convertible=False)
+                            self.buybot.refresh(is_convertible=False)
                             self.lock.lock()
                             running = False
                             self.lock.unlock()
                     else:
                         # 正常模式
                         if lowest_price > current_unacceptable:
-                            print('当前价格：', lowest_price, '高于最高价格', current_ideal, '，免费刷新价格')
+                            print('当前价格：', lowest_price, '高于最高价格', current_unacceptable, '，免费刷新价格')
                             self.buybot.freerefresh(good_postion=self.mouse_position)
                         elif lowest_price > current_ideal:
                             print('当前价格：', lowest_price, '高于理想价格', current_ideal, '，刷新价格')
