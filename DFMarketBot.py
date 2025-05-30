@@ -1,10 +1,20 @@
 import sys
+import ctypes
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QThread
 from GUI.AppGUI import Ui_MainWindow
 from backend.BuyBot import BuyBot
 from backend.utils import *
 import keyboard
+
+def is_admin():
+    """
+    检查当前是否以管理员权限运行
+    """
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
+        return False
 
 class KeyMonitor(QObject):
     key_pressed = pyqtSignal(int)
@@ -163,5 +173,10 @@ def main():
     return runApp()
 
 if __name__ == "__main__":
+    if not is_admin():
+        # 尝试重新以管理员身份启动
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit(0)
     print("正在初始化")
     sys.exit(main())
