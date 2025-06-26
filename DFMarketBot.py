@@ -172,7 +172,7 @@ def runApp():
 
     # 创建监控线程
     key_monitor = KeyMonitor()
-    worker = Worker(BuyBot)
+    worker = Worker(BuyBot())
     
     # 信号连接
     def handle_key_event(x):
