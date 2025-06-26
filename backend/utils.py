@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pyautogui
-import numpy as np
 
 def is_windowized(window_title:str):
     '''
@@ -51,6 +50,18 @@ def get_windowshot(range:list, debug_mode = False):
         screenshot.save('screenshot.png')
     return screenshot
 
+def mouse_move(positon:list):
+    '''
+    postion：鼠标移动位置，[x, y]
+    '''
+    x = positon[0]
+    y = positon[1]
+    if x < 1:
+        screen_size = pyautogui.size()
+        x = int(screen_size.width * x)
+        y = int(screen_size.height * y)
+    pyautogui.moveTo(x, y)
+
 def mouse_click(positon:list, num:int = 1):
     '''
     postion：鼠标点击位置，[x, y]
@@ -75,7 +86,7 @@ def get_mouse_position():
     return list(pyautogui.position())
 
 def main():
-    get_screenshot(debug_mode=True)
+    mouse_move([2218/2560, 72/1440])
 
 if __name__ == "__main__":
     main()
