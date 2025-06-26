@@ -54,28 +54,7 @@
      </font>
     </property>
    </widget>
-   <widget class="QLabel" name="label_lowest_price">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>120</y>
-      <width>71</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>微软雅黑</family>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>当前底价</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="label_use">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -136,34 +115,13 @@
      </font>
     </property>
    </widget>
-   <widget class="QLabel" name="label_lowest_price_value">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>120</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>微软雅黑</family>
-      <pointsize>11</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="QCheckBox" name="is_convertiable">
     <property name="enabled">
      <bool>true</bool>
     </property>
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>240</x>
       <y>20</y>
       <width>121</width>
       <height>31</height>
@@ -187,7 +145,7 @@
    <widget class="QCheckBox" name="is_key_mode">
     <property name="geometry">
      <rect>
-      <x>280</x>
+      <x>240</x>
       <y>70</y>
       <width>121</width>
       <height>31</height>
@@ -223,7 +181,7 @@
      </font>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="label_loop_gap">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -242,6 +200,27 @@
     </property>
     <property name="text">
      <string>循环间隔</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="is_half_coin_mode">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>120</y>
+      <width>191</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>11</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>使用哈夫币余额计算价格</string>
     </property>
    </widget>
   </widget>

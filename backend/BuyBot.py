@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 if __name__ == '__main__':
     from utils import *
 else:
@@ -22,24 +19,50 @@ class BuyBot:
         self.postion_notconvertiable_min_shopping_number = [2028/2560, 1112/1440]
         self.postion_isconvertible_buy_button = [2189/2560, 0.7979]
         self.postion_notconvertiable_buy_button = [2186/2560, 1225/1440]
+        self.postion_balance = [2200/2560, 70/1440]
+        self.postion_balance_half_coin = [1930/2560, 363/1440, 2324/2560, 387/1440]
         self.lowest_price = None
+        self.balance_half_coin = None
         print('初始化完成')
     
-    def detect_price(self, is_convertible, debug_mode = False):
+    def identify_number(self, img, debug_mode = False):
         try:
-            if is_convertible:
-                self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=debug_mode)
-            else:
-                self._screenshot = get_windowshot(self.range_notconvertible_lowest_price, debug_mode=debug_mode)
-            # 识别最低价格
-            result = self.reader.readtext(np.array(self._screenshot))
-            if debug_mode:
-                print(result)
-            self.lowest_price = int(result[-1][1].replace(',', ''))
+            text = self.reader.readtext(np.array(img))
+            text = text[-1][1]
+            text = text.replace(',', '')
         except:
-            self.lowest_price = None
+            text = None
+        if debug_mode == True:
+            print(text)
+        return int(text)
+
+    def detect_price(self, is_convertible, debug_mode = False):
+        if is_convertible:
+            self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=debug_mode)
+        else:
+            self._screenshot = get_windowshot(self.range_notconvertible_lowest_price, debug_mode=debug_mode)
+        # 识别最低价格
+        self.lowest_price = self.identify_number(self._screenshot)
+
+        if self.lowest_price == None:
             print('识别失败, 建议检查物品是否可兑换')
-        return self.lowest_price
+        return int(self.lowest_price)
+
+    def detect_balance_half_coin(self, debug_mode = False):
+        # 先把鼠标移到余额位置
+        mouse_move(self.postion_balance)
+        # 对哈夫币余额范围进行截图然后识别
+        self._screenshot = get_windowshot(self.postion_balance_half_coin, debug_mode=debug_mode)
+        self.balance_half_coin = self.identify_number(self._screenshot)
+
+        if self.balance_half_coin == None:
+            print('哈夫币余额检测识别失败或不稳定，建议关闭余额识别相关功能')
+        return self.balance_half_coin
+    
+    def get_half_coin_diff(self):
+        previous_balance_half_coin = self.balance_half_coin
+        self.detect_balance_half_coin()
+        return self.balance_half_coin - previous_balance_half_coin
 
     def buy(self, is_convertible):
         if is_convertible:
@@ -65,8 +88,8 @@ class BuyBot:
 
 def main():
     bot = BuyBot()
-    is_convertiable = False
-    bot.detect_price(is_convertible=is_convertiable, debug_mode=True)
+    print(bot.detect_price(is_convertible=True,debug_mode=True))
+    print(bot.detect_balance_half_coin(debug_mode=True)) 
 
 if __name__ == '__main__':
     main()
