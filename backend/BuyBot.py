@@ -30,6 +30,7 @@ class BuyBot:
             text = self.reader.readtext(np.array(img))
             text = text[-1][1]
             text = text.replace(',', '')
+            text = text.replace('.', '')
         except:
             text = None
         if debug_mode == True:
