@@ -183,8 +183,8 @@ def runApp():
     key_monitor.key_pressed.connect(handle_key_event)
     
     def handle_text_change():
-        ideal = int(mainWindow.textEdit_ideal_price.toPlainText())
-        unaccept = int(mainWindow.textEdit_unacceptable_price.toPlainText())
+        ideal = int(mainWindow.get_plain_number(mainWindow.textEdit_ideal_price))
+        unaccept = int(mainWindow.get_plain_number(mainWindow.textEdit_unacceptable_price))
         loop_gap = int(mainWindow.textEdit_loop_gap.toPlainText())
         is_convertible = mainWindow.is_convertiable.isChecked()
         is_key_mode = mainWindow.is_key_mode.isChecked()
