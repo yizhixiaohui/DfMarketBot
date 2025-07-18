@@ -31,11 +31,12 @@ class BuyBot:
             text = text[-1][1]
             text = text.replace(',', '')
             text = text.replace('.', '')
+            text = text.replace(' ', '')
         except:
             text = None
         if debug_mode == True:
             print(text)
-        return int(text)
+        return int(text) if text else None
 
     def detect_price(self, is_convertible, debug_mode = False):
         if is_convertible:
@@ -47,6 +48,7 @@ class BuyBot:
 
         if self.lowest_price == None:
             print('识别失败, 建议检查物品是否可兑换')
+            raise Exception('识别失败')
         return int(self.lowest_price)
 
     def detect_balance_half_coin(self, debug_mode = False):

@@ -131,7 +131,11 @@ class Worker(QThread):
                     if first_loop == True:
                         first_loop = False
                 except Exception as e:
-                    print(f"操作失败: {str(e)}")
+                    if str(e) == '识别失败':  # 识别失败, 建议检查物品是否可兑换
+                        self.msleep(self.loop_gap)
+                        self.buybot.freerefresh(good_postion=self.mouse_position)
+                    else:
+                        print(f"操作失败: {str(e)}")
                 self.msleep(self.loop_gap)
             else:
                 self.msleep(100)
