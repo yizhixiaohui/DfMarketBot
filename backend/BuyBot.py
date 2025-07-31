@@ -14,9 +14,9 @@ class BuyBot:
         self.range_isconvertible_lowest_price = [2179/2560, 1078/1440, 2308/2560, 1102/1440]
         self.range_notconvertible_lowest_price = [2179/2560, 1156/1440, 2308/2560, 1178/1440]
         self.postion_isconvertible_max_shopping_number = [0.9085, 0.7222]
-        self.postion_isconvertible_min_shopping_number = [0.7921, 0.7222]
+        self.postion_isconvertible_min_shopping_number = [0.8095, 0.7222]  #"将Buybot.py中的"self.postion_isconvertible_min_shopping_number"临时改为[0.8095, 0.7222], 该值原本为[0.7921, 0.7222]"
         self.postion_notconvertiable_max_shopping_number = [2329/2560, 1112/1440]
-        self.postion_notconvertiable_min_shopping_number = [2028/2560, 1112/1440]
+        self.postion_notconvertiable_min_shopping_number = [2059/2560, 1112/1440] #"将Buybot.py中的"self.postion_notconvertiable_min_shopping_number"临时改为[2059/2560, 1112/1440], 该值原本为[2028/2560, 1112/1440]"
         self.postion_isconvertible_buy_button = [2189/2560, 0.7979]
         self.postion_notconvertiable_buy_button = [2186/2560, 1225/1440]
         self.postion_balance = [2200/2560, 70/1440]
