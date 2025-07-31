@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
 
 if __name__ == '__main__':
     from utils import *
@@ -15,9 +14,9 @@ class BuyBot:
         self.range_isconvertible_lowest_price = [2179/2560, 1078/1440, 2308/2560, 1102/1440]
         self.range_notconvertible_lowest_price = [2179/2560, 1156/1440, 2308/2560, 1178/1440]
         self.postion_isconvertible_max_shopping_number = [0.9085, 0.7222]
-        self.postion_isconvertible_min_shopping_number = [0.8095, 0.7222]
+        self.postion_isconvertible_min_shopping_number = [0.8095, 0.7222]  #"将Buybot.py中的"self.postion_isconvertible_min_shopping_number"临时改为[0.8095, 0.7222], 该值原本为[0.7921, 0.7222]"
         self.postion_notconvertiable_max_shopping_number = [2329/2560, 1112/1440]
-        self.postion_notconvertiable_min_shopping_number = [2059/2560, 1112/1440]
+        self.postion_notconvertiable_min_shopping_number = [2059/2560, 1112/1440] #"将Buybot.py中的"self.postion_notconvertiable_min_shopping_number"临时改为[2059/2560, 1112/1440], 该值原本为[2028/2560, 1112/1440]"
         self.postion_isconvertible_buy_button = [2189/2560, 0.7979]
         self.postion_notconvertiable_buy_button = [2186/2560, 1225/1440]
         self.postion_balance = [2200/2560, 70/1440]
@@ -26,7 +25,7 @@ class BuyBot:
         self.balance_half_coin = None
         print('初始化完成')
     
-    def identify_number(self, img, debug_mode = True):
+    def identify_number(self, img, debug_mode = False):
         try:
             text = self.reader.readtext(np.array(img))
             text = text[-1][1]
@@ -39,7 +38,7 @@ class BuyBot:
             print(text)
         return int(text) if text else None
 
-    def detect_price(self, is_convertible, debug_mode = True):
+    def detect_price(self, is_convertible, debug_mode = False):
         if is_convertible:
             self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=debug_mode)
         else:
@@ -89,7 +88,6 @@ class BuyBot:
         pyautogui.press('esc')
         # 点击回到商品页面
         mouse_click(good_postion)
-        time.sleep(0.8)
 
 def main():
     bot = BuyBot()
