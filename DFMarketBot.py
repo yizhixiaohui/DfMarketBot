@@ -121,7 +121,7 @@ class Worker(QThread):
                         elif lowest_price > current_ideal:
                             print('高于理想价格', current_ideal, ' 刷新价格')
                             self.buybot.refresh(is_convertible=current_convertible)
-                            buy_number = 1
+                            buy_number = 31 #原始值为 购买子弹价格/1 ，修改为 购买子弹价格/31
                         else:
                             print('低于理想价格', current_ideal, ' 开始购买')
                             self.buybot.buy(is_convertible=current_convertible)
