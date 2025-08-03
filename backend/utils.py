@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-
+import numpy as np
 import pyautogui
+screen_size = pyautogui.size()
 
 def is_windowized(window_title:str):
     '''
@@ -40,8 +41,7 @@ def get_windowshot(range:list, debug_mode = False):
     '''
     # 对范围内截图
     if range[0] < 1:
-        screen_size = pyautogui.size()
-        range = [int(screen_size.width * range[0]), 
+        range = [int(screen_size.width * range[0]),
                  int(screen_size.height * range[1]), 
                  int(screen_size.width * range[2]), 
                  int(screen_size.height * range[3])]
@@ -57,7 +57,6 @@ def mouse_move(positon:list):
     x = positon[0]
     y = positon[1]
     if x < 1:
-        screen_size = pyautogui.size()
         x = int(screen_size.width * x)
         y = int(screen_size.height * y)
     pyautogui.moveTo(x, y)
@@ -71,13 +70,11 @@ def mouse_click(positon:list, num:int = 1):
     x = positon[0]
     y = positon[1]
     if x < 1:
-        screen_size = pyautogui.size()
         x = int(screen_size.width * x)
         y = int(screen_size.height * y)
     for i in range(num):
         pyautogui.moveTo(x, y)
-        pyautogui.mouseDown()
-        pyautogui.mouseUp()
+        pyautogui.click(x, y)
 
 def get_mouse_position():
     '''
@@ -89,4 +86,20 @@ def main():
     mouse_move([2218/2560, 72/1440])
 
 if __name__ == "__main__":
-    main()
+    # main()
+    import pyocr
+    import re
+    import time
+    img = get_windowshot([2128, 1133, 2413, 1191])
+    # img = get_windowshot([2098, 356, 2361, 389])
+    # img = get_windowshot([2179, 1078, 2308, 1102])
+    # img = get_windowshot([2161, 49, 2295, 87])
+    # res = pytesseract.image_to_string(img)
+    # print(res)
+    tools = pyocr.get_available_tools()
+    tool = tools[0]
+    # ocr = cnocr.CnOcr()
+    # res = ocr.ocr(img)
+    t = time.time()
+    res = tool.image_to_string(img)
+    print(res, time.time() - t)
