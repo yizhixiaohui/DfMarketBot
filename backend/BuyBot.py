@@ -56,12 +56,16 @@ class BuyBot:
         return int(text) if text else None
 
     def detect_price(self, is_convertible, debug_mode = False):
-        if is_convertible:
-            self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=self.debug or debug_mode)
-        else:
-            self._screenshot = get_windowshot(self.range_notconvertible_lowest_price, debug_mode=self.debug or debug_mode)
-        # 识别最低价格
-        self.lowest_price = self.identify_number(self._screenshot)
+        for i in range(50):
+            if is_convertible:
+                self._screenshot = get_windowshot(self.range_isconvertible_lowest_price, debug_mode=self.debug or debug_mode)
+            else:
+                self._screenshot = get_windowshot(self.range_notconvertible_lowest_price, debug_mode=self.debug or debug_mode)
+                # 识别最低价格
+            self.lowest_price = self.identify_number(self._screenshot)
+            if self.lowest_price is not None:
+                return self.lowest_price
+            time.sleep(0.02)
 
         if self.lowest_price is None:
             print('识别失败, 建议检查物品是否可兑换')
@@ -72,8 +76,14 @@ class BuyBot:
         # 先把鼠标移到余额位置
         mouse_move(self.postion_balance)
         # 对哈夫币余额范围进行截图然后识别
-        self._screenshot = get_windowshot(self.postion_balance_half_coin, debug_mode=self.debug or debug_mode)
-        self.balance_half_coin = self.identify_number(self._screenshot)
+        for i in range(50):
+            self._screenshot = get_windowshot(self.postion_balance_half_coin, debug_mode=self.debug or debug_mode)
+            self.balance_half_coin = self.identify_number(self._screenshot)
+            if self.balance_half_coin is not None:
+                # if self.debug or debug_mode:
+                #     self._screenshot.save(f"debug/{self.balance_half_coin}.png")
+                return self.balance_half_coin
+            time.sleep(0.02)
 
         if self.balance_half_coin is None:
             print('哈夫币余额检测识别失败或不稳定，建议关闭余额识别相关功能')
@@ -142,8 +152,9 @@ class BuyBot:
 def main():
     bot = BuyBot()
     # print(bot.detect_option_price(debug_mode=True))
-    # print(bot.detect_price(is_convertible=True,debug_mode=True))
-    print(bot.detect_option_buy_failed())
+    print(bot.detect_price(is_convertible=True,debug_mode=True))
+    # print(bot.detect_option_buy_failed())
+    # bot.detect_balance_half_coin()
 
 if __name__ == '__main__':
     main()

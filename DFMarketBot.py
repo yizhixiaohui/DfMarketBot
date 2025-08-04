@@ -1,5 +1,6 @@
 import ctypes
 import sys
+import time
 
 import keyboard
 from PyQt5 import QtCore, QtWidgets
@@ -45,7 +46,7 @@ class Worker(QThread):
     def __init__(self, buybot):
         super().__init__()
         # 0: 交易页面购买，屯仓模式， 1: 配装页面购买，滚仓模式
-        self.mode = 1
+        self.mode = 0
         self.buybot = buybot
         self._is_running = False
         self.lock = QtCore.QMutex()
@@ -61,6 +62,7 @@ class Worker(QThread):
         self.mouse_position = []
         self.mouse_position_lock = QtCore.QMutex()
         self.param_lock = QtCore.QMutex()  # 参数专用锁
+        self.debug = True
 
     def record_mouse_position(self):
         """记录鼠标位置"""
@@ -79,9 +81,7 @@ class Worker(QThread):
             if running:
                 try:
                     if self.mode == 0:
-                        t = time.time()
                         buy_number = self.mode_0(first_loop, buy_number)
-                        print('cost', time.time() - t)
                     if self.mode == 1:
                         self.mode_1()
                     # 标记为非第一次循环
@@ -97,9 +97,10 @@ class Worker(QThread):
             else:
                 self.msleep(100)
                 # 标记为第一次循环
-                if first_loop == False:
+                if not first_loop:
                     first_loop = True
                     buy_number = 0
+                    self.buybot.balance_half_coin = None
 
     def update_params(self, ideal, unacceptable, convertible, key_mode, half_coin_mode, loop_gap):
         """线程安全更新参数"""
@@ -129,9 +130,9 @@ class Worker(QThread):
         self.param_lock.unlock()
 
         # 进入商品页面
-        t = time.time()
         mouse_click(self.mouse_position, num=1)
-        print('mouse click cost', time.time() - t)
+        if self.debug:
+            print('current buy number:', buy_number)
 
         # 获取商品价格
         if current_half_coin_mode and (not first_loop) and (buy_number != 0):
@@ -140,20 +141,30 @@ class Worker(QThread):
                 previous_balance_half_coin = self.buybot.balance_half_coin
                 current_balance_half_coin = self.buybot.detect_balance_half_coin()
                 lowest_price = (previous_balance_half_coin - current_balance_half_coin) / buy_number
+                if self.debug:
+                    print(f'lowest_price: {lowest_price}, previous: {previous_balance_half_coin}, current: {current_balance_half_coin}')
                 if lowest_price == 0:
                     # 直接看市场底价
                     lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
                     print("上一次购买失败，直接看市场底价:", lowest_price, end=" ")
+                elif lowest_price <= 0:
+                    lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
+                    print("数值计算出错，直接看市场底价:", lowest_price, end=" ")
                 else:
                     print("哈夫币余额差值计算价格:", lowest_price, end=" ")
-            except:
+            except Exception as e:
                 # 直接看市场底价
                 lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
-                print("余额计算出现异常，直接看市场底价:", lowest_price, end=" ")
+                print(f"余额计算出现异常({e})，直接看市场底价:", lowest_price, end=" ")
         else:
             # 直接看市场底价
             lowest_price = self.buybot.detect_price(is_convertible=current_convertible, debug_mode=False)
-            print("直接看市场底价:", lowest_price, end=" ")
+            if lowest_price < 200:
+                print("识别价格异常，自动过滤")
+                self.buybot.lowest_price = 9999999999
+                lowest_price = 9999999999
+            else:
+                print("直接看市场底价:", lowest_price, end=" ")
 
         if current_key_mode:
             # 钥匙卡模式
@@ -172,11 +183,13 @@ class Worker(QThread):
                 self.buybot.freerefresh(good_postion=self.mouse_position)
                 buy_number = 0
             elif lowest_price > current_ideal:
-                print('高于理想价格', current_ideal, ' 刷新价格')
+                self.buybot.detect_balance_half_coin()
+                print('高于理想价格', current_ideal, f' 刷新价格，当前哈夫币：{self.buybot.balance_half_coin}')
                 self.buybot.refresh(is_convertible=current_convertible)
                 buy_number = 31  # 原始值为 购买子弹价格/1 ，修改为 购买子弹价格/31
             else:
-                print('低于理想价格', current_ideal, ' 开始购买')
+                print('低于理想价格', current_ideal, f' 开始购买，当前哈夫币：{self.buybot.balance_half_coin}')
+                self.buybot.detect_balance_half_coin()
                 self.buybot.buy(is_convertible=current_convertible)
                 buy_number = 200
         return buy_number
@@ -192,6 +205,16 @@ class Worker(QThread):
                 "buy_price": 450,  # 5.7x28
                 "min_buy_price": 270,
                 "buy_count": 4980
+            },
+            {
+                "buy_price": 450,  # 5.7x28
+                "min_buy_price": 270,
+                "buy_count": 4980
+            },
+            {
+                "buy_price": 1700,  # 12.7x55 PS12
+                "min_buy_price": 700,
+                "buy_count": 1740
             }
         ]
         buy_price, min_buy_price, buy_count = (options[option]["buy_price"], options[option]["min_buy_price"],
@@ -201,14 +224,10 @@ class Worker(QThread):
         print(f'单价: {buy_price}, 数量: {buy_count}, 总价: {target_price}, 最低价: {min_price}')
         pyautogui.press('l')
         self.msleep(50)
-        t = time.time()
         self.buybot.switch_to_option(option)
-        print(f't1 cost {int((time.time() - t) * 1000)}ms')
         # 避免数字还没切过来就检测了，导致检测到上次配装的价格
         self.msleep(100)
-        print(f't1.5 cost {int((time.time() - t) * 1000)}ms')
         price = self.buybot.detect_option_price()
-        print(f't2 cost {int((time.time() - t) * 1000)}ms')
         if min_price < int(price) <= target_price:
             self.buybot.option_buy()
             # TODO 检测购买是否成功
