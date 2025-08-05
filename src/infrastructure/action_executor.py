@@ -17,10 +17,11 @@ from ..core.exceptions import ActionExecutionException
 class PyAutoGUIActionExecutor(IActionExecutor):
     """基于PyAutoGUI的动作执行器"""
     
-    def __init__(self):
+    def __init__(self, debug=False):
         # 设置PyAutoGUI的安全特性
         pyautogui.FAILSAFE = True
-        pyautogui.PAUSE = 0.01
+        pyautogui.PAUSE = 0.05
+        self.debug = debug
         
         # 锁用于线程安全
         self._lock = threading.Lock()
@@ -36,6 +37,8 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 # 移动鼠标并点击
                 pyautogui.moveTo(x, y)
                 pyautogui.click()
+                if self.debug:
+                    print(f'click position ({x}, {y})')
                 
         except Exception as e:
             raise ActionExecutionException(f"点击位置失败: {e}")
@@ -45,6 +48,8 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         try:
             with self._lock:
                 pyautogui.press(key)
+                if self.debug:
+                    print(f'press key {key}')
                 
         except Exception as e:
             raise ActionExecutionException(f"按键失败: {e}")
@@ -72,7 +77,9 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         try:
             with self._lock:
                 x, y = int(position[0]), int(position[1])
-                pyautogui.moveTo(x, y, duration=0.1)
+                pyautogui.moveTo(x, y)
+                if self.debug:
+                    print(f'move to ({x}, {y})')
         except Exception as e:
             raise ActionExecutionException(f"移动鼠标失败: {e}")
     

@@ -21,9 +21,7 @@ class PriceDetector(IPriceDetector):
     def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
         self.screen_capture = screen_capture
         self.ocr_engine = ocr_engine
-        self.coordinates = ResolutionConfig.scale_coordinates(
-            screen_capture.width, screen_capture.height
-        )
+        self.coordinates = ResolutionConfig.restore_coordinates(screen_capture.width, screen_capture.height)
 
     @abstractmethod
     def detect_price(self) -> int:
@@ -34,12 +32,12 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            
             for attempt in range(50):
                 screenshot = self.screen_capture.capture_region(coords)
                 balance = self._extract_number(screenshot)
                 
                 if balance is not None:
+                    print('detected balance:', balance)
                     return balance
                 
                 time.sleep(0.02)
@@ -80,6 +78,7 @@ class HoardingModeDetector(PriceDetector):
                 price = self._extract_number(screenshot)
 
                 if price is not None and price >= 200:  # 过滤异常价格
+                    print('detected price:', price)
                     return price
 
                 time.sleep(0.02)

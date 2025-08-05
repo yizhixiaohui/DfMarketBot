@@ -14,6 +14,7 @@ class HoardingStrategy(ITradingStrategy):
 
     @staticmethod
     def _need_calc_unit_price(market_data: MarketData) -> bool:
+        print(market_data)
         return (market_data.balance is not None
                 and market_data.last_balance is not None
                 and 0 < market_data.last_balance != market_data.balance > 0
@@ -33,7 +34,8 @@ class HoardingStrategy(ITradingStrategy):
             if unit_price > 100:
                 return unit_price <= self.config.max_price
             print(f"单价计算异常({unit_price})，直接看市场底价")
-        return market_data.current_price <= self.config.max_price
+        print('current_price:', market_data.current_price, 'max_price:', self.config.max_price)
+        return market_data.current_price <= int(self.config.max_price)
     
     def should_refresh(self, market_data: MarketData) -> bool:
         """判断是否该刷新"""
@@ -46,11 +48,16 @@ class HoardingStrategy(ITradingStrategy):
         if self._need_calc_unit_price(market_data):
             # 计算单价
             unit_price = self._calc_unit_price(market_data)
+            print('计算上次购买单价:', unit_price)
             if self.config.ideal_price < unit_price <= self.config.max_price:
                 return 31
             if unit_price <= self.config.ideal_price:
                 return 200
             return 0
+        if market_data.current_price > self.config.max_price:
+            return 0
+        if self.config.ideal_price < market_data.current_price <= self.config.max_price:
+            return 31
         return 200  # 默认购买200发
 
 
@@ -66,7 +73,8 @@ class RefreshOnlyStrategy(ITradingStrategy):
         return False
     
     def should_refresh(self, market_data: MarketData) -> bool:
-        return market_data.current_price > self.config.ideal_price
+        print('理想价格:', self.config.ideal_price)
+        return self.config.max_price >= market_data.current_price > self.config.ideal_price
     
     def get_buy_quantity(self, market_data: MarketData) -> int:
         return 31

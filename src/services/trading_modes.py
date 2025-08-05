@@ -38,17 +38,23 @@ class HoardingTradingMode(ITradingMode):
     def prepare(self) -> None:
         self.mouse_position = self.action_executor.get_mouse_position()
         self._execute_enter()
+        time.sleep(0.05)
+
+    def detect_balance(self):
+        self.action_executor.move_mouse(self.detector.coordinates["balance_active"])
+        return self.detector.detect_balance()
 
     def execute_cycle(self) -> bool:
         """执行一个屯仓交易周期"""
         try:
             # 获取当前价格
             current_price = self.detector.detect_price()
-            
+
+            # TODO 这里获取计算哈夫币余额数量有bug，需要调试修复
             # 获取当前余额（如果需要）
             current_balance = None
-            if self.config.use_balance_calculation:
-                current_balance = self.detector.detect_balance()
+            if self.config.use_balance_calculation and self.last_buy_quantity != 0:
+                current_balance = self.detect_balance()
             
             self.current_market_data = MarketData(
                 current_price=current_price,
@@ -60,6 +66,7 @@ class HoardingTradingMode(ITradingMode):
 
             # 执行交易逻辑
             if self.strategy.should_buy(self.current_market_data):
+                print('直接购买')
                 # 购买逻辑
                 quantity = self.strategy.get_buy_quantity(self.current_market_data)
                 self._execute_buy(quantity)
@@ -67,11 +74,13 @@ class HoardingTradingMode(ITradingMode):
 
                 if self.config.key_mode:
                     return False  # 钥匙卡模式购买后停止
-            elif self.refresh_strategy.should_refresh(self.current_market_data, self.config):
+            elif self.refresh_strategy.should_refresh(self.current_market_data):
+                print('刷新购买')
                 quantity = self.strategy.get_buy_quantity(self.current_market_data)
                 self._execute_buy(quantity)
                 self.last_buy_quantity = self.refresh_strategy.get_buy_quantity(self.config)
             elif self.strategy.should_refresh(self.current_market_data):
+                print('直接刷新')
                 self._execute_refresh()
                 self.last_buy_quantity = 0
 
@@ -89,9 +98,9 @@ class HoardingTradingMode(ITradingMode):
 
     def _execute_buy(self, quantity: int) -> None:
         """执行购买操作"""
+        convertible = "" if ItemType(self.config.item_type) == ItemType.CONVERTIBLE else "non_"
         if not self.config.key_mode:
             quantity_pos = "min" if quantity == 31 else "max"
-            convertible = "" if self.config.item_type == ItemType.CONVERTIBLE else "non_"
             self.action_executor.click_position(self.detector.coordinates["buy_buttons"][f"{convertible}convertible_{quantity_pos}"])
         self.action_executor.click_position(self.detector.coordinates["buy_buttons"][f"{convertible}convertible_buy"])
         print(f"执行购买: 数量={quantity}")
@@ -210,8 +219,13 @@ class TradingModeFactory:
                     screen_capture: ScreenCapture,
                     action_executor: ActionExecutor) -> ITradingMode:
         """根据类型创建交易模式"""
+        if isinstance(config.trading_mode, int):
+            config.trading_mode = TradingMode(config.trading_mode)
+        if isinstance(config.item_type, str):
+            config.item_type = ItemType(config.item_type)
+
         if config.trading_mode == TradingMode.HOARDING:
-            price_detector = HoardingModeDetector(screen_capture, ocr_engine, config.item_type == ItemType.CONVERTIBLE)
+            price_detector = HoardingModeDetector(screen_capture, ocr_engine, ItemType(config.item_type) == ItemType.CONVERTIBLE)
             mode = HoardingTradingMode(price_detector, action_executor)
         elif config.trading_mode == TradingMode.ROLLING:
             price_detector = RollingModeDetector(screen_capture, ocr_engine)

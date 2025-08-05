@@ -26,10 +26,10 @@ class ScreenCapture:
             raise ValueError("坐标必须是4个元素的列表")
         
         # 转换为绝对坐标
-        x1 = int(coordinates[0] * self.width)
-        y1 = int(coordinates[1] * self.height)
-        x2 = int(coordinates[2] * self.width)
-        y2 = int(coordinates[3] * self.height)
+        x1 = int(coordinates[0])
+        y1 = int(coordinates[1])
+        x2 = int(coordinates[2])
+        y2 = int(coordinates[3])
         
         # 确保坐标有效
         x1, x2 = min(x1, x2), max(x1, x2)

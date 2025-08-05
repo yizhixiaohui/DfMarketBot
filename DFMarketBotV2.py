@@ -7,7 +7,7 @@ DFMarketBotV2 - 重构后的主程序入口
 import sys
 import os
 import signal
-import threading
+import ctypes
 import keyboard
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
@@ -18,6 +18,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 from GUIV2.AppGUI import Ui_MainWindow
 from src.ui.adapter import UIAdapter
 
+
+def is_admin():
+    """
+    检查当前是否以管理员权限运行
+    """
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+    except:
+        return False
 
 class MainWindow(QMainWindow):
     """主窗口类"""
@@ -134,4 +143,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if not is_admin():
+        # 尝试重新以管理员身份启动
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit(0)
+    sys.exit(main())

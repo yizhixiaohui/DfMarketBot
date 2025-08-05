@@ -17,8 +17,8 @@ class TradingMode(Enum):
 
 class ItemType(Enum):
     """物品类型枚举"""
-    CONVERTIBLE = "convertible"
-    NON_CONVERTIBLE = "non_convertible"
+    CONVERTIBLE = 0
+    NON_CONVERTIBLE = 1
 
 
 @dataclass

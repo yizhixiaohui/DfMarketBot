@@ -53,7 +53,7 @@ class TradingService(ITradingService):
         """执行一个交易周期"""
         try:
             # 执行交易周期
-            return self.current_mode.execute_cycle(self.current_config)
+            return self.current_mode.execute_cycle()
             
         except Exception as e:
             raise TradingException(f"交易周期执行失败: {e}")
@@ -73,7 +73,7 @@ class TradingService(ITradingService):
         """检查基础设施是否可用"""
         # 检查屏幕捕获
         try:
-            test_image = self.screen_capture.capture_region([0, 0, 0.1, 0.1])
+            test_image = self.screen_capture.capture_region([0, 0, 256, 1440])
             if test_image is None or test_image.size == 0:
                 raise TradingException("屏幕捕获失败")
         except Exception as e:
@@ -81,7 +81,7 @@ class TradingService(ITradingService):
         
         # 检查OCR引擎
         try:
-            test_image = self.screen_capture.capture_region([0, 0, 0.1, 0.1])
+            test_image = self.screen_capture.capture_region([0, 0, 256, 144])
             self.ocr_engine.image_to_string(test_image)
         except Exception as e:
             raise TradingException(f"OCR引擎不可用: {e}")

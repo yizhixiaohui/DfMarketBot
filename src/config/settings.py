@@ -7,8 +7,12 @@ import os
 from typing import Dict, Any
 from pathlib import Path
 
-from ..core.interfaces import TradingConfig, IConfigManager
-from ..core.exceptions import ConfigurationException
+if __name__ == '__main__':
+    from src.core.interfaces import TradingConfig, IConfigManager
+    from src.core.exceptions import ConfigurationException
+else:
+    from ..core.interfaces import TradingConfig, IConfigManager
+    from ..core.exceptions import ConfigurationException
 
 
 class JsonConfigManager(IConfigManager):
@@ -115,6 +119,7 @@ class ResolutionConfig:
             "convertible": [2179/2560, 1078/1440, 2308/2560, 1102/1440],
             "non_convertible": [2179/2560, 1156/1440, 2308/2560, 1178/1440]
         },
+        "balance_active": [2200/2560, 70/1440],
         "balance_detection": [1912/2560, 363/1440, 2324/2560, 387/1440],
         "buy_buttons": {
             "convertible_max": [0.9085, 0.7222],
@@ -136,34 +141,47 @@ class ResolutionConfig:
             "failure_check": [418/2560, 280/1440, 867/2560, 387/1440]
         }
     }
-    
+
     @classmethod
-    def scale_coordinates(cls, target_width: int, target_height: int) -> Dict:
-        """根据目标分辨率缩放坐标"""
-        scale_x = target_width / cls.BASE_WIDTH
-        scale_y = target_height / cls.BASE_HEIGHT
-        
-        def scale_coord(coord):
+    def restore_coordinates(cls, target_width: int = 2560, target_height: int = 1440) -> Dict:
+        """将比例坐标还原为目标分辨率下的绝对像素坐标
+
+        Args:
+            target_width: 目标宽度（像素）
+            target_height: 目标高度（像素）
+
+        Returns:
+            包含绝对像素坐标的配置字典
+        """
+        def restore_coord(coord):
             if isinstance(coord, list):
-                return [coord[0] * scale_x if i % 2 == 0 else coord[i] * scale_y 
-                       for i in range(len(coord))]
+                return [int(coord[i] * (target_width if i % 2 == 0 else target_height))
+                        for i in range(len(coord))]
             elif isinstance(coord, tuple):
-                return (coord[0] * scale_x, coord[1] * scale_y)
+                return tuple(int(coord[i] * (target_width if i % 2 == 0 else target_height))
+                             for i in range(len(coord)))
             return coord
-        
-        # 递归缩放所有坐标
-        def scale_dict(d):
+
+        # 递归处理所有坐标
+        def restore_dict(d):
             result = {}
             for k, v in d.items():
                 if isinstance(v, dict):
-                    result[k] = scale_dict(v)
+                    result[k] = restore_dict(v)
                 elif isinstance(v, list):
                     if all(isinstance(item, (int, float)) for item in v):
-                        result[k] = scale_coord(v)
+                        result[k] = restore_coord(v)
                     else:
-                        result[k] = [scale_coord(item) if isinstance(item, list) else item for item in v]
+                        result[k] = [restore_coord(item) if isinstance(item, (list, tuple)) else item
+                                     for item in v]
                 else:
                     result[k] = v
             return result
-        
-        return scale_dict(cls.COORDINATES)
+
+        return restore_dict(cls.COORDINATES)
+
+
+if __name__ == '__main__':
+    res = ResolutionConfig.restore_coordinates(2560, 1440)
+    print(ResolutionConfig.COORDINATES)
+    print(res)

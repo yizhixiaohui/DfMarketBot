@@ -88,6 +88,7 @@ class TradingWorker(QThread):
         self._running = True
         # 获取当前配置
         current_config = self._config or self.config_manager.load_config().__dict__
+        loop_interval = current_config.get('loop_interval', 50)
         self._mutex.unlock()
         
         try:
@@ -126,14 +127,16 @@ class TradingWorker(QThread):
                         break
                     
                     # 休眠
-                    self.msleep(current_config.get('loop_interval', 50))
+                    self.msleep(loop_interval)
                     
                 except TradingException as e:
-                    self.signals.error_occurred.emit(str(e))
-                    self.signals.status_changed.emit("错误")
-                    time.sleep(2)  # 错误后等待
+                    print(f"循环流执行失败： {e}")
+                    # self.signals.error_occurred.emit(str(e))
+                    # self.signals.status_changed.emit("错误")
+                    time.sleep(loop_interval)  # 错误后等待
                     
         except Exception as e:
+            print(f"交易服务初始化失败: {e}")
             self.signals.error_occurred.emit(f"交易服务初始化失败: {e}")
             self.signals.status_changed.emit("错误")
         finally:
