@@ -9,7 +9,7 @@ from typing import Dict, Any, Optional
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex
 from PyQt5.QtWidgets import QApplication
 
-from ..core.interfaces import IConfigManager, ITradingService
+from ..core.interfaces import IConfigManager, ITradingService, TradingMode, ItemType
 from ..core.exceptions import TradingException
 from ..config.settings import JsonConfigManager
 from ..services.trading_service import TradingService
@@ -130,10 +130,10 @@ class TradingWorker(QThread):
                     self.msleep(loop_interval)
                     
                 except TradingException as e:
-                    print(f"循环流执行失败： {e}")
+                    print(f"循环流执行失败，跳过当前循环流： {e}")
                     # self.signals.error_occurred.emit(str(e))
                     # self.signals.status_changed.emit("错误")
-                    time.sleep(loop_interval)  # 错误后等待
+                    self.msleep(loop_interval)  # 错误后等待
                     
         except Exception as e:
             print(f"交易服务初始化失败: {e}")
@@ -204,7 +204,7 @@ class UIAdapter:
         """根据配置更新UI"""
         # 更新模式选择
         if hasattr(self.ui, 'comboBox_mode'):
-            mode_index = config.get('trading_mode', 0)
+            mode_index = config.get('trading_mode', TradingMode.HOARDING).value
             self.ui.comboBox_mode.setCurrentIndex(mode_index)
         
         # 更新滚仓模式选项
@@ -224,7 +224,7 @@ class UIAdapter:
         
         # 更新复选框
         if hasattr(self.ui, 'is_convertiable'):
-            self.ui.is_convertiable.setChecked(config.get('item_type', 0) == 0)
+            self.ui.is_convertiable.setChecked(config.get('item_type', ItemType.CONVERTIBLE) == ItemType.CONVERTIBLE)
         
         if hasattr(self.ui, 'is_key_mode'):
             self.ui.is_key_mode.setChecked(config.get('key_mode', False))

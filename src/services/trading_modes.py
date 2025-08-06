@@ -141,10 +141,10 @@ class RollingTradingMode(ITradingMode):
             self._execute_enter()
             # 切换到指定配装选项
             self._switch_to_option(self.config.rolling_option)
-            
+            time.sleep(0.1)
             # 检测价格
             current_price = self.detector.detect_price()
-            
+
             # 存储市场数据
             self.current_market_data = MarketData(
                 current_price=current_price,
@@ -169,13 +169,14 @@ class RollingTradingMode(ITradingMode):
             if min_price < current_price <= target_price:
                 # 购买
                 self._execute_buy()
-                
+
                 # 检查购买是否成功
                 time.sleep(2)
                 if self.detector.check_purchase_failure():
-                    self.action_executor.press_key('esc')
                     print("购买失败，继续购买")
-                    time.sleep(0.1)
+                    self._execute_refresh()
+                    time.sleep(1)
+                    return True
                 else:
                     print("购买完毕，手动检查购买是否成功")
                     return False  # 购买成功后停止
@@ -204,6 +205,7 @@ class RollingTradingMode(ITradingMode):
     
     def _execute_refresh(self) -> None:
         """执行刷新操作"""
+        print('execute refresh')
         self.action_executor.press_key('esc')
     
     def get_market_data(self) -> Optional[MarketData]:

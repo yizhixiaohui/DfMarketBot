@@ -2,48 +2,63 @@
 """
 价格检测服务
 """
-import time
 import re
+import time
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
+
 import numpy as np
 
-from ..core.interfaces import IPriceDetector, ItemType
-from ..core.exceptions import PriceDetectionException, BalanceDetectionException
 from ..config.settings import ResolutionConfig
-from ..infrastructure.screen_capture import ScreenCapture
+from ..core.exceptions import PriceDetectionException, BalanceDetectionException
+from ..core.interfaces import IPriceDetector
 from ..infrastructure.ocr_engine import TemplateOCREngine
+from ..infrastructure.screen_capture import ScreenCapture
 
 
 class PriceDetector(IPriceDetector):
     """价格检测器基类"""
-    
+
     def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
         self.screen_capture = screen_capture
         self.ocr_engine = ocr_engine
         self.coordinates = ResolutionConfig.restore_coordinates(screen_capture.width, screen_capture.height)
 
     @abstractmethod
-    def detect_price(self) -> int:
-        """检测当前物品价格 - 由子类实现"""
+    def get_detection_coordinates(self) -> List[float]:
+        """获取价格检测坐标 - 由子类实现"""
         pass
+
+    def _detect_value(self, coords: List[float], value_name: str = "价格", max_attempts: int = 50) -> int:
+        """通用的数值检测逻辑"""
+        for attempt in range(max_attempts):
+            screenshot = self.screen_capture.capture_region(coords)
+            value = self._extract_number(screenshot)
+
+            if value is not None:
+                if value_name == "价格" and value < 100:  # 仅对价格进行异常过滤
+                    print(f'检测{value_name}({value})异常，跳过检测')
+                    continue
+                print(f'detected {value_name}:', value)
+                return value
+
+            time.sleep(0.02)
+
+        raise PriceDetectionException(f"{value_name}检测失败")
+
+    def detect_price(self) -> int:
+        """检测当前物品价格 - 使用模板方法模式"""
+        try:
+            coords = self.get_detection_coordinates()
+            return self._detect_value(coords)
+        except Exception as e:
+            raise PriceDetectionException(f"价格检测异常: {e}")
 
     def detect_balance(self) -> Optional[int]:
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            for attempt in range(50):
-                screenshot = self.screen_capture.capture_region(coords)
-                balance = self._extract_number(screenshot)
-                
-                if balance is not None:
-                    print('detected balance:', balance)
-                    return balance
-                
-                time.sleep(0.02)
-            
-            return None
-            
+            return self._detect_value(coords, "余额", 50)
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}")
 
@@ -61,55 +76,27 @@ class PriceDetector(IPriceDetector):
 class HoardingModeDetector(PriceDetector):
     """屯仓模式检测器"""
 
-    def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine, item_convertible: bool=False):
+    def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine, item_convertible: bool = False):
         super().__init__(screen_capture, ocr_engine)
         self.item_convertible = item_convertible
 
-    def detect_price(self) -> int:
-        """检测当前物品价格"""
-        try:
-            if self.item_convertible:
-                coords = self.coordinates["price_detection"]["convertible"]
-            else:
-                coords = self.coordinates["price_detection"]["non_convertible"]
-
-            for attempt in range(50):
-                screenshot = self.screen_capture.capture_region(coords)
-                price = self._extract_number(screenshot)
-
-                if price is not None and price >= 200:  # 过滤异常价格
-                    print('detected price:', price)
-                    return price
-
-                time.sleep(0.02)
-
-            raise PriceDetectionException("价格检测失败，建议检查物品是否可兑换")
-
-        except Exception as e:
-            raise PriceDetectionException(f"价格检测异常: {e}")
+    def get_detection_coordinates(self) -> dict:
+        """获取价格检测坐标"""
+        if self.item_convertible:
+            return self.coordinates["price_detection"]["convertible"]
+        return self.coordinates["price_detection"]["non_convertible"]
 
 
 class RollingModeDetector(PriceDetector):
     """滚仓模式检测器"""
-    
+
     def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
         super().__init__(screen_capture, ocr_engine)
 
-    def detect_price(self) -> int:
-        """检测指定配装选项的价格"""
-        try:
-            coords = self.coordinates["rolling_mode"]["price_area"]
-            screenshot = self.screen_capture.capture_region(coords)
-            price = self._extract_number(screenshot)
-            
-            if price is None:
-                raise PriceDetectionException(f"配装选项价格检测失败")
-            
-            return price
-            
-        except Exception as e:
-            raise PriceDetectionException(f"配装价格检测异常: {e}")
-    
+    def get_detection_coordinates(self) -> dict:
+        """获取价格检测坐标"""
+        return self.coordinates["rolling_mode"]["price_area"]
+
     def check_purchase_failure(self) -> bool:
         """检查购买是否失败"""
         try:
