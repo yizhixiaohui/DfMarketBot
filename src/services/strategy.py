@@ -14,7 +14,6 @@ class HoardingStrategy(ITradingStrategy):
 
     @staticmethod
     def _need_calc_unit_price(market_data: MarketData) -> bool:
-        print(market_data)
         return (market_data.balance is not None
                 and market_data.last_balance is not None
                 and 0 < market_data.last_balance != market_data.balance > 0

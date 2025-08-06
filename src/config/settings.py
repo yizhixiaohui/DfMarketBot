@@ -59,48 +59,6 @@ class JsonConfigManager(IConfigManager):
             if hasattr(config, key):
                 setattr(config, key, value)
         self.save_config(config)
-    
-    def __init__(self, config_path: str = None):
-        if config_path is None:
-            config_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                "config",
-                "settings.json"
-            )
-        self.config_path = Path(config_path)
-        self.config_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    def load_config(self) -> TradingConfig:
-        """从JSON文件加载配置"""
-        try:
-            if not self.config_path.exists():
-                # 创建默认配置
-                default_config = TradingConfig()
-                self.save_config(default_config)
-                return default_config
-            
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            return TradingConfig(**data)
-        except Exception as e:
-            raise ConfigurationException(f"加载配置失败: {e}")
-    
-    def save_config(self, config: TradingConfig) -> None:
-        """保存配置到JSON文件"""
-        try:
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                json.dump(config.__dict__, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            raise ConfigurationException(f"保存配置失败: {e}")
-    
-    def update_config(self, updates: Dict[str, Any]) -> None:
-        """更新配置"""
-        config = self.load_config()
-        for key, value in updates.items():
-            if hasattr(config, key):
-                setattr(config, key, value)
-        self.save_config(config)
 
 
 # 向后兼容的别名

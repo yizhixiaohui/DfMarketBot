@@ -37,6 +37,23 @@ class TradingConfig:
     tesseract_path: str = ""
     log_level: str = "INFO"
 
+    def __post_init__(self):
+        """验证配置参数"""
+        if self.ideal_price < 0:
+            raise ValueError("理想价格不能为负数")
+        if self.max_price < 0:
+            raise ValueError("最高价格不能为负数")
+        if self.loop_interval <= 0:
+            raise ValueError("循环间隔必须大于0")
+        if self.screen_width <= 0 or self.screen_height <= 0:
+            raise ValueError("屏幕分辨率必须大于0")
+        
+        # 处理整数到枚举的转换
+        if isinstance(self.trading_mode, int):
+            self.trading_mode = TradingMode(self.trading_mode)
+        if isinstance(self.item_type, int):
+            self.item_type = ItemType(self.item_type)
+
 
 @dataclass
 class MarketData:

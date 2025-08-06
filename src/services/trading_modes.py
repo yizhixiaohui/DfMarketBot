@@ -21,6 +21,7 @@ class HoardingTradingMode(ITradingMode):
         self.detector = price_detector
         self.action_executor = action_executor
         self.last_balance = None
+        self.current_balance = None
         self.last_buy_quantity = 0
         self.current_market_data = None
         self.config = None
@@ -37,12 +38,9 @@ class HoardingTradingMode(ITradingMode):
 
     def prepare(self) -> None:
         self.mouse_position = self.action_executor.get_mouse_position()
+        self.current_balance = self._detect_balance()
         self._execute_enter()
         time.sleep(0.05)
-
-    def detect_balance(self):
-        self.action_executor.move_mouse(self.detector.coordinates["balance_active"])
-        return self.detector.detect_balance()
 
     def execute_cycle(self) -> bool:
         """执行一个屯仓交易周期"""
@@ -52,13 +50,12 @@ class HoardingTradingMode(ITradingMode):
 
             # TODO 这里获取计算哈夫币余额数量有bug，需要调试修复
             # 获取当前余额（如果需要）
-            current_balance = None
             if self.config.use_balance_calculation and self.last_buy_quantity != 0:
-                current_balance = self.detect_balance()
-            
+                self.current_balance = self._detect_balance()
+
             self.current_market_data = MarketData(
                 current_price=current_price,
-                balance=current_balance,
+                balance=self.current_balance,
                 last_balance= self.last_balance,
                 last_buy_quantity=self.last_buy_quantity,
                 timestamp=time.time()
@@ -86,12 +83,16 @@ class HoardingTradingMode(ITradingMode):
 
             # 更新余额
             if self.config.use_balance_calculation:
-                self.last_balance = current_balance
-            
+                self.last_balance = self.current_balance
+
             return True
-            
+
         except Exception as e:
             raise TradingException(f"屯仓模式交易失败: {e}")
+
+    def _detect_balance(self):
+        self.action_executor.move_mouse(self.detector.coordinates["balance_active"])
+        return self.detector.detect_balance()
 
     def _execute_enter(self) -> None:
         self.action_executor.click_position((self.mouse_position.x, self.mouse_position.y))
@@ -219,11 +220,6 @@ class TradingModeFactory:
                     screen_capture: ScreenCapture,
                     action_executor: ActionExecutor) -> ITradingMode:
         """根据类型创建交易模式"""
-        if isinstance(config.trading_mode, int):
-            config.trading_mode = TradingMode(config.trading_mode)
-        if isinstance(config.item_type, str):
-            config.item_type = ItemType(config.item_type)
-
         if config.trading_mode == TradingMode.HOARDING:
             price_detector = HoardingModeDetector(screen_capture, ocr_engine, ItemType(config.item_type) == ItemType.CONVERTIBLE)
             mode = HoardingTradingMode(price_detector, action_executor)
