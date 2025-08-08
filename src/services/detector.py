@@ -116,7 +116,7 @@ class RollingModeDetector(PriceDetector):
     def detect_sellable_item(self):
         width = 9
         length = 10
-        color_toleration = 10
+        color_toleration = 15
         coords = self.coordinates["rolling_mode"]["wait_sell_item_area"]
         item_range = self.coordinates["rolling_mode"]["item_range"]
         item_center = [int(item_range[0] / 2), int(item_range[1] / 2)]
@@ -135,10 +135,22 @@ class RollingModeDetector(PriceDetector):
             current_pos[1] += item_range[1] + 1
         return [0, 0]
 
+    def detect_sell_num(self):
+        coords = self.coordinates["rolling_mode"]["sell_full"]
+        screenshot = self.screen_capture.capture_region(coords)
+        res = self.ocr_engine.image_to_string(screenshot)
+        if res == "":
+            return 0, 0
+        return int(res[0]), int(res[1])
+
+    def detect_is_sell_full(self):
+        cur, max = self.detect_sell_num()
+        # 识别失败时为了防止检测失误，就当拍卖行上架已满，等待下次检测
+        return cur == 0 and max == 0
 
 if __name__ == '__main__':
     sc = ScreenCapture()
     ocr = TemplateOCREngine("L:\workspace\github.com\XiaoGu-G2020\DeltaForceMarketBot\\templates")
     detector = RollingModeDetector(sc, ocr)
-    res = detector.detect_sellable_item()
+    res = detector.detect_is_sell_full()
     print(res)

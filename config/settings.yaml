@@ -1,24 +1,24 @@
 ideal_price: 500
 key_mode: false
 max_price: 550
-loop_interval: 50
+loop_interval: 80
 item_type: 0
 use_balance_calculation: false
 trading_mode: 1
 rolling_option: 0
 rolling_options:
-  - buy_price: 520
-    min_buy_price: 300
-    buy_count: 4980
-  - buy_price: 450
-    min_buy_price: 270
-    buy_count: 4980
-  - buy_price: 450
-    min_buy_price: 270
-    buy_count: 4980
-  - buy_price: 1600
-    min_buy_price: 700
-    buy_count: 1740
+- buy_price: 520
+  min_buy_price: 290
+  buy_count: 4980
+- buy_price: 450
+  min_buy_price: 270
+  buy_count: 4980
+- buy_price: 450
+  min_buy_price: 270
+  buy_count: 4980
+- buy_price: 1600
+  min_buy_price: 700
+  buy_count: 1740
 screen_width: 2560
 screen_height: 1440
 tesseract_path: ''

@@ -39,12 +39,20 @@ class CoordinateConfig:
             "failure_check": [418 / 2560, 280 / 1440, 867 / 2560, 387 / 1440],
 
             "item_range": [84 / 2560, 84 / 1440],
+
             # 仓库前10行为等待售卖区域
             "wait_sell_item_area": [1651 / 2560, 177 / 1440, 2416 / 2560, 1028 / 1440],
             "enter_storage": [427 / 2560, 76 / 1440],
             "transfer_all": [390 / 2560, 1403 / 1440],
-            "sell_button": [1877 / 2560, 939 / 1440],
-            "sell_return_button": [1280 / 2560, 1258 / 1440]
+            "sell_button": [1965 / 2560, 939 / 1440],
+            "sell_return_button": [1280 / 2560, 1258 / 1440],
+            # 当前最小价格的柱子所在位置
+            "min_sell_price": [655 / 2560, 904 / 1440],
+            "sell_num_left": [1563 / 2560, 749 / 1440],
+            "sell_num_right": [1937 / 2560, 749 / 1440],
+            "sell_full": [1973 / 2560, 678 / 1440, 2027 / 2560, 711 / 1440],
+            # 上架按钮
+            "final_sell_button": [1757 / 2560, 994 / 1440],
         }
     }
 
@@ -61,6 +69,9 @@ class CoordinateConfig:
         """
 
         def restore_coord(coord):
+            # 大于1的认为是绝对坐标，不处理
+            if coord[0] > 1 or coord[1] > 1:
+                return coord
             if isinstance(coord, list):
                 return [int(coord[i] * (target_width if i % 2 == 0 else target_height))
                         for i in range(len(coord))]

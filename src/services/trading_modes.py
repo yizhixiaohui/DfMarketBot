@@ -185,17 +185,18 @@ class RollingTradingMode(ITradingMode):
                 # 检查购买是否成功
                 time.sleep(2)
                 if self.detector.check_purchase_failure():
-                    print("购买失败，继续购买")
+                    print("购买失败！")
                     self._execute_refresh()
                     time.sleep(1)
-                    return True
                 else:
-                    print("购买完毕，手动检查购买是否成功")
-                    return False  # 购买成功后停止
-
-            # 刷新
-            self._execute_refresh()
-
+                    print("购买成功！")
+                    self._execute_auto_sell()
+                    time.sleep(1)
+                    self._execute_refresh()
+                    time.sleep(1)
+            else:
+                # 刷新
+                self._execute_refresh()
             return True
 
         except Exception as e:
@@ -225,18 +226,40 @@ class RollingTradingMode(ITradingMode):
         time.sleep(1)
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["transfer_all"])
         time.sleep(1)
-        pos = self.detector.detect_sellable_item()
-        while True:
-            self.action_executor.move_mouse(pos)
-            time.sleep(0.3)
-            self.action_executor.multi_key_press('alt', 'd')
+        sell_time = 0
+        sell_slice = [0.33, 0.5, 1]
+        min_sell_pos = self.detector.coordinates["rolling_mode"]["sell_num_left"]
+        sell_num_slice_length = self.detector.coordinates["rolling_mode"]["sell_num_right"][0] - \
+                                min_sell_pos[0]
+        while sell_time < len(sell_slice):
+            pos = self.detector.detect_sellable_item()
+            if pos[0] == 0 and pos[1] == 0:
+                return
+            while True:
+                self.action_executor.move_mouse(pos)
+                time.sleep(0.3)
+                self.action_executor.multi_key_press('alt', 'd')
+                time.sleep(1)
+                self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_button"])
+                time.sleep(1)
+                if not self.detector.detect_is_sell_full():
+                    break
+                self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_return_button"])
+                time.sleep(1)
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["min_sell_price"])
             time.sleep(1)
-            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_button"])
+            self.action_executor.click_position(
+                (min_sell_pos[0] + sell_num_slice_length * sell_slice[sell_time], min_sell_pos[1])
+            )
             time.sleep(1)
-            if "交易行未满" != "交易行未满":
-                break
-            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_return_button"])
+            cur_num, max_num = self.detector.detect_sell_num()
+            if cur_num > max_num:
+                self.action_executor.press_key('esc')
+                time.sleep(1)
+                continue
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["final_sell_button"])
             time.sleep(1)
+            sell_time += 1
 
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""

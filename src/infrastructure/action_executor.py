@@ -41,7 +41,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                     print(f'click position ({x}, {y})')
 
         except Exception as e:
-            raise ActionExecutionException(f"点击位置失败: {e}")
+            raise ActionExecutionException(f"点击位置({x}, {y})失败: {e}")
 
     def press_key(self, key: str) -> None:
         """按下指定按键"""
