@@ -3,10 +3,9 @@
 配置管理器工厂
 提供统一的配置管理器创建接口，屏蔽底层实现细节
 """
-import os
 from typing import Optional
-from ..core.interfaces import IConfigManager, TradingConfig
-from .settings import JsonConfigManager, YamlConfigManager
+from ..core.interfaces import IConfigManager
+from .config_manager import JsonConfigManager, YamlConfigManager
 
 
 class ConfigFactory:

@@ -101,10 +101,10 @@ def test_configuration():
     print("\n=== 测试配置文件 ===")
     
     try:
-        from src.config.settings import ConfigManager
+        from src.config.config_manager import YamlConfigManager
         
         # 创建配置管理器
-        config_manager = ConfigManager()
+        config_manager = YamlConfigManager()
         config = config_manager.load_config()
         
         print("✓ 配置文件加载成功")

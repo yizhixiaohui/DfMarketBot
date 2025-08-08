@@ -28,7 +28,7 @@ src/
 │   ├── interfaces.py    # 接口定义
 │   └── exceptions.py    # 异常体系
 ├── config/         # 配置管理层
-│   └── settings.py      # JSON配置管理
+│   └── config_manager.py      # JSON配置管理
 ├── services/       # 业务逻辑层
 │   ├── detector.py      # 价格检测服务
 │   ├── strategy.py      # 交易策略

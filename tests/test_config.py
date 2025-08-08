@@ -13,7 +13,7 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.config.settings import YamlConfigManager, JsonConfigManager, BaseConfigManager
+from src.config.config_manager import YamlConfigManager, JsonConfigManager, BaseConfigManager
 from src.core.interfaces import TradingConfig, TradingMode, ItemType
 from src.core.exceptions import ConfigurationException
 

@@ -11,13 +11,13 @@ import cv2
 import numpy as np
 
 if __name__ == '__main__':
-    from src.config.settings import ResolutionConfig
+    from src.config.coordinates import CoordinateConfig
     from src.core.exceptions import PriceDetectionException, BalanceDetectionException
     from src.core.interfaces import IPriceDetector
     from src.infrastructure.ocr_engine import TemplateOCREngine
     from src.infrastructure.screen_capture import ScreenCapture
 else:
-    from ..config.settings import ResolutionConfig
+    from ..config.coordinates import CoordinateConfig
     from ..core.exceptions import PriceDetectionException, BalanceDetectionException
     from ..core.interfaces import IPriceDetector
     from ..infrastructure.ocr_engine import TemplateOCREngine
@@ -30,7 +30,7 @@ class PriceDetector(IPriceDetector):
     def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
         self.screen_capture = screen_capture
         self.ocr_engine = ocr_engine
-        self.coordinates = ResolutionConfig.restore_coordinates(screen_capture.width, screen_capture.height)
+        self.coordinates = CoordinateConfig.restore_coordinates(screen_capture.width, screen_capture.height)
 
     @abstractmethod
     def get_detection_coordinates(self) -> List[float]:

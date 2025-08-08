@@ -17,7 +17,7 @@ def test_imports():
         print("✅ 核心接口导入成功")
         
         # 测试配置管理
-        from src.config.settings import JsonConfigManager, ConfigManager
+        from src.config.config_manager import JsonConfigManager, ConfigManager
         print("✅ 配置管理导入成功")
         
         # 测试服务层
