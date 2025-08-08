@@ -183,7 +183,7 @@ class IOCREngine(ABC):
         pass
     
     @abstractmethod
-    def detect_template(self, image: np.ndarray, template_path: str = None) -> bool:
+    def detect_template(self, image: np.ndarray) -> bool:
         """检测模板匹配"""
         pass
 

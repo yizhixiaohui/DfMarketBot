@@ -7,13 +7,21 @@ import time
 from abc import abstractmethod
 from typing import Optional, List
 
+import cv2
 import numpy as np
 
-from ..config.settings import ResolutionConfig
-from ..core.exceptions import PriceDetectionException, BalanceDetectionException
-from ..core.interfaces import IPriceDetector
-from ..infrastructure.ocr_engine import TemplateOCREngine
-from ..infrastructure.screen_capture import ScreenCapture
+if __name__ == '__main__':
+    from src.config.settings import ResolutionConfig
+    from src.core.exceptions import PriceDetectionException, BalanceDetectionException
+    from src.core.interfaces import IPriceDetector
+    from src.infrastructure.ocr_engine import TemplateOCREngine
+    from src.infrastructure.screen_capture import ScreenCapture
+else:
+    from ..config.settings import ResolutionConfig
+    from ..core.exceptions import PriceDetectionException, BalanceDetectionException
+    from ..core.interfaces import IPriceDetector
+    from ..infrastructure.ocr_engine import TemplateOCREngine
+    from ..infrastructure.screen_capture import ScreenCapture
 
 
 class PriceDetector(IPriceDetector):
@@ -105,3 +113,31 @@ class RollingModeDetector(PriceDetector):
             return self.ocr_engine.detect_template(screenshot)
         except:
             return False
+
+    def detect_sellable_item(self):
+        width = 9
+        length = 10
+        color_toleration = 10
+        coords = self.coordinates["rolling_mode"]["wait_sell_item_area"]
+        item_range = self.coordinates["rolling_mode"]["item_range"]
+        item_center = [int(item_range[0]/2), int(item_range[1]/2)]
+        screenshot = self.screen_capture.capture_region(coords)
+        valid_color = [26, 31, 34]
+        current_pos = [item_center[0], item_center[1]]
+        for i in range(length):
+            for j in range(width):
+                color = self.ocr_engine.get_pixel_color(screenshot, current_pos[0], current_pos[1])
+                if not (valid_color[0]-color_toleration < color[0] < valid_color[0]+color_toleration and valid_color[1]-color_toleration < color[1] < valid_color[1]+color_toleration and valid_color[2]-color_toleration < color[2] < valid_color[2]+color_toleration):
+                    return [coords[0]+current_pos[0], coords[1]+current_pos[1]]
+                current_pos[0] += item_range[0]+1
+            current_pos[0] = item_center[0]
+            current_pos[1] += item_range[1]+1
+        return [0,0]
+
+
+if __name__ == '__main__':
+    sc = ScreenCapture()
+    ocr = TemplateOCREngine("L:\workspace\github.com\XiaoGu-G2020\DeltaForceMarketBot\\templates")
+    detector = RollingModeDetector(sc, ocr)
+    res = detector.detect_sellable_item()
+    print(res)

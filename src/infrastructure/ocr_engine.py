@@ -148,7 +148,7 @@ class TemplateOCREngine(IOCREngine):
         except Exception as e:
             raise OCRException(f"OCR识别失败: {e}")
     
-    def detect_template(self, image: np.ndarray, template_path: str = None) -> bool:
+    def detect_template(self, image: np.ndarray) -> bool:
         """检测模板是否存在于图像中"""
         try:
             if self._option_failed_template is None:
@@ -191,6 +191,37 @@ class TemplateOCREngine(IOCREngine):
         except Exception:
             return 0
 
+    def get_pixel_color(self, img: np.ndarray, x: int, y: int):
+        """
+        获取NumPy数组图像中指定坐标点的颜色值
+
+        参数:
+            img: NumPy数组形式的图像数据 (OpenCV格式)
+            x: x坐标 (列)
+            y: y坐标 (行)
+
+        返回:
+            BGR颜色值 (如果是彩色图像)
+            灰度值 (如果是灰度图像)
+            None (如果坐标超出范围)
+        """
+        # 检查图像是否有效
+        if not isinstance(img, np.ndarray):
+            print("错误: 输入必须是NumPy数组")
+            return None
+
+        # 检查坐标是否在图像范围内
+        height, width = img.shape[:2]
+        if x < 0 or x >= width or y < 0 or y >= height:
+            print(f"坐标({x},{y})超出图片范围(宽{width},高{height})")
+            return None
+
+        # 获取颜色值
+        if len(img.shape) == 3:  # 彩色图像
+            return tuple(img[y, x])
+        else:  # 灰度图像
+            return int(img[y, x])
+
 
 class MockOCREngine(IOCREngine):
     """OCR引擎的模拟实现，用于测试"""
@@ -203,7 +234,7 @@ class MockOCREngine(IOCREngine):
         """模拟OCR识别"""
         return self.recognized_text
     
-    def detect_template(self, image: np.ndarray, template_path: str = None) -> bool:
+    def detect_template(self, image: np.ndarray) -> bool:
         """模拟模板检测"""
         return self.template_detected
     

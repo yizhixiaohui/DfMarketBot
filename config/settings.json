@@ -4,7 +4,7 @@
   "max_price": 550,
   "loop_interval": 50,
   "item_type": 0,
-  "use_balance_calculation": true,
+  "use_balance_calculation": false,
   "trading_mode": 1,
   "rolling_option": 0,
   "screen_width": 2560,

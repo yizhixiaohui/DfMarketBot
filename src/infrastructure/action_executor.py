@@ -53,6 +53,37 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 
         except Exception as e:
             raise ActionExecutionException(f"按键失败: {e}")
+
+    def key_down(self, key: str) -> None:
+        """按下指定按键"""
+        try:
+            with self._lock:
+                pyautogui.keyDown(key)
+                if self.debug:
+                    print(f'press key {key}')
+
+        except Exception as e:
+            raise ActionExecutionException(f"按键失败: {e}")
+
+    def key_up(self, key: str) -> None:
+        """按下指定按键"""
+        try:
+            with self._lock:
+                pyautogui.keyUp(key)
+                if self.debug:
+                    print(f'press key {key}')
+
+        except Exception as e:
+            raise ActionExecutionException(f"按键失败: {e}")
+
+    def multi_key_press(self, a, b, interval=0.03):
+        self.key_down(a)
+        time.sleep(interval)
+        self.key_down(b)
+        time.sleep(interval)
+        self.key_up(a)
+        time.sleep(interval)
+        self.key_up(b)
     
     def type_text(self, text: str) -> None:
         """输入文本"""

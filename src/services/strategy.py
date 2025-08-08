@@ -14,8 +14,8 @@ class HoardingStrategy(ITradingStrategy):
 
     @staticmethod
     def _need_calc_unit_price(market_data: MarketData) -> bool:
-        return (market_data.balance is not None
-                and market_data.last_balance is not None
+        return (market_data.last_balance is not None
+                and market_data.balance is not None
                 and 0 < market_data.last_balance != market_data.balance > 0
                 and market_data.last_buy_quantity > 0)
 
@@ -27,6 +27,8 @@ class HoardingStrategy(ITradingStrategy):
     
     def should_buy(self, market_data: MarketData) -> bool:
         """判断是否该购买"""
+        if market_data.last_buy_quantity != 0 and market_data.last_balance == market_data.balance:
+            print('上次购买失败，直接看市场底价')
         if self._need_calc_unit_price(market_data):
             # 计算单价
             unit_price = self._calc_unit_price(market_data)

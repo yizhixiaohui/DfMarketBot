@@ -5,14 +5,24 @@
 import time
 from typing import Optional
 
-from ..core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
-from ..core.exceptions import TradingException
-from ..infrastructure.ocr_engine import TemplateOCREngine
-from ..infrastructure.screen_capture import ScreenCapture
-from ..services.detector import HoardingModeDetector, RollingModeDetector
-from ..services.strategy import StrategyFactory
-from ..services.strategy import RollingStrategy
-from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
+if __name__ == '__main__':
+    from src.core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
+    from src.core.exceptions import TradingException
+    from src.infrastructure.ocr_engine import TemplateOCREngine
+    from src.infrastructure.screen_capture import ScreenCapture
+    from src.services.detector import HoardingModeDetector, RollingModeDetector
+    from src.services.strategy import StrategyFactory
+    from src.services.strategy import RollingStrategy
+    from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
+else:
+    from ..core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
+    from ..core.exceptions import TradingException
+    from ..infrastructure.ocr_engine import TemplateOCREngine
+    from ..infrastructure.screen_capture import ScreenCapture
+    from ..services.detector import HoardingModeDetector, RollingModeDetector
+    from ..services.strategy import StrategyFactory
+    from ..services.strategy import RollingStrategy
+    from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
 
 class HoardingTradingMode(ITradingMode):
     """屯仓模式交易实现"""
@@ -48,7 +58,6 @@ class HoardingTradingMode(ITradingMode):
             # 获取当前价格
             current_price = self.detector.detect_price()
 
-            # TODO 这里获取计算哈夫币余额数量有bug，需要调试修复
             # 获取当前余额（如果需要）
             if self.config.use_balance_calculation and self.last_buy_quantity != 0:
                 self.current_balance = self._detect_balance()
@@ -207,7 +216,26 @@ class RollingTradingMode(ITradingMode):
         """执行刷新操作"""
         print('execute refresh')
         self.action_executor.press_key('esc')
-    
+
+    def _execute_auto_sell(self):
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["enter_storage"])
+        time.sleep(1)
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["transfer_all"])
+        time.sleep(1)
+        pos = self.detector.detect_sellable_item()
+        while True:
+            self.action_executor.move_mouse(pos)
+            time.sleep(0.3)
+            self.action_executor.multi_key_press('alt', 'd')
+            time.sleep(1)
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_button"])
+            time.sleep(1)
+            if "交易行未满" != "交易行未满":
+                break
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_return_button"])
+            time.sleep(1)
+
+
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
         return self.current_market_data
@@ -231,3 +259,12 @@ class TradingModeFactory:
         else:
             raise ValueError(f"不支持的交易模式: {config.trading_mode}")
         return mode
+
+
+if __name__ == '__main__':
+    sc = ScreenCapture()
+    ocr = TemplateOCREngine()
+    detector = RollingModeDetector(sc, ocr)
+    executor = ActionExecutor()
+    mode = RollingTradingMode(detector, executor)
+    mode._execute_auto_sell()
