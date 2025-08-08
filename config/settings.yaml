@@ -1,0 +1,32 @@
+# 交易配置
+# 交易模式: 0=屯仓模式, 1=滚仓模式
+trading_mode: 1
+
+# 滚仓模式配置
+rolling_option: 0
+rolling_options:
+  - buy_price: 520
+    min_buy_price: 300
+    buy_count: 4980
+  - buy_price: 450
+    min_buy_price: 270
+    buy_count: 4980
+  - buy_price: 450
+    min_buy_price: 270
+    buy_count: 4980
+  - buy_price: 1600
+    min_buy_price: 700
+    buy_count: 1740
+
+# 屯仓模式配置
+ideal_price: 500
+max_price: 550
+# 物品是否可兑换
+item_type: 0
+key_mode: false
+use_balance_calculation: false
+
+# 通用配置
+loop_interval: 50
+# 日志配置
+log_level: "INFO"

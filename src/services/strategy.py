@@ -9,12 +9,11 @@ from ..core.interfaces import ITradingStrategy, TradingConfig, MarketData, ItemT
 
 class HoardingStrategy(ITradingStrategy):
     """屯仓模式交易策略"""
-    def __init__(self, config):
+    def __init__(self, config: TradingConfig):
         self.config = config
 
-    @staticmethod
-    def _need_calc_unit_price(market_data: MarketData) -> bool:
-        return (market_data.last_balance is not None
+    def _need_calc_unit_price(self, market_data: MarketData) -> bool:
+        return self.config.use_balance_calculation and (market_data.last_balance is not None
                 and market_data.balance is not None
                 and 0 < market_data.last_balance != market_data.balance > 0
                 and market_data.last_buy_quantity > 0)
@@ -55,10 +54,10 @@ class HoardingStrategy(ITradingStrategy):
             if unit_price <= self.config.ideal_price:
                 return 200
             return 0
+        if self.config.use_balance_calculation and self.config.ideal_price < market_data.current_price <= self.config.max_price:
+            return 31
         if market_data.current_price > self.config.max_price:
             return 0
-        if self.config.ideal_price < market_data.current_price <= self.config.max_price:
-            return 31
         return 200  # 默认购买200发
 
 
@@ -91,22 +90,14 @@ class RollingStrategy(ITradingStrategy):
     def __init__(self, config: TradingConfig):
         self.config = config
     
-    # 配装选项配置
-    ROLLING_OPTIONS = {
-        0: {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
-        1: {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-        2: {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-        3: {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740}
-    }
-    
     def should_buy(self, market_data: MarketData) -> bool:
         """判断是否该购买"""
         if self.config.trading_mode != TradingMode.ROLLING:
             return False
             
-        option_config = self.ROLLING_OPTIONS.get(self.config.rolling_option)
-        if not option_config:
+        if self.config.rolling_option >= len(self.config.rolling_options):
             return False
+        option_config = self.config.rolling_options[self.config.rolling_option]
             
         target_price = option_config["buy_price"] * option_config["buy_count"]
         min_price = option_config["min_buy_price"] * option_config["buy_count"]
@@ -118,9 +109,9 @@ class RollingStrategy(ITradingStrategy):
         if self.config.trading_mode != TradingMode.ROLLING:
             return False
             
-        option_config = self.ROLLING_OPTIONS.get(self.config.rolling_option)
-        if not option_config:
+        if self.config.rolling_option >= len(self.config.rolling_options):
             return False
+        option_config = self.config.rolling_options[self.config.rolling_option]
 
         target_price = option_config["buy_price"] * option_config["buy_count"]
         return market_data.current_price > target_price
@@ -130,12 +121,16 @@ class RollingStrategy(ITradingStrategy):
         if self.config.trading_mode != TradingMode.ROLLING:
             return 0
             
-        option_config = self.ROLLING_OPTIONS.get(self.config.rolling_option)
-        return option_config["buy_count"] if option_config else 0
+        if self.config.rolling_option >= len(self.config.rolling_options):
+            return 0
+        option_config = self.config.rolling_options[self.config.rolling_option]
+        return option_config["buy_count"]
     
     def get_option_config(self, option_index: int) -> Dict[str, Any]:
         """获取配装选项配置"""
-        return self.ROLLING_OPTIONS.get(option_index, {})
+        if option_index >= len(self.config.rolling_options):
+            return {}
+        return self.config.rolling_options[option_index]
 
 
 class StrategyFactory:

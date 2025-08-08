@@ -134,12 +134,13 @@ class RollingTradingMode(ITradingMode):
         self.action_executor = action_executor
         self.strategy_factory = StrategyFactory()
         self.current_market_data = None
-        self.option_configs = RollingStrategy.ROLLING_OPTIONS
+        self.option_configs = None
         self.config = None
     
     def initialize(self, config) -> None:
         """初始化滚仓模式"""
         self.config = config
+        self.option_configs = config.rolling_options
 
     def prepare(self) -> None:
         pass
@@ -162,7 +163,9 @@ class RollingTradingMode(ITradingMode):
             )
 
             # 获取配装配置
-            option_config = self.option_configs.get(self.config.rolling_option)
+            if self.config.rolling_option >= len(self.option_configs):
+                return False
+            option_config = self.option_configs[self.config.rolling_option]
             if not option_config:
                 return False
             

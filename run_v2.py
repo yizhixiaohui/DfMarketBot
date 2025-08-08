@@ -35,13 +35,4 @@ def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    # main()
-    import requests
-    body = '{"model":"DeepSeek-R1","messages":[{"role":"user","content":"北京天气怎么样？"}],"tools":[{"type":"function","function":{"name":"get_current_weather","description":"获取当前天气信息","parameters":{"type":"object","properties":{"location":{"type":"string","description":"城市名称，例如：北京"},"unit":{"type":"string","enum":["celsius","fahrenheit"],"description":"温度单位，默认为摄氏度"}},"required":["location"]}}}],"temperature":0.6,"stream":true,"max_tokens":600}'
-    res = json.loads(body)
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer sk-4d5fd5e8-9155-42a5-84db-38eb504df510",
-    }
-    resp = requests.post('http://api.haihub.cn/v1/chat/completions', headers=headers, data=body)
-    print(resp.text)
+    main()

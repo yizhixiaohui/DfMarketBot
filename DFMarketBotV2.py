@@ -16,6 +16,7 @@ from PyQt5.QtCore import QTimer
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 from GUIV2.AppGUI import Ui_MainWindow
+from GUIV2.RollingConfigUI import RollingConfigUI
 from src.ui.adapter import UIAdapter
 
 
@@ -42,6 +43,9 @@ class MainWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("V2")
         self.setFixedSize(self.size())
+        
+        # 添加滚仓配置按钮
+        self._add_rolling_config_button()
         
         # 设置热键
         self._setup_hotkeys()
@@ -98,6 +102,33 @@ class MainWindow(QMainWindow):
         """检查状态"""
         # 这里可以添加状态检查逻辑
         pass
+    
+    def _add_rolling_config_button(self):
+        """添加滚仓配置按钮"""
+        from PyQt5.QtWidgets import QPushButton
+        
+        # 创建滚仓配置按钮
+        self.rolling_config_btn = QPushButton("滚仓配置", self)
+        self.rolling_config_btn.setGeometry(240, 160, 191, 31)
+        
+        # 设置按钮样式
+        font = self.rolling_config_btn.font()
+        font.setFamily("微软雅黑")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.rolling_config_btn.setFont(font)
+        
+        # 连接点击事件
+        self.rolling_config_btn.clicked.connect(self._open_rolling_config)
+    
+    def _open_rolling_config(self):
+        """打开滚仓配置界面"""
+        try:
+            self.rolling_config_window = RollingConfigUI()
+            self.rolling_config_window.show()
+        except Exception as e:
+            print(f"打开滚仓配置界面失败: {e}")
     
     def closeEvent(self, event):
         """窗口关闭事件"""

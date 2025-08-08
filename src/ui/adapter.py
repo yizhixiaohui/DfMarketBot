@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QApplication
 
 from ..core.interfaces import IConfigManager, ITradingService, TradingMode, ItemType
 from ..core.exceptions import TradingException
-from ..config.settings import JsonConfigManager
+from ..config.config_factory import get_config_manager
 from ..services.trading_service import TradingService
 
 
@@ -148,7 +148,7 @@ class UIAdapter:
     
     def __init__(self, ui_instance):
         self.ui = ui_instance
-        self.config_manager = JsonConfigManager()
+        self.config_manager = get_config_manager()
         self.trading_service = TradingService()
         self.worker = None
         

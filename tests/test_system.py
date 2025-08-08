@@ -5,7 +5,7 @@
 """
 import sys
 import os
-sys.path.insert(0, '.')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def test_imports():
     """测试所有模块导入"""
