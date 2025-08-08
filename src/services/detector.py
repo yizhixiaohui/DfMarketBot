@@ -7,7 +7,6 @@ import time
 from abc import abstractmethod
 from typing import Optional, List
 
-import cv2
 import numpy as np
 
 if __name__ == '__main__':
@@ -35,7 +34,7 @@ class PriceDetector(IPriceDetector):
     @abstractmethod
     def get_detection_coordinates(self) -> List[float]:
         """获取价格检测坐标 - 由子类实现"""
-        pass
+        raise NotImplementedError("not implemented")
 
     def _detect_value(self, coords: List[float], value_name: str = "价格", max_attempts: int = 50) -> int:
         """通用的数值检测逻辑"""
@@ -120,19 +119,21 @@ class RollingModeDetector(PriceDetector):
         color_toleration = 10
         coords = self.coordinates["rolling_mode"]["wait_sell_item_area"]
         item_range = self.coordinates["rolling_mode"]["item_range"]
-        item_center = [int(item_range[0]/2), int(item_range[1]/2)]
+        item_center = [int(item_range[0] / 2), int(item_range[1] / 2)]
         screenshot = self.screen_capture.capture_region(coords)
         valid_color = [26, 31, 34]
         current_pos = [item_center[0], item_center[1]]
         for i in range(length):
             for j in range(width):
                 color = self.ocr_engine.get_pixel_color(screenshot, current_pos[0], current_pos[1])
-                if not (valid_color[0]-color_toleration < color[0] < valid_color[0]+color_toleration and valid_color[1]-color_toleration < color[1] < valid_color[1]+color_toleration and valid_color[2]-color_toleration < color[2] < valid_color[2]+color_toleration):
-                    return [coords[0]+current_pos[0], coords[1]+current_pos[1]]
-                current_pos[0] += item_range[0]+1
+                if not (valid_color[0] - color_toleration < color[0] < valid_color[0] + color_toleration and
+                        valid_color[1] - color_toleration < color[1] < valid_color[1] + color_toleration and
+                        valid_color[2] - color_toleration < color[2] < valid_color[2] + color_toleration):
+                    return [coords[0] + current_pos[0], coords[1] + current_pos[1]]
+                current_pos[0] += item_range[0] + 1
             current_pos[0] = item_center[0]
-            current_pos[1] += item_range[1]+1
-        return [0,0]
+            current_pos[1] += item_range[1] + 1
+        return [0, 0]
 
 
 if __name__ == '__main__':

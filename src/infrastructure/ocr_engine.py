@@ -4,36 +4,37 @@ OCR引擎基础设施 - 基于模板匹配的图像识别
 不使用三方OCR库，仅识别数字
 """
 import os
+import threading
+from pathlib import Path
+
 import cv2
 import numpy as np
-from pathlib import Path
-import threading
 
-from ..core.interfaces import IOCREngine
 from ..core.exceptions import OCRException
+from ..core.interfaces import IOCREngine
 
 
 class TemplateOCREngine(IOCREngine):
     """基于模板匹配的OCR引擎"""
-    
+
     def __init__(self, templates_dir: str = None):
         if templates_dir is None:
             templates_dir = os.path.join(
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 "templates"
             )
-        
+
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # 模板缓存
         self._templates = {}
         self._option_failed_template = None
         self._lock = threading.Lock()
-        
+
         # 加载模板
         self._load_templates()
-    
+
     def _load_templates(self):
         """加载所有数字模板"""
         try:
@@ -47,17 +48,17 @@ class TemplateOCREngine(IOCREngine):
                         if template is not None:
                             _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
                             default_group[i] = binary
-                
+
                 if default_group:
                     self._templates["default"] = default_group
-                
+
                 # 加载带前缀的模板 (prefix_0.png~prefix_9.png)
                 font_prefixes = set()
                 for template_file in self.templates_dir.glob("*_*.png"):
                     parts = template_file.stem.split('_')
                     if len(parts) == 2 and parts[1].isdigit():
                         font_prefixes.add(parts[0])
-                
+
                 for prefix in sorted(font_prefixes):
                     group = {}
                     for i in range(10):
@@ -67,10 +68,10 @@ class TemplateOCREngine(IOCREngine):
                             if template is not None:
                                 _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
                                 group[i] = binary
-                    
+
                     if len(group) == 10:
                         self._templates[prefix] = group
-                
+
                 # 加载失败检测模板
                 failed_template_path = self.templates_dir / "option_failed.png"
                 if failed_template_path.exists():
@@ -78,20 +79,20 @@ class TemplateOCREngine(IOCREngine):
                     if template is not None:
                         _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
                         self._option_failed_template = binary
-                
+
                 if not self._templates:
                     raise FileNotFoundError("未找到有效的数字模板文件")
-                    
+
         except Exception as e:
             raise OCRException(f"加载模板失败: {e}")
-    
+
     def image_to_string(self, image: np.ndarray) -> str:
         """将图像转换为数字字符串"""
         try:
             # 确保图像是numpy数组
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
-            
+
             # 转换为灰度图
             if len(image.shape) == 3:
                 if image.shape[2] == 3:  # RGB
@@ -102,16 +103,16 @@ class TemplateOCREngine(IOCREngine):
                     gray = image
             else:
                 gray = image
-            
+
             digits_info = []
-            
+
             # 对每个字体组进行模板匹配
             for font_name, templates in self._templates.items():
                 for digit, template in templates.items():
                     # 模板匹配
                     result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
                     locations = np.where(result >= 0.7)  # 匹配阈值
-                    
+
                     for pt in zip(*locations[::-1]):
                         digits_info.append({
                             'digit': digit,
@@ -119,45 +120,45 @@ class TemplateOCREngine(IOCREngine):
                             'score': result[pt[1], pt[0]],
                             'font': font_name
                         })
-            
+
             # 非极大值抑制，去除重叠检测
             digits_info.sort(key=lambda x: -x['score'])
             filtered = []
-            
+
             for info in digits_info:
                 x = info['x']
                 overlap = False
-                
+
                 # 检查是否与已选区域重叠
                 for selected in filtered:
                     template_width = self._templates[info['font']][info['digit']].shape[1]
                     selected_width = self._templates[selected['font']][selected['digit']].shape[1]
                     max_width = max(template_width, selected_width)
-                    
+
                     if abs(x - selected['x']) < max_width * 0.7:  # 重叠阈值
                         overlap = True
                         break
-                
+
                 if not overlap:
                     filtered.append(info)
-            
+
             # 按x坐标排序，拼接成字符串
             filtered.sort(key=lambda x: x['x'])
             return ''.join(str(d['digit']) for d in filtered)
-            
+
         except Exception as e:
             raise OCRException(f"OCR识别失败: {e}")
-    
+
     def detect_template(self, image: np.ndarray) -> bool:
         """检测模板是否存在于图像中"""
         try:
             if self._option_failed_template is None:
                 return False
-            
+
             # 确保图像是numpy数组
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
-            
+
             # 转换为灰度图
             if len(image.shape) == 3:
                 if image.shape[2] == 3:  # RGB
@@ -168,39 +169,24 @@ class TemplateOCREngine(IOCREngine):
                     gray = image
             else:
                 gray = image
-            
+
             # 模板匹配
             result = cv2.matchTemplate(gray, self._option_failed_template, cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
-            
+
             return max_val >= 0.7
-            
+
         except Exception as e:
             raise OCRException(f"模板检测失败: {e}")
-    
-    def recognize_price(self, image: np.ndarray) -> int:
-        """识别价格（专门用于价格识别）"""
-        try:
-            result = self.image_to_string(image)
-            if result:
-                # 移除非数字字符并转换为整数
-                digits_only = ''.join(filter(str.isdigit, result))
-                if digits_only:
-                    return int(digits_only)
-            return 0
-        except Exception:
-            return 0
 
-    def get_pixel_color(self, img: np.ndarray, x: int, y: int):
+    @staticmethod
+    def get_pixel_color(img: np.ndarray, x: int, y: int):
         """
         获取NumPy数组图像中指定坐标点的颜色值
-
-        参数:
-            img: NumPy数组形式的图像数据 (OpenCV格式)
-            x: x坐标 (列)
-            y: y坐标 (行)
-
-        返回:
+        :param img: NumPy数组形式的图像数据 (OpenCV格式)
+        :param x: x坐标 (列)
+        :param y: y坐标 (行)
+        :return:
             BGR颜色值 (如果是彩色图像)
             灰度值 (如果是灰度图像)
             None (如果坐标超出范围)
@@ -225,27 +211,27 @@ class TemplateOCREngine(IOCREngine):
 
 class MockOCREngine(IOCREngine):
     """OCR引擎的模拟实现，用于测试"""
-    
+
     def __init__(self):
         self.recognized_text = "1234"  # 默认返回的文本
         self.template_detected = False
-    
+
     def image_to_string(self, image: np.ndarray) -> str:
         """模拟OCR识别"""
         return self.recognized_text
-    
+
     def detect_template(self, image: np.ndarray) -> bool:
         """模拟模板检测"""
         return self.template_detected
-    
+
     def recognize_price(self, image: np.ndarray) -> int:
         """模拟价格识别"""
         return int(self.recognized_text) if self.recognized_text.isdigit() else 0
-    
+
     def set_recognized_text(self, text: str):
         """设置模拟返回的文本"""
         self.recognized_text = text
-    
+
     def set_template_detected(self, detected: bool):
         """设置模板检测结果"""
         self.template_detected = detected
@@ -253,7 +239,7 @@ class MockOCREngine(IOCREngine):
 
 class OCREngineFactory:
     """OCR引擎工厂"""
-    
+
     @staticmethod
     def create_engine(engine_type: str = "template", **kwargs):
         """创建OCR引擎"""

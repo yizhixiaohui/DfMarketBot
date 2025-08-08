@@ -157,12 +157,13 @@ class Ui_MainWindow(object):
 
         # 添加千位分隔监听器
         self.textEdit_ideal_price.textChanged.connect(lambda: self.format_price_input(self.textEdit_ideal_price))
-        self.textEdit_unacceptable_price.textChanged.connect(lambda: self.format_price_input(self.textEdit_unacceptable_price))
-        
+        self.textEdit_unacceptable_price.textChanged.connect(
+            lambda: self.format_price_input(self.textEdit_unacceptable_price))
+
         # 初始化模式选择下拉框
         self.comboBox_mode.addItem("交易页面购买(屯仓模式)")
         self.comboBox_mode.addItem("配装页面购买(滚仓模式)")
-        
+
         # 初始化模式1配装选项下拉框
         self.comboBox_mode1_option.addItem("配装1")
         self.comboBox_mode1_option.addItem("配装2")

@@ -4,16 +4,17 @@
 提供统一的配置管理器创建接口，屏蔽底层实现细节
 """
 from typing import Optional
-from ..core.interfaces import IConfigManager
+
 from .config_manager import JsonConfigManager, YamlConfigManager
+from ..core.interfaces import IConfigManager
 
 
 class ConfigFactory:
     """配置管理器工厂类"""
-    
+
     _config_manager: Optional[IConfigManager] = None
     _config_format: str = "yaml"  # 默认使用YAML格式
-    
+
     @classmethod
     def set_config_format(cls, format_type: str) -> None:
         """
@@ -26,7 +27,7 @@ class ConfigFactory:
             raise ValueError("配置格式必须是 'json' 或 'yaml'")
         cls._config_format = format_type.lower()
         cls._config_manager = None  # 重置配置管理器
-    
+
     @classmethod
     def get_config_manager(cls) -> IConfigManager:
         """
@@ -41,7 +42,7 @@ class ConfigFactory:
             else:
                 cls._config_manager = YamlConfigManager()
         return cls._config_manager
-    
+
     @classmethod
     def create_config_manager(cls, format_type: str = "yaml", config_path: str = None) -> IConfigManager:
         """

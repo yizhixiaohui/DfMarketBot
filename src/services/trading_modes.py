@@ -12,7 +12,6 @@ if __name__ == '__main__':
     from src.infrastructure.screen_capture import ScreenCapture
     from src.services.detector import HoardingModeDetector, RollingModeDetector
     from src.services.strategy import StrategyFactory
-    from src.services.strategy import RollingStrategy
     from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
 else:
     from ..core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
@@ -21,12 +20,12 @@ else:
     from ..infrastructure.screen_capture import ScreenCapture
     from ..services.detector import HoardingModeDetector, RollingModeDetector
     from ..services.strategy import StrategyFactory
-    from ..services.strategy import RollingStrategy
     from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
+
 
 class HoardingTradingMode(ITradingMode):
     """屯仓模式交易实现"""
-    
+
     def __init__(self, price_detector: HoardingModeDetector, action_executor: ActionExecutor):
         self.detector = price_detector
         self.action_executor = action_executor
@@ -65,7 +64,7 @@ class HoardingTradingMode(ITradingMode):
             self.current_market_data = MarketData(
                 current_price=current_price,
                 balance=self.current_balance,
-                last_balance= self.last_balance,
+                last_balance=self.last_balance,
                 last_buy_quantity=self.last_buy_quantity,
                 timestamp=time.time()
             )
@@ -111,7 +110,8 @@ class HoardingTradingMode(ITradingMode):
         convertible = "" if ItemType(self.config.item_type) == ItemType.CONVERTIBLE else "non_"
         if not self.config.key_mode:
             quantity_pos = "min" if quantity == 31 else "max"
-            self.action_executor.click_position(self.detector.coordinates["buy_buttons"][f"{convertible}convertible_{quantity_pos}"])
+            self.action_executor.click_position(
+                self.detector.coordinates["buy_buttons"][f"{convertible}convertible_{quantity_pos}"])
         self.action_executor.click_position(self.detector.coordinates["buy_buttons"][f"{convertible}convertible_buy"])
         print(f"执行购买: 数量={quantity}")
 
@@ -120,7 +120,7 @@ class HoardingTradingMode(ITradingMode):
         self.action_executor.press_key('esc')
         self._execute_enter()
         print("执行价格刷新")
-    
+
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
         return self.current_market_data
@@ -128,7 +128,7 @@ class HoardingTradingMode(ITradingMode):
 
 class RollingTradingMode(ITradingMode):
     """滚仓模式交易实现"""
-    
+
     def __init__(self, rolling_detector: RollingModeDetector, action_executor: ActionExecutor):
         self.detector = rolling_detector
         self.action_executor = action_executor
@@ -136,7 +136,7 @@ class RollingTradingMode(ITradingMode):
         self.current_market_data = None
         self.option_configs = None
         self.config = None
-    
+
     def initialize(self, config) -> None:
         """初始化滚仓模式"""
         self.config = config
@@ -144,7 +144,7 @@ class RollingTradingMode(ITradingMode):
 
     def prepare(self) -> None:
         pass
-    
+
     def execute_cycle(self) -> bool:
         """执行一个滚仓交易周期"""
         try:
@@ -168,15 +168,15 @@ class RollingTradingMode(ITradingMode):
             option_config = self.option_configs[self.config.rolling_option]
             if not option_config:
                 return False
-            
+
             target_price = option_config["buy_price"] * option_config["buy_count"]
             min_price = option_config["min_buy_price"] * option_config["buy_count"]
-            
+
             print(f"滚仓模式: 单价={option_config['buy_price']}, "
                   f"数量={option_config['buy_count']}, "
                   f"总价={target_price}, 最低价={min_price}, "
                   f"当前价={current_price}")
-            
+
             # 执行交易决策
             if min_price < current_price <= target_price:
                 # 购买
@@ -195,9 +195,9 @@ class RollingTradingMode(ITradingMode):
 
             # 刷新
             self._execute_refresh()
-            
+
             return True
-            
+
         except Exception as e:
             raise TradingException(f"滚仓模式交易失败: {e}")
 
@@ -209,12 +209,12 @@ class RollingTradingMode(ITradingMode):
         coordinates = self.detector.coordinates["rolling_mode"]["options"]
         if 0 <= option_index < len(coordinates):
             self.action_executor.click_position(coordinates[option_index])
-    
+
     def _execute_buy(self) -> None:
         """执行购买操作"""
         coordinates = self.detector.coordinates["rolling_mode"]["buy_button"]
         self.action_executor.click_position(coordinates)
-    
+
     def _execute_refresh(self) -> None:
         """执行刷新操作"""
         print('execute refresh')
@@ -238,7 +238,6 @@ class RollingTradingMode(ITradingMode):
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_return_button"])
             time.sleep(1)
 
-
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
         return self.current_market_data
@@ -246,7 +245,7 @@ class RollingTradingMode(ITradingMode):
 
 class TradingModeFactory:
     """交易模式工厂"""
-    
+
     @staticmethod
     def create_mode(config: TradingConfig,
                     ocr_engine: TemplateOCREngine,
@@ -254,7 +253,8 @@ class TradingModeFactory:
                     action_executor: ActionExecutor) -> ITradingMode:
         """根据类型创建交易模式"""
         if config.trading_mode == TradingMode.HOARDING:
-            price_detector = HoardingModeDetector(screen_capture, ocr_engine, ItemType(config.item_type) == ItemType.CONVERTIBLE)
+            price_detector = HoardingModeDetector(screen_capture, ocr_engine,
+                                                  ItemType(config.item_type) == ItemType.CONVERTIBLE)
             mode = HoardingTradingMode(price_detector, action_executor)
         elif config.trading_mode == TradingMode.ROLLING:
             price_detector = RollingModeDetector(screen_capture, ocr_engine)
