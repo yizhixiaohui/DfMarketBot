@@ -26,7 +26,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         # 锁用于线程安全
         self._lock = threading.Lock()
 
-    def click_position(self, coordinates: Tuple[float, float]) -> None:
+    def click_position(self, coordinates: Tuple[float, float], right_click=False) -> None:
         """点击指定坐标位置"""
         try:
             with self._lock:
@@ -36,7 +36,10 @@ class PyAutoGUIActionExecutor(IActionExecutor):
 
                 # 移动鼠标并点击
                 pyautogui.moveTo(x, y)
-                pyautogui.click()
+                if right_click:
+                    pyautogui.rightClick()
+                else:
+                    pyautogui.click()
                 if self.debug:
                     print(f'click position ({x}, {y})')
 
@@ -145,7 +148,7 @@ class MockActionExecutor(IActionExecutor):
         self.log_actions = log_actions
         self.actions = []
 
-    def click_position(self, coordinates: Tuple[float, float]) -> None:
+    def click_position(self, coordinates: Tuple[float, float], right_click=False) -> None:
         """模拟点击位置"""
         action = {"type": "click", "coordinates": coordinates}
         self.actions.append(action)

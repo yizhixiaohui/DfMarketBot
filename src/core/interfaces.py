@@ -94,7 +94,7 @@ class IActionExecutor(ABC):
     """动作执行器接口"""
 
     @abstractmethod
-    def click_position(self, position: Tuple[float, float]) -> None:
+    def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """点击指定位置"""
         pass
 
@@ -215,7 +215,7 @@ class IOCREngine(ABC):
         pass
 
     @abstractmethod
-    def detect_template(self, image: np.ndarray) -> bool:
+    def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板匹配"""
         pass
 

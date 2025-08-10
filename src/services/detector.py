@@ -8,6 +8,7 @@ from abc import abstractmethod
 from typing import Optional, List
 
 import numpy as np
+from sympy import Tuple
 
 if __name__ == '__main__':
     from src.config.coordinates import CoordinateConfig
@@ -65,7 +66,7 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            return self._detect_value(coords, "余额", 50)
+            return self._detect_value(coords, "余额")
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}")
 
@@ -87,7 +88,7 @@ class HoardingModeDetector(PriceDetector):
         super().__init__(screen_capture, ocr_engine)
         self.item_convertible = item_convertible
 
-    def get_detection_coordinates(self) -> dict:
+    def get_detection_coordinates(self) -> List[float]:
         """获取价格检测坐标"""
         if self.item_convertible:
             return self.coordinates["price_detection"]["convertible"]
@@ -100,7 +101,7 @@ class RollingModeDetector(PriceDetector):
     def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
         super().__init__(screen_capture, ocr_engine)
 
-    def get_detection_coordinates(self) -> dict:
+    def get_detection_coordinates(self) -> List[float]:
         """获取价格检测坐标"""
         return self.coordinates["rolling_mode"]["price_area"]
 
@@ -109,8 +110,19 @@ class RollingModeDetector(PriceDetector):
         try:
             coords = self.coordinates["rolling_mode"]["failure_check"]
             screenshot = self.screen_capture.capture_region(coords)
-            return self.ocr_engine.detect_template(screenshot)
-        except:
+            return self.ocr_engine.detect_template(screenshot, "option_failed")
+        except Exception as e:
+            print('检测失败:', e)
+            return False
+
+    def check_sell_window(self) -> bool:
+        """检查仓库出售页面是不是无法售卖（三角洲bug）"""
+        try:
+            coords = self.coordinates["rolling_mode"]["failure_check"]
+            screenshot = self.screen_capture.capture_region(coords)
+            return self.ocr_engine.detect_template(screenshot, "sell")
+        except Exception as e:
+            print('检测失败:', e)
             return False
 
     def detect_sellable_item(self):
@@ -135,7 +147,7 @@ class RollingModeDetector(PriceDetector):
             current_pos[1] += item_range[1] + 1
         return [0, 0]
 
-    def detect_sell_num(self):
+    def detect_sell_num(self) -> Tuple(int, int):
         coords = self.coordinates["rolling_mode"]["sell_full"]
         screenshot = self.screen_capture.capture_region(coords)
         res = self.ocr_engine.image_to_string(screenshot)
@@ -143,14 +155,37 @@ class RollingModeDetector(PriceDetector):
             return 0, 0
         return int(res[0]), int(res[1])
 
-    def detect_is_sell_full(self):
+    def detect_is_sell_full(self) -> int:
         cur, max = self.detect_sell_num()
         # 识别失败时为了防止检测失误，就当拍卖行上架已满，等待下次检测
         return cur == 0 and max == 0
+
+    def detect_min_sell_price(self) -> int:
+        """检测当前售卖的最小价格"""
+        return self._detect_area("min_sell_price_area")
+
+    def detect_expected_revenue(self) -> int:
+        """检测当前售卖的期望收益"""
+        res = self._detect_area("expected_revenue_area")
+        # 检测器会把售价边上的问号当成7，所以这里特殊处理一下... TODO: 以后再修
+        return int((res - 7) / 10) if res % 10 == 7 else res
+
+    def detect_total_sell_price_area(self) -> int:
+        """检测当前售卖总价"""
+        return self._detect_area("total_sell_price_area")
+
+    def _detect_area(self, template) -> int:
+        """检测模板的区域, 并返回数值"""
+        try:
+            coords = self.coordinates["rolling_mode"][template]
+            return self._detect_value(coords)
+        except Exception as e:
+            raise PriceDetectionException(f"价格检测异常: {e}")
+
 
 if __name__ == '__main__':
     sc = ScreenCapture()
     ocr = TemplateOCREngine("L:\workspace\github.com\XiaoGu-G2020\DeltaForceMarketBot\\templates")
     detector = RollingModeDetector(sc, ocr)
-    res = detector.detect_is_sell_full()
+    res = detector.detect_expected_revenue()
     print(res)

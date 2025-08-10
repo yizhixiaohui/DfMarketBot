@@ -10,8 +10,12 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from ..core.exceptions import OCRException
-from ..core.interfaces import IOCREngine
+if __name__ == '__main__':
+    from src.core.exceptions import OCRException
+    from src.core.interfaces import IOCREngine
+else:
+    from ..core.exceptions import OCRException
+    from ..core.interfaces import IOCREngine
 
 
 class TemplateOCREngine(IOCREngine):
@@ -29,11 +33,20 @@ class TemplateOCREngine(IOCREngine):
 
         # 模板缓存
         self._templates = {}
-        self._option_failed_template = None
+        self._pic_templates = {}
         self._lock = threading.Lock()
 
         # 加载模板
         self._load_templates()
+
+    def _load_pic(self, pic_name: str):
+        sell_template_path = self.templates_dir / pic_name
+        if sell_template_path.exists():
+            template = cv2.imread(str(sell_template_path), cv2.IMREAD_GRAYSCALE)
+            if template is not None:
+                _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                template_name = pic_name if not pic_name.endswith(".png") else pic_name[:-4]
+                self._pic_templates[template_name] = binary
 
     def _load_templates(self):
         """加载所有数字模板"""
@@ -73,12 +86,9 @@ class TemplateOCREngine(IOCREngine):
                         self._templates[prefix] = group
 
                 # 加载失败检测模板
-                failed_template_path = self.templates_dir / "option_failed.png"
-                if failed_template_path.exists():
-                    template = cv2.imread(str(failed_template_path), cv2.IMREAD_GRAYSCALE)
-                    if template is not None:
-                        _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
-                        self._option_failed_template = binary
+                self._load_pic("option_failed.png")
+                # 加载售卖框模板
+                self._load_pic("sell.png")
 
                 if not self._templates:
                     raise FileNotFoundError("未找到有效的数字模板文件")
@@ -149,10 +159,10 @@ class TemplateOCREngine(IOCREngine):
         except Exception as e:
             raise OCRException(f"OCR识别失败: {e}")
 
-    def detect_template(self, image: np.ndarray) -> bool:
+    def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板是否存在于图像中"""
         try:
-            if self._option_failed_template is None:
+            if self._pic_templates is None or self._pic_templates[template_name] is None:
                 return False
 
             # 确保图像是numpy数组
@@ -171,7 +181,7 @@ class TemplateOCREngine(IOCREngine):
                 gray = image
 
             # 模板匹配
-            result = cv2.matchTemplate(gray, self._option_failed_template, cv2.TM_CCOEFF_NORMED)
+            result = cv2.matchTemplate(gray, self._pic_templates[template_name], cv2.TM_CCOEFF_NORMED)
             _, max_val, _, _ = cv2.minMaxLoc(result)
 
             return max_val >= 0.7
@@ -249,3 +259,8 @@ class OCREngineFactory:
             return MockOCREngine(**kwargs)
         else:
             raise ValueError(f"不支持的OCR引擎类型: {engine_type}")
+
+
+if __name__ == '__main__':
+    a = "test.png"
+    print(a[:-4])
