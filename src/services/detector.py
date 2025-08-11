@@ -5,10 +5,9 @@
 import re
 import time
 from abc import abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 import numpy as np
-from sympy import Tuple
 
 if __name__ == '__main__':
     from src.config.coordinates import CoordinateConfig
@@ -147,7 +146,7 @@ class RollingModeDetector(PriceDetector):
             current_pos[1] += item_range[1] + 1
         return [0, 0]
 
-    def detect_sell_num(self) -> Tuple(int, int):
+    def detect_sell_num(self) -> Tuple[int, int]:
         coords = self.coordinates["rolling_mode"]["sell_full"]
         screenshot = self.screen_capture.capture_region(coords)
         res = self.ocr_engine.image_to_string(screenshot)

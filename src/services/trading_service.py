@@ -25,19 +25,17 @@ class TradingService(ITradingService):
         self.current_mode = None
         self.current_config = None
 
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def initialize(self, config: TradingConfig) -> None:
         """初始化交易服务"""
         try:
             # 检查基础设施是否可用
             self._check_infrastructure()
             # 转换配置
 
-            trading_config = TradingConfig(**config)
-
-            self._switch_mode(trading_config)
+            self._switch_mode(config)
 
             # 更新当前配置
-            self.current_config = trading_config
+            self.current_config = config
             print("交易服务初始化成功")
 
         except Exception as e:

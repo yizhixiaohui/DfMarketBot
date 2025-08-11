@@ -181,7 +181,7 @@ class IConfigManager(ABC):
         pass
 
     @abstractmethod
-    def update_config(self, updates: Dict[str, Any]) -> None:
+    def update_config(self, updates: Dict[str, Any]) -> TradingConfig:
         """更新配置"""
         pass
 
@@ -224,7 +224,7 @@ class ITradingService(ABC):
     """交易服务接口"""
 
     @abstractmethod
-    def initialize(self, config: Dict[str, Any]) -> None:
+    def initialize(self, config: TradingConfig) -> None:
         """初始化交易服务"""
         pass
 

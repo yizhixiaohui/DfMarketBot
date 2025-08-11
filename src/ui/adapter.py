@@ -46,9 +46,9 @@ class TradingWorker(QThread):
         """更新配置"""
         self._mutex.lock()
         try:
-            self._config = config.copy()
             # 保存到配置文件
-            self.config_manager.update_config(config)
+            self._config = self.config_manager.update_config(config)
+
         finally:
             self._mutex.unlock()
 
@@ -84,8 +84,8 @@ class TradingWorker(QThread):
         self._mutex.lock()
         self._running = True
         # 获取当前配置
-        current_config = self._config or self.config_manager.load_config().__dict__
-        loop_interval = current_config.get('loop_interval', 50)
+        current_config = self._config or self.config_manager.load_config()
+        loop_interval = current_config.loop_interval
         self._mutex.unlock()
 
         try:

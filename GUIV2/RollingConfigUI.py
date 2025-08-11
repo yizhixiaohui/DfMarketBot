@@ -50,7 +50,7 @@ class RollingConfigUI(QMainWindow):
         main_layout.addWidget(title_label)
 
         # 说明文字
-        desc_label = QLabel("双击表格单元格可直接编辑数值，修改后点击保存配置生效")
+        desc_label = QLabel("双击表格单元格可直接编辑数值，修改后自动保存生效")
         desc_label.setWordWrap(True)
         desc_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(desc_label)
@@ -140,7 +140,6 @@ class RollingConfigUI(QMainWindow):
         """保存配置"""
         try:
             self.config_manager.update_config({"rolling_options": self.rolling_options})
-            QMessageBox.information(self, "成功", "配置已保存")
             self.statusBar().showMessage("配置保存成功")
         except Exception as e:
             QMessageBox.critical(self, "错误", f"保存配置失败: {str(e)}")
@@ -168,7 +167,12 @@ class RollingConfigUI(QMainWindow):
             elif column == 3:  # 购买数量
                 self.rolling_options[row]["buy_count"] = value
 
-            self.statusBar().showMessage(f"已更新配装 {row + 1} 的配置")
+            # 立即保存配置到文件
+            try:
+                self.config_manager.update_config({"rolling_options": self.rolling_options})
+                self.statusBar().showMessage(f"已更新并保存配装 {row + 1} 的配置")
+            except Exception as e:
+                self.statusBar().showMessage(f"配置更新失败: {str(e)}")
 
         except ValueError:
             # 如果输入无效，恢复原来的值

@@ -62,13 +62,14 @@ class BaseConfigManager(IConfigManager):
         except Exception as e:
             raise ConfigurationException(f"保存配置失败: {e}")
 
-    def update_config(self, updates: Dict[str, Any]) -> None:
+    def update_config(self, updates: Dict[str, Any]) -> TradingConfig:
         """更新配置"""
         try:
             config_dict = self._config_to_dict(self.load_config())
             config_dict.update(updates)
             new_config = self._dict_to_config(config_dict)
             self.save_config(new_config)
+            return new_config
 
         except Exception as e:
             raise ConfigurationException(f"更新配置失败: {e}")

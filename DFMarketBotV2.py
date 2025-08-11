@@ -9,6 +9,7 @@ import os
 import signal
 import ctypes
 import keyboard
+import platform
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
 
@@ -57,8 +58,7 @@ class MainWindow(QMainWindow):
         
     def _setup_hotkeys(self):
         """设置全局热键"""
-        import platform
-        
+
         # 在Windows上使用keyboard库，macOS上跳过
         if platform.system() == "Windows":
             try:
