@@ -55,6 +55,7 @@ class CoordinateConfig:
             "sell_count_area": [1570 / 2560, 680 / 1440, 1760 / 2560, 710 / 1440],
             "sell_num_left": [1563 / 2560, 749 / 1440],
             "sell_num_right": [1937 / 2560, 749 / 1440],
+            "sell_price_text": [1748 / 2560, 860 / 1440],
             "sell_full": [1973 / 2560, 678 / 1440, 2027 / 2560, 711 / 1440],
             "expected_revenue_area": [1642 / 2560, 910 / 1440, 1920 / 2560, 950 / 1440],
             "sell_detail_button": [1867 / 2560, 929 / 1440],

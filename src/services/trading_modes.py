@@ -108,6 +108,8 @@ class HoardingTradingMode(ITradingMode):
 
     def _execute_buy(self, quantity: int) -> None:
         """执行购买操作"""
+        if quantity == 0:
+            return
         convertible = "" if ItemType(self.config.item_type) == ItemType.CONVERTIBLE else "non_"
         if not self.config.key_mode:
             quantity_pos = "min" if quantity == 31 else "max"
@@ -149,7 +151,9 @@ class RollingTradingMode(ITradingMode):
 
     def prepare(self) -> None:
         self.last_balance = self._detect_balance()
+        print("===" * 30)
         print('初始化成功，当前余额:', self.last_balance)
+        self.append_to_sell_log("===" * 30)
         self.append_to_sell_log(f"初始化成功，当前余额: {self.last_balance}")
         time.sleep(0.4)
 
@@ -203,18 +207,20 @@ class RollingTradingMode(ITradingMode):
                     print('部分购买失败，执行售卖')
                 else:
                     print("购买成功！")
+                    time.sleep(1)
                     cur_balance = self._detect_balance()
                 cost = self.last_balance - cur_balance
                 self.profit -= cost
-                self.append_to_sell_log(f"购买成功, 花费: {cost}, 当前盈利: {self.profit}")
+                self.append_to_sell_log(f"购买成功, 总花费: {cost}, 当前盈利: {self.profit}")
                 self._execute_auto_sell(cost)
                 # 自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
                 time.sleep(0.3)
                 self._execute_get_mail_half_coin()
                 time.sleep(2)
+                self.last_balance = self._detect_balance()
+                time.sleep(0.3)
                 self._execute_refresh()
-                time.sleep(1)
-                self.last_balance = cur_balance
+                time.sleep(2)
             else:
                 # 刷新
                 self._execute_refresh()
@@ -267,7 +273,8 @@ class RollingTradingMode(ITradingMode):
         while sell_time < len(sell_ratios):
             result = self._execute_single_sell_cycle(idx, sell_ratios[sell_time])
             if not result["success"]:
-                break
+                time.sleep(1)
+                continue
 
             total_profit += result["revenue"]
             total_count += result["count"]
@@ -317,10 +324,10 @@ class RollingTradingMode(ITradingMode):
         self._enter_sell_interface_with_retry(item_pos, sell_pos)
 
         # 设置售卖价格
-        self._set_sell_price(sell_ratio, cycle_index)
+        min_sell_price = self._set_sell_price(sell_ratio, cycle_index, fast_sell=True)
 
         # 获取售卖信息并确认
-        return self._confirm_sell_transaction()
+        return self._confirm_sell_transaction(min_sell_price)
 
     def _enter_sell_interface_with_retry(self, item_pos: Tuple[int, int], sell_pos: Tuple[int, int]):
         """进入售卖界面，带重试机制"""
@@ -329,6 +336,8 @@ class RollingTradingMode(ITradingMode):
             try:
                 self._click_sell_item(item_pos, sell_pos)
                 if self._wait_for_sell_window():
+                    self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_button"])
+                    time.sleep(0.7)
                     return
 
                 # 处理卡顿
@@ -360,7 +369,7 @@ class RollingTradingMode(ITradingMode):
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["enter_storage"])
         time.sleep(1)
 
-    def _set_sell_price(self, sell_ratio: float, cycle_index: int):
+    def _set_sell_price(self, sell_ratio: float, cycle_index: int, fast_sell=False) -> int:
         """设置售卖价格"""
         min_sell_pos = self.detector.coordinates["rolling_mode"]["sell_num_left"]
         sell_num_slice_length = self.detector.coordinates["rolling_mode"]["sell_num_right"][0] - min_sell_pos[0]
@@ -368,12 +377,22 @@ class RollingTradingMode(ITradingMode):
         sell_x = min_sell_pos[0] + sell_num_slice_length * sell_ratio
         sell_y = min_sell_pos[1]
 
-        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["min_sell_price_button"])
+        min_sell_price = self.detector.detect_min_sell_price()
+        if fast_sell and (min_sell_price or min_sell_price) > 0:
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_price_text"])
+            time.sleep(0.5)
+            self.action_executor.multi_key_press("ctrl", "a")
+            time.sleep(0.5)
+            min_sell_price = min_sell_price - 10
+            self.action_executor.type_text(str(min_sell_price))
+        else:
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["min_sell_price_button"])
         time.sleep(1)
         self.action_executor.click_position((sell_x, sell_y))
         time.sleep(1)
+        return min_sell_price
 
-    def _confirm_sell_transaction(self) -> Dict[str, any]:
+    def _confirm_sell_transaction(self, min_sell_price=0) -> Dict[str, any]:
         """确认售卖交易"""
         # 检测售卖数量
         cur_num, max_num = self.detector.detect_sell_num()
@@ -383,7 +402,8 @@ class RollingTradingMode(ITradingMode):
             raise ValueError("售卖数量超出限制")
 
         # 获取售卖信息
-        min_sell_price = self.detector.detect_min_sell_price()
+        if min_sell_price <= 0:
+            min_sell_price = self.detector.detect_min_sell_price()
         expected_revenue = self.detector.detect_expected_revenue()
 
         self.action_executor.move_mouse(self.detector.coordinates["rolling_mode"]["sell_detail_button"])
@@ -414,7 +434,7 @@ class RollingTradingMode(ITradingMode):
         cur_profit = total_profit
 
         self.append_to_sell_log(
-            f"本轮售卖完成, 本轮盈利: {cur_profit - cost}, 本轮售卖: {total_count}个, "
+            f"本轮售卖完成, 本轮盈利: {cur_profit - cost}, 本轮售卖: {total_count}个, 购买均价: {cost / total_count}"
             f"当前总盈利: {self.profit}, 当前售卖总量: {self.count}")
 
     def _execute_get_mail_half_coin(self):
@@ -423,7 +443,7 @@ class RollingTradingMode(ITradingMode):
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["mail_trade_button"])
         time.sleep(1)
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["mail_get_button"])
-        time.sleep(1)
+        time.sleep(2)
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["mail_get_button"])
         time.sleep(1)
         self.action_executor.press_key('esc')
@@ -484,4 +504,4 @@ if __name__ == '__main__':
     detector = RollingModeDetector(sc, ocr)
     executor = ActionExecutor()
     mode = RollingTradingMode(detector, executor)
-    mode._execute_auto_sell()
+    mode._set_sell_price(0.33, 0, True)

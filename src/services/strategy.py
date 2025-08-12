@@ -49,12 +49,14 @@ class HoardingStrategy(ITradingStrategy):
         if self._need_calc_unit_price(market_data):
             # 计算单价
             unit_price = self._calc_unit_price(market_data)
-            print('计算上次购买单价:', unit_price)
-            if self.config.ideal_price < unit_price <= self.config.max_price:
-                return 31
-            if unit_price <= self.config.ideal_price:
-                return 200
-            return 0
+            if unit_price >= 50:
+                print('计算上次购买单价:', unit_price)
+                if self.config.ideal_price < unit_price <= self.config.max_price:
+                    return 31
+                if unit_price <= self.config.ideal_price:
+                    return 200
+                return 0
+            print(f'单价计算异常({unit_price})，直接看市场底价')
         if self.config.use_balance_calculation and self.config.ideal_price < market_data.current_price <= self.config.max_price:
             return 31
         if market_data.current_price > self.config.max_price:

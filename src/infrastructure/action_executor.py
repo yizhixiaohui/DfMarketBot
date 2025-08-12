@@ -92,7 +92,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         """输入文本"""
         try:
             with self._lock:
-                pyautogui.typewrite(text, interval=0.01)
+                pyautogui.typewrite(text, interval=0.04)
 
         except Exception as e:
             raise ActionExecutionException(f"输入文本失败: {e}")

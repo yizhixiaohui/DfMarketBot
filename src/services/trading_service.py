@@ -2,7 +2,7 @@
 """
 交易服务 - 核心业务逻辑整合
 """
-from typing import Optional, Dict, Any
+from typing import Optional
 
 from ..core.exceptions import TradingException
 from ..core.interfaces import ITradingService, TradingConfig, MarketData

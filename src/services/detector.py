@@ -127,7 +127,7 @@ class RollingModeDetector(PriceDetector):
     def detect_sellable_item(self):
         width = 9
         length = 10
-        color_toleration = 15
+        color_toleration = 20
         coords = self.coordinates["rolling_mode"]["wait_sell_item_area"]
         item_range = self.coordinates["rolling_mode"]["item_range"]
         item_center = [int(item_range[0] / 2), int(item_range[1] / 2)]
@@ -140,6 +140,7 @@ class RollingModeDetector(PriceDetector):
                 if not (valid_color[0] - color_toleration < color[0] < valid_color[0] + color_toleration and
                         valid_color[1] - color_toleration < color[1] < valid_color[1] + color_toleration and
                         valid_color[2] - color_toleration < color[2] < valid_color[2] + color_toleration):
+                    print(f'检测到可售卖物品: 第{j}行第{i}个, 颜色: ({color[0]}, {color[1]}, {color[2]})')
                     return [coords[0] + current_pos[0], coords[1] + current_pos[1]]
                 current_pos[0] += item_range[0] + 1
             current_pos[0] = item_center[0]
