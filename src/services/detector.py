@@ -154,7 +154,7 @@ class RollingModeDetector(PriceDetector):
             return 0, 0
         return int(res[0]), int(res[1])
 
-    def detect_is_sell_full(self) -> int:
+    def detect_sell_full(self) -> int:
         cur, max = self.detect_sell_num()
         # 识别失败时为了防止检测失误，就当拍卖行上架已满，等待下次检测
         return cur == 0 and max == 0
