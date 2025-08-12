@@ -149,6 +149,8 @@ class RollingTradingMode(ITradingMode):
 
     def prepare(self) -> None:
         self.last_balance = self._detect_balance()
+        print('初始化成功，当前余额:', self.last_balance)
+        self.append_to_sell_log(f"初始化成功，当前余额: {self.last_balance}")
         time.sleep(0.4)
 
     def execute_cycle(self) -> bool:
@@ -197,7 +199,6 @@ class RollingTradingMode(ITradingMode):
                     if cur_balance == self.last_balance:
                         print("购买失败！")
                         time.sleep(0.4)
-                        self._execute_refresh()
                         return True
                     print('部分购买失败，执行售卖')
                 else:
@@ -210,7 +211,7 @@ class RollingTradingMode(ITradingMode):
                 # 自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
                 time.sleep(0.3)
                 self._execute_get_mail_half_coin()
-                time.sleep(1)
+                time.sleep(2)
                 self._execute_refresh()
                 time.sleep(1)
                 self.last_balance = cur_balance
@@ -333,6 +334,7 @@ class RollingTradingMode(ITradingMode):
 
     def _detect_balance(self):
         self.action_executor.move_mouse(self.detector.coordinates["balance_active"])
+        time.sleep(0.3)
         return self.detector.detect_balance()
 
     def append_to_sell_log(self, content, path='sell.log'):
