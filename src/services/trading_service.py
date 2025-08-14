@@ -15,15 +15,20 @@ from ..services.trading_modes import TradingModeFactory
 class TradingService(ITradingService):
     """交易服务实现"""
 
-    def __init__(self):
+    def __init__(self, overlay):
         # 初始化基础设施
         self.screen_capture = ScreenCapture()
         self.ocr_engine = TemplateOCREngine()
         self.action_executor = ActionExecutorFactory.create_executor("pyautogui")
 
+        self.overlay = overlay
+
         # 初始化交易模式
         self.current_mode = None
         self.current_config = None
+
+        self.profit = 0
+        self.count = 0
 
     def initialize(self, config: TradingConfig) -> None:
         """初始化交易服务"""
@@ -51,7 +56,11 @@ class TradingService(ITradingService):
         """执行一个交易周期"""
         try:
             # 执行交易周期
-            return self.current_mode.execute_cycle()
+            res = self.current_mode.execute_cycle()
+            market_data = self.get_market_data()
+            self.profit = market_data.profit
+            self.count = market_data.count
+            return res
 
         except Exception as e:
             raise TradingException(f"交易周期执行失败: {e}")
@@ -98,11 +107,12 @@ class TradingService(ITradingService):
                 config,
                 self.ocr_engine,
                 self.screen_capture,
-                self.action_executor
+                self.action_executor,
+                self.overlay
             )
 
             # 初始化新模式
-            new_mode.initialize(config)
+            new_mode.initialize(config, profit=self.profit, count=self.count)
 
             # 更新当前模式
             self.current_mode = new_mode

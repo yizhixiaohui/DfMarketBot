@@ -13,6 +13,8 @@ import platform
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
 
+from src.ui.overlay import TransparentOverlay
+
 # 添加src目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
@@ -37,9 +39,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.overlay = TransparentOverlay(self)
+        self.overlay.show()
         
         # 初始化UI适配器
-        self.ui_adapter = UIAdapter(self.ui)
+        self.ui_adapter = UIAdapter(self.ui, self.overlay)
         
         # 设置窗口属性
         self.setWindowTitle("V2")

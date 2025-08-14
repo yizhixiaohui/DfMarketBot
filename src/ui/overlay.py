@@ -1,4 +1,5 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QLabel, QApplication
 
 
@@ -6,6 +7,7 @@ class TransparentOverlay(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._pending_text = None
         self.initUI()
 
     def initUI(self):
@@ -15,8 +17,9 @@ class TransparentOverlay(QMainWindow):
             Qt.Tool
         )
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        self.setGeometry(100, 100, 300, 50)
+        screen = QGuiApplication.primaryScreen().geometry()
+        x = (screen.width() - self.width()) // 2 - 150
+        self.setGeometry(x, 5, 300, 50)
 
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
@@ -33,10 +36,26 @@ class TransparentOverlay(QMainWindow):
 
         self.oldPos = None
 
+        QTimer.singleShot(0, self._process_pending_text)
+
     def update_text(self, text: str):
-        self.label.setText(text)
-        self.label.adjustSize()
-        self.resize(self.label.width(), self.label.height())
+        self._pending_text = text
+        QTimer.singleShot(0, self._process_pending_text)
+
+    def _process_pending_text(self):
+        """实际处理文本更新"""
+        if self._pending_text is None or not self.isVisible():
+            return
+
+        try:
+            self.label.setText(self._pending_text)
+            self.label.adjustSize()
+            self.label.setMinimumWidth(350)
+            new_width = max(350, self.label.width())  # 设置最小宽度
+            new_height = max(50, self.label.height())  # 设置最小高度
+            self.resize(new_width, new_height)
+        finally:
+            self._pending_text = None
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

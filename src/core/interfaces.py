@@ -74,6 +74,8 @@ class MarketData:
     last_balance: Optional[int] = None
     last_buy_quantity: Optional[int] = None
     timestamp: float = 0.0
+    profit: Optional[int] = 0
+    count: Optional[int] = 0
 
 
 class IPriceDetector(ABC):
@@ -141,7 +143,7 @@ class ITradingMode(ABC):
         pass
 
     @abstractmethod
-    def initialize(self, config: TradingConfig) -> None:
+    def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化模式"""
         pass
 

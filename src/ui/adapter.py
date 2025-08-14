@@ -142,10 +142,11 @@ class TradingWorker(QThread):
 class UIAdapter:
     """UI适配器 - 连接PyQt5 UI与新架构"""
 
-    def __init__(self, ui_instance):
+    def __init__(self, ui_instance, overlay):
         self.ui = ui_instance
         self.config_manager = get_config_manager()
-        self.trading_service = TradingService()
+        self.overlay_ui = overlay
+        self.trading_service = TradingService(overlay)
         self.worker = None
 
         # 初始化UI
