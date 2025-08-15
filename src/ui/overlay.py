@@ -2,6 +2,11 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QMainWindow, QLabel, QApplication
 
+try:
+    from ..core.event_bus import event_bus
+except ImportError:
+    from src.core.event_bus import event_bus
+
 
 class TransparentOverlay(QMainWindow):
 
@@ -9,6 +14,7 @@ class TransparentOverlay(QMainWindow):
         super().__init__(parent)
         self._pending_text = None
         self.initUI()
+        self._connect_events()
 
     def initUI(self):
         self.setWindowFlags(
@@ -31,16 +37,23 @@ class TransparentOverlay(QMainWindow):
             font-size: 14px;
         """)
         self.label.setGeometry(0, 0, self.width(), self.height())
-        self.label.setText("测试")
+        self.label.setText("准备就绪")
         self.label.setWordWrap(True)
 
         self.oldPos = None
 
+    def _connect_events(self):
+        """连接事件总线信号"""
+        event_bus.overlay_text_updated.connect(self._on_overlay_text_updated)
+
+    def _on_overlay_text_updated(self, text: str):
+        """处理文本更新事件"""
+        self._pending_text = text
         QTimer.singleShot(0, self._process_pending_text)
 
     def update_text(self, text: str):
-        self._pending_text = text
-        QTimer.singleShot(0, self._process_pending_text)
+        """兼容旧接口的方法, 计划废弃"""
+        event_bus.emit_overlay_text_updated(text)
 
     def _process_pending_text(self):
         """实际处理文本更新"""

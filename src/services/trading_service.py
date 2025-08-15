@@ -15,13 +15,11 @@ from ..services.trading_modes import TradingModeFactory
 class TradingService(ITradingService):
     """交易服务实现"""
 
-    def __init__(self, overlay):
+    def __init__(self):
         # 初始化基础设施
         self.screen_capture = ScreenCapture()
         self.ocr_engine = TemplateOCREngine()
         self.action_executor = ActionExecutorFactory.create_executor("pyautogui")
-
-        self.overlay = overlay
 
         # 初始化交易模式
         self.current_mode = None
@@ -107,8 +105,7 @@ class TradingService(ITradingService):
                 config,
                 self.ocr_engine,
                 self.screen_capture,
-                self.action_executor,
-                self.overlay
+                self.action_executor
             )
 
             # 初始化新模式

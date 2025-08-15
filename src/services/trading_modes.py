@@ -6,17 +6,8 @@ import datetime
 import time
 from typing import Optional, Dict, Tuple
 
-from src.ui.overlay import TransparentOverlay
-
-if __name__ == '__main__':
-    from src.core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
-    from src.core.exceptions import TradingException
-    from src.infrastructure.ocr_engine import TemplateOCREngine
-    from src.infrastructure.screen_capture import ScreenCapture
-    from src.services.detector import HoardingModeDetector, RollingModeDetector
-    from src.services.strategy import StrategyFactory
-    from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
-else:
+try:
+    from ..core.event_bus import event_bus
     from ..core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
     from ..core.exceptions import TradingException
     from ..infrastructure.ocr_engine import TemplateOCREngine
@@ -24,15 +15,23 @@ else:
     from ..services.detector import HoardingModeDetector, RollingModeDetector
     from ..services.strategy import StrategyFactory
     from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
+except ImportError:
+    from src.core.event_bus import event_bus
+    from src.core.interfaces import ITradingMode, TradingConfig, MarketData, TradingMode, ItemType
+    from src.core.exceptions import TradingException
+    from src.infrastructure.ocr_engine import TemplateOCREngine
+    from src.infrastructure.screen_capture import ScreenCapture
+    from src.services.detector import HoardingModeDetector, RollingModeDetector
+    from src.services.strategy import StrategyFactory
+    from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
 
 
 class HoardingTradingMode(ITradingMode):
     """屯仓模式交易实现"""
 
-    def __init__(self, price_detector: HoardingModeDetector, action_executor: ActionExecutor, overlay: TransparentOverlay):
+    def __init__(self, price_detector: HoardingModeDetector, action_executor: ActionExecutor):
         self.detector = price_detector
         self.action_executor = action_executor
-        self.overlay = overlay
         self.last_balance = None
         self.current_balance = None
         self.last_buy_quantity = 0
@@ -137,11 +136,10 @@ class RollingTradingMode(ITradingMode):
 
     current_market_data: MarketData
 
-    def __init__(self, rolling_detector: RollingModeDetector, action_executor: ActionExecutor, overlay: TransparentOverlay):
+    def __init__(self, rolling_detector: RollingModeDetector, action_executor: ActionExecutor):
         self.detector = rolling_detector
         self.action_executor = action_executor
         self.strategy_factory = StrategyFactory()
-        self.overlay = overlay
         self.option_configs = None
         self.config = None
         self.last_balance = None
@@ -165,7 +163,7 @@ class RollingTradingMode(ITradingMode):
         print('初始化成功，当前余额:', self.last_balance)
         self.append_to_sell_log("===" * 30)
         self.append_to_sell_log(f"初始化成功，当前余额: {self.last_balance}")
-        self.overlay.update_text(f"初始化成功，当前余额: {self.last_balance}")
+        event_bus.emit_overlay_text_updated(f"初始化成功，当前余额: {self.last_balance}")
         time.sleep(0.4)
 
     def execute_cycle(self) -> bool:
@@ -199,7 +197,8 @@ class RollingTradingMode(ITradingMode):
                   f"数量={option_config['buy_count']}, "
                   f"总价={target_price}, 最低价={min_price}, "
                   f"当前价={current_price}")
-            self.overlay.update_text(f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]")
+            event_bus.emit_overlay_text_updated(
+                f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]")
 
             # 执行交易决策
             if min_price < current_price <= target_price:
@@ -225,14 +224,15 @@ class RollingTradingMode(ITradingMode):
                 cost = self.last_balance - cur_balance
                 self.profit -= cost
                 self.append_to_sell_log(f"购买成功, 总花费: {cost}, 当前盈利: {self.profit}")
-                self.overlay.update_text(f"购买成功, 总花费[{cost}], 当前盈利: {self.profit}")
+                event_bus.emit_overlay_text_updated(f"购买成功, 总花费[{cost}], 当前盈利: {self.profit}")
                 self._execute_auto_sell(cost)
                 # 自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
                 time.sleep(0.3)
                 self._execute_get_mail_half_coin()
                 time.sleep(2)
                 self.last_balance = self._detect_balance()
-                self.overlay.update_text(f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]")
+                event_bus.emit_overlay_text_updated(
+                    f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]")
                 time.sleep(0.3)
                 self._execute_refresh()
                 time.sleep(2)
@@ -361,7 +361,7 @@ class RollingTradingMode(ITradingMode):
 
                 # 处理卡顿
                 print(f'出售按钮没有按动，尝试解除卡顿 (尝试 {attempt + 1}/{max_retries})')
-                self.overlay.update_text(f'出售按钮没有按动，尝试解除卡顿 (尝试 {attempt + 1}/{max_retries})')
+                event_bus.emit_overlay_text_updated(f'出售按钮没有按动，尝试解除卡顿 (尝试 {attempt + 1}/{max_retries})')
                 self._resolve_sell_stuck()
 
             except Exception as e:
@@ -440,7 +440,8 @@ class RollingTradingMode(ITradingMode):
         self.append_to_sell_log(
             f"出售成功, 单价: {min_sell_price}, 数量: {count}, 总价: {total_sell_price}, "
             f"预期收入: {expected_revenue}")
-        self.overlay.update_text(f"第{sell_time+1}轮售卖成功, 单价: {min_sell_price}, 数量: {count}, 总价: {total_sell_price}, 预期收入: {expected_revenue}")
+        event_bus.emit_overlay_text_updated(
+            f"第{sell_time + 1}轮售卖成功, 单价: {min_sell_price}, 数量: {count}, 总价: {total_sell_price}, 预期收入: {expected_revenue}")
 
         return {
             "revenue": expected_revenue,
@@ -457,7 +458,7 @@ class RollingTradingMode(ITradingMode):
         self.append_to_sell_log(
             f"本轮售卖完成, 本轮盈利: {cur_profit - cost}, 本轮售卖: {total_count}个, 购买均价: {cost / total_count}"
             f"当前总盈利: {self.profit}, 当前售卖总量: {self.count}")
-        self.overlay.update_text(
+        event_bus.emit_overlay_text_updated(
             f"本轮售卖完成, 本轮盈利: {cur_profit - cost}, 本轮售卖: {total_count}个, 购买均价: {cost / total_count}"
         )
 
@@ -508,16 +509,15 @@ class TradingModeFactory:
     def create_mode(config: TradingConfig,
                     ocr_engine: TemplateOCREngine,
                     screen_capture: ScreenCapture,
-                    action_executor: ActionExecutor,
-                    overlay: TransparentOverlay) -> ITradingMode:
+                    action_executor: ActionExecutor) -> ITradingMode:
         """根据类型创建交易模式"""
         if config.trading_mode == TradingMode.HOARDING:
             price_detector = HoardingModeDetector(screen_capture, ocr_engine,
                                                   ItemType(config.item_type) == ItemType.CONVERTIBLE)
-            mode = HoardingTradingMode(price_detector, action_executor, overlay)
+            mode = HoardingTradingMode(price_detector, action_executor)
         elif config.trading_mode == TradingMode.ROLLING:
             price_detector = RollingModeDetector(screen_capture, ocr_engine)
-            mode = RollingTradingMode(price_detector, action_executor, overlay)
+            mode = RollingTradingMode(price_detector, action_executor)
         else:
             raise ValueError(f"不支持的交易模式: {config.trading_mode}")
         return mode

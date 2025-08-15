@@ -4,16 +4,15 @@
 """
 from typing import Dict, Any
 
+from ..core.event_bus import event_bus
 from ..core.interfaces import ITradingStrategy, TradingConfig, MarketData, TradingMode
-from ..ui.overlay import TransparentOverlay
 
 
 class HoardingStrategy(ITradingStrategy):
     """屯仓模式交易策略"""
 
-    def __init__(self, config: TradingConfig, overlay: TransparentOverlay):
+    def __init__(self, config: TradingConfig):
         self.config = config
-        self.overlay = overlay
 
     def _need_calc_unit_price(self, market_data: MarketData) -> bool:
         return self.config.use_balance_calculation and (market_data.last_balance is not None
@@ -31,15 +30,15 @@ class HoardingStrategy(ITradingStrategy):
         """判断是否该购买"""
         if market_data.last_buy_quantity != 0 and market_data.last_balance == market_data.balance:
             print('上次购买失败，直接看市场底价')
-            self.overlay.update_text('上次购买失败，直接看市场底价')
+            event_bus.emit_overlay_text_updated('上次购买失败，直接看市场底价')
         if self._need_calc_unit_price(market_data):
             # 计算单价
             unit_price = self._calc_unit_price(market_data)
             if unit_price > 100:
-                self.overlay.update_text(f"上次购买单价: {unit_price}")
+                event_bus.emit_overlay_text_updated(f"上次购买单价: {unit_price}")
                 return unit_price <= self.config.max_price
             print(f"单价计算异常({unit_price})，直接看市场底价")
-            self.overlay.update_text(f"单价计算异常({unit_price})，直接看市场底价")
+            event_bus.emit_overlay_text_updated(f"单价计算异常({unit_price})，直接看市场底价")
         print('current_price:', market_data.current_price, 'max_price:', self.config.max_price)
         return market_data.current_price <= int(self.config.max_price)
 
@@ -56,7 +55,7 @@ class HoardingStrategy(ITradingStrategy):
             unit_price = self._calc_unit_price(market_data)
             if unit_price >= 50:
                 print('计算上次购买单价:', unit_price)
-                self.overlay.update_text(f"上次购买单价: {unit_price}")
+                event_bus.emit_overlay_text_updated(f"上次购买单价: {unit_price}")
                 if self.config.ideal_price < unit_price <= self.config.max_price:
                     return 31
                 if unit_price <= self.config.ideal_price:
@@ -73,11 +72,10 @@ class HoardingStrategy(ITradingStrategy):
 class RefreshOnlyStrategy(ITradingStrategy):
     """仅刷新策略（用于价格高于理想值时）"""
 
-    def __init__(self, config, overlay: TransparentOverlay):
+    def __init__(self, config):
         self.last_balance = None
         self.last_buy_quantity = 0
         self.config = config
-        self.overlay = overlay
 
     def should_buy(self, market_data: MarketData) -> bool:
         return False
@@ -98,9 +96,8 @@ class RefreshOnlyStrategy(ITradingStrategy):
 class RollingStrategy(ITradingStrategy):
     """滚仓模式交易策略"""
 
-    def __init__(self, config: TradingConfig, overlay: TransparentOverlay):
+    def __init__(self, config: TradingConfig):
         self.config = config
-        self.overlay = overlay
 
     def should_buy(self, market_data: MarketData) -> bool:
         """判断是否该购买"""
@@ -149,14 +146,14 @@ class StrategyFactory:
     """策略工厂"""
 
     @staticmethod
-    def create_strategy(config: TradingConfig, overlay: TransparentOverlay) -> ITradingStrategy:
+    def create_strategy(config: TradingConfig) -> ITradingStrategy:
         """根据配置创建策略"""
         if config.trading_mode == TradingMode.ROLLING:
-            return RollingStrategy(config, overlay)
+            return RollingStrategy(config)
         else:
-            return HoardingStrategy(config, overlay)
+            return HoardingStrategy(config)
 
     @staticmethod
-    def create_refresh_strategy(config: TradingConfig, overlay: TransparentOverlay) -> ITradingStrategy:
+    def create_refresh_strategy(config: TradingConfig) -> ITradingStrategy:
         """创建刷新策略"""
-        return RefreshOnlyStrategy(config, overlay)
+        return RefreshOnlyStrategy(config)

@@ -7,25 +7,10 @@ from typing import Dict, Any
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex
 
 from ..config.config_factory import get_config_manager
+from ..core.event_bus import event_bus
 from ..core.exceptions import TradingException
 from ..core.interfaces import IConfigManager, ITradingService, TradingMode, ItemType
 from ..services.trading_service import TradingService
-
-
-class TradingSignals(QObject):
-    """交易信号类"""
-
-    # 状态信号
-    status_changed = pyqtSignal(str)
-    error_occurred = pyqtSignal(str)
-
-    # 数据信号
-    price_updated = pyqtSignal(int)
-    balance_updated = pyqtSignal(int)
-
-    # 控制信号
-    started = pyqtSignal()
-    stopped = pyqtSignal()
 
 
 class TradingWorker(QThread):
@@ -35,7 +20,6 @@ class TradingWorker(QThread):
         super().__init__()
         self.trading_service = trading_service
         self.config_manager = config_manager
-        self.signals = TradingSignals()
 
         # 线程控制
         self._mutex = QMutex()
@@ -67,7 +51,8 @@ class TradingWorker(QThread):
         """开始交易"""
         if not self.isRunning():
             self.start()
-            self.signals.started.emit()
+            # 通过事件总线发送交易开始事件
+            event_bus.emit_trading_started()
 
     def stop_trading(self) -> None:
         """停止交易"""
@@ -77,10 +62,13 @@ class TradingWorker(QThread):
 
         if self.isRunning():
             self.wait()
-            self.signals.stopped.emit()
+            # 通过事件总线发送交易停止事件
+            event_bus.emit_trading_stopped()
 
     def run(self) -> None:
         """工作线程主循环"""
+        from ..core.event_bus import event_bus
+        
         self._mutex.lock()
         self._running = True
         # 获取当前配置
@@ -108,14 +96,14 @@ class TradingWorker(QThread):
                     # 获取最新数据
                     market_data = self.trading_service.get_market_data()
 
-                    # 发送信号更新UI
+                    # 发送事件更新UI - 使用事件总线
                     if market_data:
-                        self.signals.price_updated.emit(market_data.current_price)
+                        event_bus.emit_price_updated(market_data.current_price)
                         if market_data.balance is not None:
-                            self.signals.balance_updated.emit(market_data.balance)
+                            event_bus.emit_balance_updated(market_data.balance)
 
                     # 更新状态
-                    self.signals.status_changed.emit("运行中")
+                    event_bus.emit_status_changed("运行中")
 
                     # 检查是否应该停止
                     if not should_continue:
@@ -127,16 +115,17 @@ class TradingWorker(QThread):
 
                 except TradingException as e:
                     print(f"循环流执行失败，跳过当前循环流： {e}")
-                    # self.signals.error_occurred.emit(str(e))
-                    # self.signals.status_changed.emit("错误")
+                    # 使用事件总线发送错误事件
+                    # event_bus.emit_error_occurred(str(e))
+                    # event_bus.emit_status_changed("错误")
                     self.msleep(loop_interval)  # 错误后等待
 
         except Exception as e:
             print(f"交易服务初始化失败: {e}")
-            self.signals.error_occurred.emit(f"交易服务初始化失败: {e}")
-            self.signals.status_changed.emit("错误")
+            event_bus.emit_error_occurred(f"交易服务初始化失败: {e}")
+            event_bus.emit_status_changed("错误")
         finally:
-            self.signals.stopped.emit()
+            event_bus.emit_trading_stopped()
 
 
 class UIAdapter:
@@ -146,7 +135,7 @@ class UIAdapter:
         self.ui = ui_instance
         self.config_manager = get_config_manager()
         self.overlay_ui = overlay
-        self.trading_service = TradingService(overlay)
+        self.trading_service = TradingService()
         self.worker = None
 
         # 初始化UI
@@ -322,12 +311,15 @@ class UIAdapter:
 
     def _connect_worker_signals(self) -> None:
         """连接工作线程信号"""
-        if self.worker:
-            # 连接状态信号
-            self.worker.signals.status_changed.connect(self._on_status_changed)
-            self.worker.signals.error_occurred.connect(self._on_error_occurred)
-            self.worker.signals.price_updated.connect(self._on_price_updated)
-            self.worker.signals.balance_updated.connect(self._on_balance_updated)
+
+        # 连接事件总线信号
+        event_bus.status_changed.connect(self._on_status_changed)
+        event_bus.error_occurred.connect(self._on_error_occurred)
+        event_bus.price_updated.connect(self._on_price_updated)
+        event_bus.balance_updated.connect(self._on_balance_updated)
+        
+        event_bus.trading_started.connect(self._on_trading_started)
+        event_bus.trading_stopped.connect(self._on_trading_stopped)
 
     def _on_status_changed(self, status: str) -> None:
         """状态改变处理"""
@@ -350,8 +342,28 @@ class UIAdapter:
         if hasattr(self.ui, 'label_balance'):
             self.ui.label_balance.setText(f"哈夫币余额: {balance}")
 
+    def _on_trading_started(self) -> None:
+        """交易开始处理"""
+        if hasattr(self.ui, 'label_status'):
+            self.ui.label_status.setText("状态: 运行中")
+
+    def _on_trading_stopped(self) -> None:
+        """交易停止处理"""
+        if hasattr(self.ui, 'label_status'):
+            self.ui.label_status.setText("状态: 已停止")
+
     def cleanup(self) -> None:
         """清理资源"""
+
+        # 断开事件总线连接
+        try:
+            event_bus.status_changed.disconnect(self._on_status_changed)
+            event_bus.error_occurred.disconnect(self._on_error_occurred)
+            event_bus.price_updated.disconnect(self._on_price_updated)
+            event_bus.balance_updated.disconnect(self._on_balance_updated)
+        except:
+            pass
+            
         if self.worker:
             self.worker.stop_trading()
             self.worker = None
