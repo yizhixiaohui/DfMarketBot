@@ -36,17 +36,6 @@ class TradingWorker(QThread):
         finally:
             self._mutex.unlock()
 
-    def get_current_config(self) -> Dict[str, Any]:
-        """获取当前配置"""
-        self._mutex.lock()
-        try:
-            if self._config:
-                return self._config.copy()
-            else:
-                return self.config_manager.load_config().__dict__
-        finally:
-            self._mutex.unlock()
-
     def start_trading(self) -> None:
         """开始交易"""
         if not self.isRunning():
@@ -247,6 +236,8 @@ class UIAdapter:
         config = self._get_config_from_ui()
         if self.worker:
             self.worker.update_config(config)
+        else:
+            self.config_manager.update_config(config)
 
     def _get_config_from_ui(self) -> Dict[str, Any]:
         """从UI获取配置"""

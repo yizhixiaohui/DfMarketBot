@@ -40,6 +40,8 @@ class HoardingTradingMode(ITradingMode):
         self.strategy = None
         self.refresh_strategy = None
         self.mouse_position = None
+        # 统计购买失败信息，超过10次认为仓库已满，退出脚本，目前只支持使用哈夫币计算价格时使用
+        self.buy_failed_count = 0
 
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化屯仓模式"""
@@ -71,6 +73,16 @@ class HoardingTradingMode(ITradingMode):
                 last_buy_quantity=self.last_buy_quantity,
                 timestamp=time.time()
             )
+
+            if self.config.use_balance_calculation and self.last_buy_quantity != 0 and self.last_balance == self.current_balance:
+                self.buy_failed_count += 1
+            else:
+                self.buy_failed_count = 0
+
+            if self.buy_failed_count >=10:
+                print("连续10次购买失败，仓库可能满了，退出购买")
+                event_bus.emit_overlay_text_updated("连续10次购买失败，仓库可能满了，退出购买")
+                return False
 
             # 执行交易逻辑
             if self.strategy.should_buy(self.current_market_data):
