@@ -25,7 +25,7 @@ def main():
         print("   在Windows上运行时将正常使用键盘监听")
 
     try:
-        from DFMarketBotV2 import main as app_main
+        from DFMarketBot import main as app_main
         app_main()
     except KeyboardInterrupt:
         print("\n程序被用户中断")

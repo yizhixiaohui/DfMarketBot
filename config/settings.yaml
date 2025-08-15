@@ -7,7 +7,7 @@ use_balance_calculation: false
 trading_mode: 1
 rolling_option: 0
 rolling_options:
-- buy_price: 500
+- buy_price: 520
   min_buy_price: 300
   buy_count: 4980
 - buy_price: 450
@@ -16,7 +16,7 @@ rolling_options:
 - buy_price: 450
   min_buy_price: 270
   buy_count: 4980
-- buy_price: 1600
+- buy_price: 1700
   min_buy_price: 700
   buy_count: 1740
 screen_width: 2560

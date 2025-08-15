@@ -18,8 +18,8 @@ from src.ui.overlay import TransparentOverlay
 # 添加src目录到Python路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from GUIV2.AppGUI import Ui_MainWindow
-from GUIV2.RollingConfigUI import RollingConfigUI
+from GUI.AppGUI import Ui_MainWindow
+from GUI.RollingConfigUI import RollingConfigUI
 from src.ui.adapter import UIAdapter
 
 

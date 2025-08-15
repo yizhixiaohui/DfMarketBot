@@ -87,7 +87,7 @@ python DFMarketBot.py
 ### V2 版本 (推荐)
 ```bash
 # 运行新版本
-python DFMarketBotV2.py
+python DFMarketBot.py
 
 # 开发调试
 python -m src.services.trading_service  # 测试交易服务
