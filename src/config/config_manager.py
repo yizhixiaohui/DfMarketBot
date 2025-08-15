@@ -4,6 +4,7 @@
 """
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Any
 
@@ -21,9 +22,17 @@ class BaseConfigManager(IConfigManager):
     """基础配置管理器"""
 
     def __init__(self, config_path: str = None):
+        # 获取正确的基目录（适配打包环境）
+        if getattr(sys, 'frozen', False):
+            # 打包后的exe运行路径
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            # 开发环境运行路径
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        print(base_dir)
         if config_path is None:
             config_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                base_dir,
                 "config",
                 "settings.yaml"
             )
