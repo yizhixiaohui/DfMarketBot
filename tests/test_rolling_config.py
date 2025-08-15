@@ -7,9 +7,9 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.config.config_manager import ConfigManager
+from src.config.config_manager import YamlConfigManager as ConfigManager
 from src.services.strategy import RollingStrategy
-from src.core.interfaces import MarketData, TradingConfig, TradingMode
+from src.core.interfaces import MarketData
 
 def test_rolling_config_loading():
     """测试滚仓配置加载"""

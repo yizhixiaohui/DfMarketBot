@@ -15,14 +15,14 @@ def test_rolling_config_ui():
     print("=== 测试滚仓配置UI ===")
     
     try:
-        from GUIV2.RollingConfigUI import RollingConfigUI
+        from GUI.RollingConfigUI import RollingConfigUI
         from PyQt5.QtWidgets import QApplication
         
         # 测试导入
         print("✓ 成功导入RollingConfigUI")
         
         # 测试配置管理器
-        from src.config.config_manager import ConfigManager
+        from src.config.config_manager import YamlConfigManager as ConfigManager
         config_manager = ConfigManager()
         config = config_manager.load_config()
         

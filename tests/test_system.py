@@ -12,10 +12,10 @@ def test_imports():
     print("=== 测试模块导入 ===")
     
     try:
-        from DFMarketBotV2 import main
-        print("✓ DFMarketBotV2.py 导入成功")
+        from DFMarketBot import main
+        print("✓ DFMarketBot.py 导入成功")
     except Exception as e:
-        print(f"✗ DFMarketBotV2.py 导入失败: {e}")
+        print(f"✗ DFMarketBot.py 导入失败: {e}")
         return False
     
     try:

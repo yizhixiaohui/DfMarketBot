@@ -17,7 +17,7 @@ def test_imports():
         print("✅ 核心接口导入成功")
         
         # 测试配置管理
-        from src.config.config_manager import JsonConfigManager, ConfigManager
+        from src.config.config_factory import ConfigFactory, get_config_manager
         print("✅ 配置管理导入成功")
         
         # 测试服务层
@@ -25,26 +25,33 @@ def test_imports():
         print("✅ 交易服务导入成功")
         
         # 测试检测器
-        from src.services.detector import PriceDetector, RollingModeDetector
+        from src.services.detector import PriceDetector, RollingModeDetector, HoardingModeDetector
         print("✅ 检测器导入成功")
         
         # 测试交易模式
-        from src.services.trading_modes import TradingModeFactory
+        from src.services.trading_modes import TradingModeFactory, HoardingTradingMode, RollingTradingMode
         print("✅ 交易模式导入成功")
         
         # 测试基础设施
         from src.infrastructure.screen_capture import ScreenCapture
-        from src.infrastructure.ocr_engine import TesseractOCREngine
+        from src.infrastructure.ocr_engine import TemplateOCREngine
         from src.infrastructure.action_executor import ActionExecutorFactory
         print("✅ 基础设施导入成功")
         
         # 测试UI适配器
-        from src.ui.adapter import UIAdapter
+        from src.ui.adapter import UIAdapter, TradingWorker
         print("✅ UI适配器导入成功")
         
+        # 测试事件总线
+        from src.core.event_bus import event_bus
+        print("✅ 事件总线导入成功")
+        
         # 测试主程序
-        from GUIV2.AppGUI import Ui_MainWindow
-        print("✅ UI文件导入成功")
+        try:
+            from GUI.AppGUI import Ui_MainWindow
+            print("✅ UI文件导入成功")
+        except ImportError:
+            print("⚠️ UI文件导入跳过（可能在非GUI环境）")
         
         return True
         

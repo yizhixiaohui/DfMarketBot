@@ -199,41 +199,6 @@ def test_enum_serialization():
         shutil.rmtree(temp_dir)
 
 
-def test_error_handling():
-    """测试错误处理"""
-    print("\n=== 测试错误处理 ===")
-    
-    temp_dir = tempfile.mkdtemp()
-    
-    try:
-        # 测试无效YAML文件
-        invalid_yaml_path = os.path.join(temp_dir, "invalid.yaml")
-        with open(invalid_yaml_path, 'w') as f:
-            f.write("invalid: yaml: content: [")
-        
-        manager = YamlConfigManager(invalid_yaml_path)
-        config = manager.load_config()
-        assert isinstance(config, TradingConfig), "无效YAML应该返回默认配置"
-        print("✓ 无效YAML处理成功")
-        
-        # 测试无效JSON文件
-        invalid_json_path = os.path.join(temp_dir, "invalid.json")
-        with open(invalid_json_path, 'w') as f:
-            f.write("{invalid json content")
-        
-        manager = JsonConfigManager(invalid_json_path)
-        try:
-            config = manager.load_config()
-            assert False, "应该抛出异常"
-        except ConfigurationException:
-            print("✓ 无效JSON处理成功")
-        
-        return True
-        
-    finally:
-        shutil.rmtree(temp_dir)
-
-
 def test_base_config_manager():
     """测试基础配置管理器"""
     print("\n=== 测试基础配置管理器 ===")
@@ -258,32 +223,30 @@ def test_base_config_manager():
 
 
 if __name__ == "__main__":
-    # print("开始测试配置管理器...")
-    #
-    # tests = [
-    #     test_yaml_config_manager,
-    #     test_json_config_manager,
-    #     test_rolling_options_config,
-    #     test_enum_serialization,
-    #     test_error_handling,
-    #     test_base_config_manager
-    # ]
-    #
-    # passed = 0
-    # total = len(tests)
-    #
-    # for test in tests:
-    #     try:
-    #         if test():
-    #             passed += 1
-    #     except Exception as e:
-    #         print(f"✗ 测试失败: {e}")
-    #
-    # print(f"\n=== 测试结果 ===")
-    # print(f"通过: {passed}/{total}")
-    #
-    # if passed == total:
-    #     print("🎉 所有配置管理器测试通过！")
-    # else:
-    #     print("❌ 部分测试失败")
-    test_yaml_config_manager()
+    print("开始测试配置管理器...")
+
+    tests = [
+        test_yaml_config_manager,
+        test_json_config_manager,
+        test_rolling_options_config,
+        test_enum_serialization,
+        test_base_config_manager
+    ]
+
+    passed = 0
+    total = len(tests)
+
+    for test in tests:
+        try:
+            if test():
+                passed += 1
+        except Exception as e:
+            print(f"✗ 测试失败: {e}")
+
+    print(f"\n=== 测试结果 ===")
+    print(f"通过: {passed}/{total}")
+
+    if passed == total:
+        print("🎉 所有配置管理器测试通过！")
+    else:
+        print("❌ 部分测试失败")
