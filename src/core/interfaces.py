@@ -12,8 +12,8 @@ import numpy as np
 
 class TradingMode(Enum):
     """交易模式枚举"""
-    HOARDING = 0  # 屯仓模式 - 交易页面购买
-    ROLLING = 1  # 滚仓模式 - 配装页面购买
+    ROLLING = 0  # 滚仓模式 - 配装页面购买
+    HOARDING = 1  # 屯仓模式 - 交易页面购买
 
 
 class ItemType(Enum):
@@ -28,7 +28,8 @@ class TradingConfig:
     ideal_price: int = 0
     key_mode: bool = False
     max_price: int = 0
-    loop_interval: int = 50
+    rolling_loop_interval: int = 50
+    hoarding_loop_interval: int = 150
     item_type: ItemType = ItemType.CONVERTIBLE
     use_balance_calculation: bool = False
     trading_mode: TradingMode = TradingMode.HOARDING
@@ -36,7 +37,9 @@ class TradingConfig:
     rolling_options: list = None  # 滚仓选项配置数组
     screen_width: int = 2560
     screen_height: int = 1440
-    tesseract_path: str = ""
+    auto_sell: bool = True
+    fast_sell: bool = True
+    fast_sell_threshold: int = 200000
     log_level: str = "INFO"
 
     def __post_init__(self):
@@ -45,7 +48,9 @@ class TradingConfig:
             raise ValueError("理想价格不能为负数")
         if self.max_price < 0:
             raise ValueError("最高价格不能为负数")
-        if self.loop_interval <= 0:
+        if self.rolling_loop_interval <= 0:
+            raise ValueError("循环间隔必须大于0")
+        if self.hoarding_loop_interval <= 0:
             raise ValueError("循环间隔必须大于0")
         if self.screen_width <= 0 or self.screen_height <= 0:
             raise ValueError("屏幕分辨率必须大于0")
@@ -150,6 +155,11 @@ class ITradingMode(ABC):
     @abstractmethod
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
+        pass
+
+    @abstractmethod
+    def stop(self):
+        """停止交易"""
         pass
 
 

@@ -48,18 +48,14 @@ class MainWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("V2")
         self.setFixedSize(self.size())
-        
+        self.rolling_config_window = RollingConfigUI(self)
+
         # 添加滚仓配置按钮
         self._add_rolling_config_button()
         
         # 设置热键
         self._setup_hotkeys()
-        
-        # 设置定时器用于状态检查
-        self.status_timer = QTimer()
-        self.status_timer.timeout.connect(self._check_status)
-        self.status_timer.start(1000)  # 每秒检查一次
-        
+
     def _setup_hotkeys(self):
         """设置全局热键"""
 
@@ -102,34 +98,14 @@ class MainWindow(QMainWindow):
             if hasattr(self.ui, 'label_status'):
                 self.ui.label_status.setText(f"状态: 停止失败 - {e}")
     
-    def _check_status(self):
-        """检查状态"""
-        # 这里可以添加状态检查逻辑
-        pass
-    
     def _add_rolling_config_button(self):
         """添加滚仓配置按钮"""
-        from PyQt5.QtWidgets import QPushButton
-        
-        # 创建滚仓配置按钮
-        self.rolling_config_btn = QPushButton("滚仓配置", self)
-        self.rolling_config_btn.setGeometry(240, 160, 191, 31)
-        
-        # 设置按钮样式
-        font = self.rolling_config_btn.font()
-        font.setFamily("微软雅黑")
-        font.setPointSize(11)
-        font.setBold(True)
-        font.setWeight(75)
-        self.rolling_config_btn.setFont(font)
-        
-        # 连接点击事件
-        self.rolling_config_btn.clicked.connect(self._open_rolling_config)
+        self.ui.rolling_config_btn.clicked.connect(self._open_rolling_config)
     
     def _open_rolling_config(self):
         """打开滚仓配置界面"""
         try:
-            self.rolling_config_window = RollingConfigUI()
+            self.rolling_config_window = RollingConfigUI(self)
             self.rolling_config_window.show()
         except Exception as e:
             print(f"打开滚仓配置界面失败: {e}")

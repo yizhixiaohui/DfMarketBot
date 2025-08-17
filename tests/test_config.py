@@ -52,17 +52,17 @@ def test_yaml_config_manager():
         print("✓ 配置保存和重新加载成功")
         
         # 测试更新配置
-        manager.update_config({"ideal_price": 1500, "loop_interval": 100})
+        manager.update_config({"ideal_price": 1500, "hoarding_loop_interval": 100})
         updated_config = manager.load_config()
         assert updated_config.ideal_price == 1500, "更新应该生效"
-        assert updated_config.loop_interval == 100, "更新应该生效"
+        assert updated_config.hoarding_loop_interval == 100, "更新应该生效"
         print("✓ 配置更新成功")
         
         # 测试YAML格式
         with open(config_path, 'r', encoding='utf-8') as f:
             yaml_content = f.read()
         assert "ideal_price: 1500" in yaml_content, "YAML应该包含更新的值"
-        assert "loop_interval: 100" in yaml_content, "YAML应该包含更新的值"
+        assert "hoarding_loop_interval: 100" in yaml_content, "YAML应该包含更新的值"
         print("✓ YAML格式正确")
         
         return True
@@ -105,17 +105,17 @@ def test_json_config_manager():
         print("✓ 配置保存和重新加载成功")
         
         # 测试更新配置
-        manager.update_config({"ideal_price": 1200, "loop_interval": 75})
+        manager.update_config({"ideal_price": 1200, "hoarding_loop_interval": 75})
         updated_config = manager.load_config()
         assert updated_config.ideal_price == 1200, "更新应该生效"
-        assert updated_config.loop_interval == 75, "更新应该生效"
+        assert updated_config.hoarding_loop_interval == 75, "更新应该生效"
         print("✓ 配置更新成功")
         
         # 测试JSON格式
         with open(config_path, 'r', encoding='utf-8') as f:
             json_data = json.load(f)
         assert json_data["ideal_price"] == 1200, "JSON应该包含更新的值"
-        assert json_data["loop_interval"] == 75, "JSON应该包含更新的值"
+        assert json_data["hoarding_loop_interval"] == 75, "JSON应该包含更新的值"
         print("✓ JSON格式正确")
         
         return True

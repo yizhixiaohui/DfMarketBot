@@ -71,6 +71,8 @@ class TradingService(ITradingService):
 
     def stop(self) -> None:
         """停止交易服务"""
+        if self.current_mode and hasattr(self.current_mode, 'stop'):
+            self.current_mode.stop()
         self.current_mode = None
         self.current_config = None
 

@@ -36,20 +36,21 @@ class PriceDetector(IPriceDetector):
         """获取价格检测坐标 - 由子类实现"""
         raise NotImplementedError("not implemented")
 
-    def _detect_value(self, coords: List[float], value_name: str = "价格", max_attempts: int = 50) -> int:
+    def _detect_value(self, coords: List[float], value_name: str = "价格", max_attempts: int = 50,
+                      abnormal_value=100) -> int:
         """通用的数值检测逻辑"""
         for attempt in range(max_attempts):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot)
 
             if value is not None:
-                if value_name == "价格" and value < 100:  # 仅对价格进行异常过滤
+                if value_name == "价格" and value < abnormal_value:  # 仅对价格进行异常过滤
                     print(f'检测{value_name}({value})异常，跳过检测')
                     continue
                 print(f'detected {value_name}:', value)
                 return value
 
-            time.sleep(0.02)
+            time.sleep(0.01)
 
         raise PriceDetectionException(f"{value_name}检测失败")
 
@@ -164,6 +165,10 @@ class RollingModeDetector(PriceDetector):
         """检测当前售卖的最小价格"""
         return self._detect_area("min_sell_price_area")
 
+    def detect_min_sell_price_count(self) -> int:
+        """检测当前售卖的最小价格"""
+        return self._detect_area("min_sell_price_count_area")
+
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
         res = self._detect_area("expected_revenue_area")
@@ -174,11 +179,11 @@ class RollingModeDetector(PriceDetector):
         """检测当前售卖总价"""
         return self._detect_area("total_sell_price_area")
 
-    def _detect_area(self, template) -> int:
+    def _detect_area(self, template, abnormal_value=100) -> int:
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
-            return self._detect_value(coords)
+            return self._detect_value(coords, abnormal_value=abnormal_value)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}")
 
@@ -187,5 +192,5 @@ if __name__ == '__main__':
     sc = ScreenCapture()
     ocr = TemplateOCREngine("L:\workspace\github.com\XiaoGu-G2020\DeltaForceMarketBot\\templates")
     detector = RollingModeDetector(sc, ocr)
-    res = detector.detect_expected_revenue()
+    res = detector._detect_area("min_sell_price_count_area", abnormal_value=0)
     print(res)

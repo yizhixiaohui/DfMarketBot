@@ -52,6 +52,8 @@ class CoordinateConfig:
             "min_sell_price_button": [655 / 2560, 904 / 1440],
             # 用于检测当前最小价格的区域
             "min_sell_price_area": [615 / 2560, 986 / 1440, 704 / 2560, 1016 / 1440],
+            # 检测最小价格数量的区域
+            "min_sell_price_count_area": [575 / 2560, 500 / 1440, 720 / 2560, 985 / 1440],
             "sell_count_area": [1570 / 2560, 680 / 1440, 1760 / 2560, 710 / 1440],
             "sell_num_left": [1563 / 2560, 749 / 1440],
             "sell_num_right": [1937 / 2560, 749 / 1440],

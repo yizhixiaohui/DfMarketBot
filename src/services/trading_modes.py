@@ -42,6 +42,8 @@ class HoardingTradingMode(ITradingMode):
         self.mouse_position = None
         # 统计购买失败信息，超过10次认为仓库已满，退出脚本，目前只支持使用哈夫币计算价格时使用
         self.buy_failed_count = 0
+        # 停止标志
+        self._should_stop = False
 
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化屯仓模式"""
@@ -49,6 +51,13 @@ class HoardingTradingMode(ITradingMode):
         factory = StrategyFactory()
         self.strategy = factory.create_strategy(config)
         self.refresh_strategy = factory.create_refresh_strategy(config)
+        self._should_stop = False
+
+    def stop(self) -> None:
+        """停止交易模式"""
+        self._should_stop = True
+        print("屯仓模式收到停止信号")
+        event_bus.emit_overlay_text_updated("收到停止信号，正在安全退出...")
 
     def prepare(self) -> None:
         self.mouse_position = self.action_executor.get_mouse_position()
@@ -59,6 +68,11 @@ class HoardingTradingMode(ITradingMode):
     def execute_cycle(self) -> bool:
         """执行一个屯仓交易周期"""
         try:
+            # 检查停止信号
+            if self._should_stop:
+                print("检测到停止信号，退出交易周期")
+                return False
+
             # 获取当前价格
             current_price = self.detector.detect_price()
 
@@ -79,7 +93,7 @@ class HoardingTradingMode(ITradingMode):
             else:
                 self.buy_failed_count = 0
 
-            if self.buy_failed_count >=10:
+            if self.buy_failed_count >= 10:
                 print("连续10次购买失败，仓库可能满了，退出购买")
                 event_bus.emit_overlay_text_updated("连续10次购买失败，仓库可能满了，退出购买")
                 return False
@@ -108,7 +122,7 @@ class HoardingTradingMode(ITradingMode):
             if self.config.use_balance_calculation:
                 self.last_balance = self.current_balance
 
-            return True
+            return not self._should_stop  # 如果收到停止信号则返回False
 
         except Exception as e:
             raise TradingException(f"屯仓模式交易失败: {e}")
@@ -147,27 +161,36 @@ class RollingTradingMode(ITradingMode):
     """滚仓模式交易实现"""
 
     current_market_data: MarketData
+    config: TradingConfig
 
     def __init__(self, rolling_detector: RollingModeDetector, action_executor: ActionExecutor):
         self.detector = rolling_detector
         self.action_executor = action_executor
         self.strategy_factory = StrategyFactory()
         self.option_configs = None
-        self.config = None
         self.last_balance = None
         self.profit = 0
         # 已出售总数
         self.count = 0
+        # 停止标志
+        self._should_stop = False
 
-    def initialize(self, config, **kwargs) -> None:
+    def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化滚仓模式"""
         self.config = config
         self.option_configs = config.rolling_options
         self.last_balance = None
+        self._should_stop = False
         if kwargs.get('profit', None):
             self.profit = kwargs.get('profit')
         if kwargs.get('count', None):
             self.count = kwargs.get('count')
+
+    def stop(self) -> None:
+        """停止交易模式"""
+        self._should_stop = True
+        print("滚仓模式收到停止信号")
+        event_bus.emit_overlay_text_updated("收到停止信号，正在安全退出...")
 
     def prepare(self) -> None:
         self.last_balance = self._detect_balance()
@@ -181,19 +204,10 @@ class RollingTradingMode(ITradingMode):
     def execute_cycle(self) -> bool:
         """执行一个滚仓交易周期"""
         try:
-            self._execute_enter()
-            # 切换到指定配装选项
-            self._switch_to_option(self.config.rolling_option)
-            time.sleep(0.1)
-            # 检测价格
-            current_price = self.detector.detect_price()
-
-            # 存储市场数据
-            self.current_market_data = MarketData(
-                current_price=current_price,
-                balance=None,  # 滚仓模式不检测余额
-                timestamp=time.time()
-            )
+            # 检查停止信号
+            if self._should_stop:
+                print("检测到停止信号，退出交易周期")
+                return False
 
             # 获取配装配置
             if self.config.rolling_option >= len(self.option_configs):
@@ -204,6 +218,27 @@ class RollingTradingMode(ITradingMode):
 
             target_price = option_config["buy_price"] * option_config["buy_count"]
             min_price = option_config["min_buy_price"] * option_config["buy_count"]
+
+            self._execute_enter()
+            time.sleep(0.01)
+            # 切换到指定配装选项
+            self._switch_to_option(self.config.rolling_option)
+            time.sleep(0.05)
+            current_price = 0
+            for i in range(5):
+                # 检测价格
+                current_price = self.detector.detect_price()
+                if current_price > min_price:
+                    break
+                print(f'价格小于异常价格，重新检测({i}/5)')
+                event_bus.emit_overlay_text_updated(f'价格小于异常价格，重新检测({i + 1}/5)')
+                time.sleep(0.05)
+            # 存储市场数据
+            self.current_market_data = MarketData(
+                current_price=current_price,
+                balance=None,  # 滚仓模式不检测余额
+                timestamp=time.time()
+            )
 
             print(f"滚仓模式: 单价={option_config['buy_price']}, "
                   f"数量={option_config['buy_count']}, "
@@ -237,7 +272,21 @@ class RollingTradingMode(ITradingMode):
                 self.profit -= cost
                 self.append_to_sell_log(f"购买成功, 总花费: {cost}, 当前盈利: {self.profit}")
                 event_bus.emit_overlay_text_updated(f"购买成功, 总花费[{cost}], 当前盈利: {self.profit}")
+
+                current = time.localtime()
+                if (current.tm_hour > 1) or (current.tm_hour == 1 and current.tm_min >= 55):
+                    return False
+
+                # 检查停止信号再执行售卖
+                if self._should_stop or self.config.auto_sell:
+                    return False
+
                 self._execute_auto_sell(cost)
+
+                # 检查停止信号
+                if self._should_stop:
+                    return False
+
                 # 自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
                 time.sleep(0.3)
                 self._execute_get_mail_half_coin()
@@ -253,7 +302,7 @@ class RollingTradingMode(ITradingMode):
                 self._execute_refresh()
 
             self._update_statistics()
-            return True
+            return not self._should_stop  # 如果收到停止信号则返回False
 
         except Exception as e:
             raise TradingException(f"滚仓模式交易失败: {e}")
@@ -280,6 +329,7 @@ class RollingTradingMode(ITradingMode):
         """执行刷新操作"""
         print('execute refresh')
         self.action_executor.press_key('esc')
+        time.sleep(0.01)
 
     def _execute_auto_sell(self, cost=0):
         """执行自动售卖流程"""
@@ -303,6 +353,12 @@ class RollingTradingMode(ITradingMode):
         cycle_results = []
 
         while sell_time < len(sell_ratios):
+            # 检查停止信号
+            if self._should_stop:
+                print(f"在第{sell_time + 1}轮售卖前收到停止信号，退出售卖循环")
+                event_bus.emit_overlay_text_updated(f"在第{sell_time + 1}轮售卖前收到停止信号，退出售卖循环")
+                break
+
             result = self._execute_single_sell_cycle(sell_time, sell_ratios[sell_time])
             if not result["success"]:
                 time.sleep(1)
@@ -321,6 +377,8 @@ class RollingTradingMode(ITradingMode):
 
     def _execute_single_sell_cycle(self, cycle_index: int, sell_ratio: float) -> Dict[str, any]:
         """执行单个售卖循环"""
+        if self._should_stop:
+            return {"success": False, "message": "收到停止信号"}
         try:
             # 检测可售卖物品
             item_pos = self.detector.detect_sellable_item()
@@ -346,6 +404,8 @@ class RollingTradingMode(ITradingMode):
 
     def _perform_sell_operation(self, item_pos: Tuple[int, int], sell_ratio: float, cycle_index: int) -> Dict[str, any]:
         """执行单个售卖操作"""
+        if self._should_stop:
+            return {}
         sell_pos = (
             item_pos[0] + self.detector.coordinates["rolling_mode"]["item_sell_offset"][0],
             item_pos[1] + self.detector.coordinates["rolling_mode"]["item_sell_offset"][1],
@@ -365,6 +425,8 @@ class RollingTradingMode(ITradingMode):
         max_retries = 3
         for attempt in range(max_retries):
             try:
+                if self._should_stop:
+                    return
                 self._click_sell_item(item_pos, sell_pos)
                 if self._wait_for_sell_window():
                     self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_button"])
@@ -403,6 +465,8 @@ class RollingTradingMode(ITradingMode):
 
     def _set_sell_price(self, sell_ratio: float, cycle_index: int, fast_sell=False) -> int:
         """设置售卖价格"""
+        if self._should_stop:
+            return 0
         min_sell_pos = self.detector.coordinates["rolling_mode"]["sell_num_left"]
         sell_num_slice_length = self.detector.coordinates["rolling_mode"]["sell_num_right"][0] - min_sell_pos[0]
 
@@ -410,7 +474,9 @@ class RollingTradingMode(ITradingMode):
         sell_y = min_sell_pos[1]
 
         min_sell_price = self.detector.detect_min_sell_price()
-        if fast_sell and (min_sell_price or min_sell_price) > 0:
+        min_sell_price_count = self.detector.detect_min_sell_price_count()
+
+        if fast_sell and min_sell_price > 0 and min_sell_price_count > self.config.fast_sell_threshold:
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_price_text"])
             time.sleep(0.5)
             self.action_executor.multi_key_press("ctrl", "a")
@@ -426,6 +492,8 @@ class RollingTradingMode(ITradingMode):
 
     def _confirm_sell_transaction(self, sell_time: int, min_sell_price=0) -> Dict[str, any]:
         """确认售卖交易"""
+        if self._should_stop:
+            return {}
         # 检测售卖数量
         cur_num, max_num = self.detector.detect_sell_num()
         if cur_num > max_num:
@@ -540,6 +608,6 @@ if __name__ == '__main__':
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
     executor = ActionExecutor()
-    mode = RollingTradingMode(detector, executor, None)
+    mode = RollingTradingMode(detector, executor)
     mode.initialize(TradingConfig(), profit=300000, count=123456)
     print(mode.profit, mode.count)

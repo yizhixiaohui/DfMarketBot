@@ -21,8 +21,8 @@ from src.config.config_factory import get_config_manager
 class RollingConfigUI(QMainWindow):
     """滚仓配置管理主界面"""
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.config_manager = get_config_manager()
         self.rolling_options = []
         self.init_ui()

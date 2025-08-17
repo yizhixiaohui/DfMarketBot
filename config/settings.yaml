@@ -1,17 +1,18 @@
-ideal_price: 500
+ideal_price: 568
 key_mode: false
-max_price: 550
-loop_interval: 80
+max_price: 628
+rolling_loop_interval: 50
+hoarding_loop_interval: 500
 item_type: 0
-use_balance_calculation: false
+use_balance_calculation: true
 trading_mode: 1
 rolling_option: 0
 rolling_options:
-- buy_price: 520
+- buy_price: 578
   min_buy_price: 300
   buy_count: 4980
 - buy_price: 450
-  min_buy_price: 270
+  min_buy_price: 300
   buy_count: 4980
 - buy_price: 450
   min_buy_price: 270
@@ -21,5 +22,7 @@ rolling_options:
   buy_count: 1740
 screen_width: 2560
 screen_height: 1440
-tesseract_path: ''
+auto_sell: true
+fast_sell: true
+fast_sell_threshold: 200000
 log_level: INFO
