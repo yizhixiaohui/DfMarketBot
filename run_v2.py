@@ -4,13 +4,13 @@
 DFMarketBot V2 启动脚本
 处理macOS权限问题
 """
-import json
-import sys
 import os
 import platform
+import sys
 
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 
 def main():
     """主函数"""
@@ -26,13 +26,16 @@ def main():
 
     try:
         from DFMarketBot import main as app_main
+
         app_main()
     except KeyboardInterrupt:
         print("\n程序被用户中断")
     except Exception as e:
         print(f"启动失败: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()

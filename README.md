@@ -145,3 +145,4 @@ python DFMarketBot.py
 - ✅ 窗口大小优化
 - ✅ UI交互改进
 - ✅ 配置管理增强
+- ✅ 集成pylint代码质量检查

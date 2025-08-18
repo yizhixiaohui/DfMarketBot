@@ -15,7 +15,7 @@ class CoordinateConfig:
     COORDINATES = {
         "price_detection": {
             "convertible": [2179 / 2560, 1078 / 1440, 2308 / 2560, 1102 / 1440],
-            "non_convertible": [2179 / 2560, 1156 / 1440, 2308 / 2560, 1178 / 1440]
+            "non_convertible": [2179 / 2560, 1156 / 1440, 2308 / 2560, 1178 / 1440],
         },
         "balance_active": [2200 / 2560, 70 / 1440],
         "balance_detection": [1912 / 2560, 363 / 1440, 2324 / 2560, 387 / 1440],
@@ -25,21 +25,19 @@ class CoordinateConfig:
             "non_convertible_max": [2329 / 2560, 1112 / 1440],
             "non_convertible_min": [2059 / 2560, 1112 / 1440],
             "convertible_buy": [2189 / 2560, 0.7979],
-            "non_convertible_buy": [2186 / 2560, 1225 / 1440]
+            "non_convertible_buy": [2186 / 2560, 1225 / 1440],
         },
         "rolling_mode": {
             "options": [
                 [244 / 2560, 404 / 1440],
                 [244 / 2560, 500 / 1440],
                 [244 / 2560, 591 / 1440],
-                [244 / 2560, 690 / 1440]
+                [244 / 2560, 690 / 1440],
             ],
             "price_area": [2128 / 2560, 1133 / 1440, 2413 / 2560, 1191 / 1440],
             "buy_button": [2245 / 2560, 1165 / 1440],
             "failure_check": [418 / 2560, 280 / 1440, 867 / 2560, 387 / 1440],
-
             "item_range": [84 / 2560, 84 / 1440],
-
             # 仓库前10行为等待售卖区域
             "wait_sell_item_area": [1651 / 2560, 177 / 1440, 2416 / 2560, 1028 / 1440],
             "enter_storage": [427 / 2560, 76 / 1440],
@@ -62,14 +60,13 @@ class CoordinateConfig:
             "expected_revenue_area": [1642 / 2560, 910 / 1440, 1920 / 2560, 950 / 1440],
             "sell_detail_button": [1867 / 2560, 929 / 1440],
             "total_sell_price_area": [1844 / 2560, 707 / 1440, 2010 / 2560, 740 / 1440],
-
             # 上架按钮
             "final_sell_button": [1757 / 2560, 994 / 1440],
             # 邮件按钮
             "mail_button": [2313 / 2560, 73 / 1440],
             "mail_trade_button": [598 / 2560, 100 / 1440],
             "mail_get_button": [256 / 2560, 1270 / 1440],
-        }
+        },
     }
 
     @classmethod
@@ -89,11 +86,9 @@ class CoordinateConfig:
             if coord[0] > 1 or coord[1] > 1:
                 return coord
             if isinstance(coord, list):
-                return [int(coord[i] * (target_width if i % 2 == 0 else target_height))
-                        for i in range(len(coord))]
-            elif isinstance(coord, tuple):
-                return tuple(int(coord[i] * (target_width if i % 2 == 0 else target_height))
-                             for i in range(len(coord)))
+                return [int(coord[i] * (target_width if i % 2 == 0 else target_height)) for i in range(len(coord))]
+            if isinstance(coord, tuple):
+                return tuple(int(coord[i] * (target_width if i % 2 == 0 else target_height)) for i in range(len(coord)))
             return coord
 
         # 递归处理所有坐标
@@ -106,8 +101,7 @@ class CoordinateConfig:
                     if all(isinstance(item, (int, float)) for item in v):
                         result[k] = restore_coord(v)
                     else:
-                        result[k] = [restore_coord(item) if isinstance(item, (list, tuple)) else item
-                                     for item in v]
+                        result[k] = [restore_coord(item) if isinstance(item, (list, tuple)) else item for item in v]
                 else:
                     result[k] = v
             return result
@@ -115,7 +109,7 @@ class CoordinateConfig:
         return restore_dict(cls.COORDINATES)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     res = CoordinateConfig.restore_coordinates(2560, 1440)
     print(CoordinateConfig.COORDINATES)
     print(res)

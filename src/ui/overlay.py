@@ -1,27 +1,25 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QGuiApplication
-from PyQt5.QtWidgets import QMainWindow, QLabel, QApplication
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
 
 try:
-    from ..core.event_bus import event_bus
-except ImportError:
     from src.core.event_bus import event_bus
+except ImportError:
+    from ..core.event_bus import event_bus
 
 
 class TransparentOverlay(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.old_pos = None
+        self.label = None
         self._pending_text = None
-        self.initUI()
+        self.init_ui()
         self._connect_events()
 
-    def initUI(self):
-        self.setWindowFlags(
-            Qt.FramelessWindowHint |
-            Qt.WindowStaysOnTopHint |
-            Qt.Tool
-        )
+    def init_ui(self):
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
         screen = QGuiApplication.primaryScreen().geometry()
         x = (screen.width() - self.width()) // 2 - 150
@@ -29,18 +27,20 @@ class TransparentOverlay(QMainWindow):
 
         self.label = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("""
+        self.label.setStyleSheet(
+            """
             background-color: rgba(0, 0, 0, 180);
             color: white;
             border-radius: 5px;
             padding: 10px;
             font-size: 14px;
-        """)
+        """
+        )
         self.label.setGeometry(0, 0, self.width(), self.height())
         self.label.setText("准备就绪")
         self.label.setWordWrap(True)
 
-        self.oldPos = None
+        self.old_pos = None
 
     def _connect_events(self):
         """连接事件总线信号"""
@@ -72,17 +72,17 @@ class TransparentOverlay(QMainWindow):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.oldPos = event.globalPos()
+            self.old_pos = event.globalPos()
 
     def mouseMoveEvent(self, event):
-        if self.oldPos and event.buttons() == Qt.LeftButton:
-            delta = event.globalPos() - self.oldPos
+        if self.old_pos and event.buttons() == Qt.LeftButton:
+            delta = event.globalPos() - self.old_pos
             self.move(self.x() + delta.x(), self.y() + delta.y())
-            self.oldPos = event.globalPos()
+            self.old_pos = event.globalPos()
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.oldPos = None
+            self.old_pos = None
 
 
 if __name__ == "__main__":

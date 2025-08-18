@@ -8,14 +8,24 @@ import sys
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
-                             QHBoxLayout, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QHeaderView,
-                             QMessageBox)
+from PyQt5.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
+
+from src.config.config_factory import ConfigFactory
 
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.config.config_factory import get_config_manager
 
 
 class RollingConfigUI(QMainWindow):
@@ -23,7 +33,9 @@ class RollingConfigUI(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.config_manager = get_config_manager()
+        self._updating_table = False
+
+        self.config_manager = ConfigFactory.get_config_manager()
         self.rolling_options = []
         self.init_ui()
         self.load_config()
@@ -103,7 +115,7 @@ class RollingConfigUI(QMainWindow):
                 {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740}
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
             ]
             self.refresh_table()
 
@@ -191,7 +203,7 @@ class RollingConfigUI(QMainWindow):
                 {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740}
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
             ]
             self.refresh_table()
             self.save_config()

@@ -3,21 +3,23 @@
 核心接口定义层
 """
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
 
 class TradingMode(Enum):
     """交易模式枚举"""
+
     ROLLING = 0  # 滚仓模式 - 配装页面购买
     HOARDING = 1  # 屯仓模式 - 交易页面购买
 
 
 class ItemType(Enum):
     """物品类型枚举"""
+
     CONVERTIBLE = 0
     NON_CONVERTIBLE = 1
 
@@ -25,6 +27,7 @@ class ItemType(Enum):
 @dataclass
 class TradingConfig:
     """交易配置数据类"""
+
     ideal_price: int = 0
     key_mode: bool = False
     max_price: int = 0
@@ -67,13 +70,14 @@ class TradingConfig:
                 {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
                 {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740}
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
             ]
 
 
 @dataclass
 class MarketData:
     """市场数据"""
+
     current_price: int
     balance: Optional[int] = None
     last_balance: Optional[int] = None
@@ -89,12 +93,10 @@ class IPriceDetector(ABC):
     @abstractmethod
     def detect_price(self) -> int:
         """检测当前物品价格"""
-        pass
 
     @abstractmethod
     def detect_balance(self) -> Optional[int]:
         """检测当前哈夫币余额"""
-        pass
 
 
 class IActionExecutor(ABC):
@@ -103,17 +105,14 @@ class IActionExecutor(ABC):
     @abstractmethod
     def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """点击指定位置"""
-        pass
 
     @abstractmethod
     def press_key(self, key: str) -> None:
         """按下键盘按键"""
-        pass
 
     @abstractmethod
     def move_mouse(self, position: Tuple[float, float]) -> None:
         """移动鼠标到指定位置"""
-        pass
 
 
 class ITradingStrategy(ABC):
@@ -122,17 +121,14 @@ class ITradingStrategy(ABC):
     @abstractmethod
     def should_buy(self, market_data: MarketData) -> bool:
         """判断是否该购买"""
-        pass
 
     @abstractmethod
     def should_refresh(self, market_data: MarketData) -> bool:
         """判断是否该刷新"""
-        pass
 
     @abstractmethod
     def get_buy_quantity(self, market_data: MarketData) -> int:
         """获取购买数量"""
-        pass
 
 
 class ITradingMode(ABC):
@@ -140,27 +136,23 @@ class ITradingMode(ABC):
 
     @abstractmethod
     def prepare(self) -> None:
-        pass
+        """交易周期啊前准备"""
 
     @abstractmethod
     def execute_cycle(self) -> bool:
         """执行一个交易周期，返回是否继续"""
-        pass
 
     @abstractmethod
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化模式"""
-        pass
 
     @abstractmethod
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
-        pass
 
     @abstractmethod
     def stop(self):
         """停止交易"""
-        pass
 
 
 class ILogger(ABC):
@@ -168,15 +160,15 @@ class ILogger(ABC):
 
     @abstractmethod
     def info(self, message: str) -> None:
-        pass
+        """info日志"""
 
     @abstractmethod
     def error(self, message: str) -> None:
-        pass
+        """error日志"""
 
     @abstractmethod
     def debug(self, message: str) -> None:
-        pass
+        """debug日志"""
 
 
 class IConfigManager(ABC):
@@ -185,35 +177,32 @@ class IConfigManager(ABC):
     @abstractmethod
     def load_config(self) -> TradingConfig:
         """加载配置"""
-        pass
 
     @abstractmethod
     def save_config(self, config: TradingConfig) -> None:
         """保存配置"""
-        pass
 
     @abstractmethod
     def update_config(self, updates: Dict[str, Any]) -> TradingConfig:
         """更新配置"""
-        pass
 
     @staticmethod
     def _config_to_dict(config: TradingConfig) -> Dict[str, Any]:
         """将配置对象转换为字典"""
         config_dict = asdict(config)
         # 处理枚举类型
-        config_dict['trading_mode'] = config.trading_mode.value
-        config_dict['item_type'] = config.item_type.value
+        config_dict["trading_mode"] = config.trading_mode.value
+        config_dict["item_type"] = config.item_type.value
         return config_dict
 
     @staticmethod
     def _dict_to_config(config_dict: Dict[str, Any]) -> TradingConfig:
         """将字典转换为配置对象"""
         # 处理枚举类型
-        if 'trading_mode' in config_dict:
-            config_dict['trading_mode'] = TradingMode(config_dict['trading_mode'])
-        if 'item_type' in config_dict:
-            config_dict['item_type'] = ItemType(config_dict['item_type'])
+        if "trading_mode" in config_dict:
+            config_dict["trading_mode"] = TradingMode(config_dict["trading_mode"])
+        if "item_type" in config_dict:
+            config_dict["item_type"] = ItemType(config_dict["item_type"])
 
         return TradingConfig(**config_dict)
 
@@ -224,12 +213,10 @@ class IOCREngine(ABC):
     @abstractmethod
     def image_to_string(self, image: np.ndarray) -> str:
         """将图像转换为字符串"""
-        pass
 
     @abstractmethod
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板匹配"""
-        pass
 
 
 class ITradingService(ABC):
@@ -238,23 +225,19 @@ class ITradingService(ABC):
     @abstractmethod
     def initialize(self, config: TradingConfig) -> None:
         """初始化交易服务"""
-        pass
 
     @abstractmethod
     def prepare(self) -> None:
-        pass
+        """交易前准备"""
 
     @abstractmethod
     def execute_cycle(self) -> bool:
         """执行一个交易周期"""
-        pass
 
     @abstractmethod
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
-        pass
 
     @abstractmethod
     def stop(self) -> None:
         """停止交易服务"""
-        pass

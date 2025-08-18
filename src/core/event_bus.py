@@ -35,7 +35,7 @@ class EventBus(QObject):
         self._handlers: Dict[str, List[Callable]] = {}
 
     @classmethod
-    def instance(cls) -> 'EventBus':
+    def instance(cls) -> "EventBus":
         """获取单例实例"""
         if cls._instance is None:
             cls._instance = cls()

@@ -14,13 +14,13 @@ tests/
 ## 命名规范
 
 1. **单元测试文件**: `test_<模块名>.py`
-   - 例如: `test_config.py`, `test_strategy.py`
+    - 例如: `test_config.py`, `test_strategy.py`
 
 2. **集成测试文件**: `test_integration_<功能名>.py`
-   - 例如: `test_integration_trading.py`
+    - 例如: `test_integration_trading.py`
 
 3. **测试数据文件**: `test_<类型>_data.json/yaml`
-   - 例如: `test_config_data.yaml`
+    - 例如: `test_config_data.yaml`
 
 ## 测试文件模板
 
@@ -90,17 +90,20 @@ if __name__ == "__main__":
 ## 运行测试
 
 ### 运行所有测试
+
 ```bash
 python -m pytest tests/
 ```
 
 ### 运行特定测试
+
 ```bash
 python tests/test_config.py
 python tests/test_yaml_config.py
 ```
 
 ### 运行集成测试
+
 ```bash
 python tests/integration/test_integration_trading.py
 ```

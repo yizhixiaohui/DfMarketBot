@@ -2,14 +2,14 @@
 """
 UI适配层 - 连接新架构与现有PyQt5 UI
 """
-from typing import Dict, Any
+from typing import Any, Dict
 
-from PyQt5.QtCore import QThread, QMutex
+from PyQt5.QtCore import QMutex, QThread
 
-from ..config.config_factory import get_config_manager
+from ..config.config_factory import ConfigFactory
 from ..core.event_bus import event_bus
 from ..core.exceptions import TradingException
-from ..core.interfaces import IConfigManager, ITradingService, TradingMode, ItemType
+from ..core.interfaces import IConfigManager, ItemType, ITradingService, TradingMode
 from ..services.trading_service import TradingService
 
 
@@ -50,7 +50,7 @@ class TradingWorker(QThread):
         self._mutex.unlock()
 
         # 立即停止交易服务
-        if hasattr(self, 'trading_service'):
+        if hasattr(self, "trading_service"):
             self.trading_service.stop()
 
         if self.isRunning():
@@ -60,13 +60,15 @@ class TradingWorker(QThread):
 
     def run(self) -> None:
         """工作线程主循环"""
-        from ..core.event_bus import event_bus
-
         self._mutex.lock()
         self._running = True
         # 获取当前配置
         current_config = self._config or self.config_manager.load_config()
-        loop_interval = current_config.rolling_loop_interval if current_config.trading_mode == TradingMode.ROLLING else current_config.hoarding_loop_interval
+        loop_interval = (
+            current_config.rolling_loop_interval
+            if current_config.trading_mode == TradingMode.ROLLING
+            else current_config.hoarding_loop_interval
+        )
         self._mutex.unlock()
 
         try:
@@ -126,7 +128,7 @@ class UIAdapter:
 
     def __init__(self, ui_instance, overlay):
         self.ui = ui_instance
-        self.config_manager = get_config_manager()
+        self.config_manager = ConfigFactory.get_config_manager()
         self.overlay_ui = overlay
         self.trading_service = TradingService()
         self.worker = None
@@ -139,35 +141,37 @@ class UIAdapter:
     def _setup_ui(self) -> None:
         """设置UI初始状态"""
         # 设置模式选项
-        if hasattr(self.ui, 'comboBox_mode'):
+        if hasattr(self.ui, "comboBox_mode"):
             self.ui.comboBox_mode.clear()
             self.ui.comboBox_mode.addItems(["屯仓模式", "滚仓模式"])
 
         # 设置滚仓模式选项
-        if hasattr(self.ui, 'comboBox_mode1_option'):
+        if hasattr(self.ui, "comboBox_mode1_option"):
             self.ui.comboBox_mode1_option.clear()
-            self.ui.comboBox_mode1_option.addItems([
-                "配装选项1", "配装选项2", "配装选项3", "配装选项4"
-            ])
+            self.ui.comboBox_mode1_option.addItems(["配装选项1", "配装选项2", "配装选项3", "配装选项4"])
 
     def _connect_signals(self) -> None:
         """连接信号"""
         # 连接UI控件信号
-        if hasattr(self.ui, 'tabWidget'):
+        if hasattr(self.ui, "tabWidget"):
             self.ui.tabWidget.currentChanged.connect(self._on_mode_changed)
 
-        if hasattr(self.ui, 'comboBox_mode1_option'):
+        if hasattr(self.ui, "comboBox_mode1_option"):
             self.ui.comboBox_mode1_option.currentIndexChanged.connect(self._on_rolling_option_changed)
 
         # 连接数值输入信号
-        for widget_name in ['textEdit_ideal_price', 'textEdit_unacceptable_price', 'textEdit_hoarding_loop_gap',
-                            'textEdit_fast_sell_threshold']:
+        for widget_name in [
+            "textEdit_ideal_price",
+            "textEdit_unacceptable_price",
+            "textEdit_hoarding_loop_gap",
+            "textEdit_fast_sell_threshold",
+        ]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
                 widget.textChanged.connect(self._on_config_changed)
 
         # 连接复选框信号
-        for widget_name in ['is_convertiable', 'is_key_mode', 'is_half_coin_mode', 'is_auto_sell', 'is_fast_sell']:
+        for widget_name in ["is_convertible", "is_key_mode", "is_half_coin_mode", "is_auto_sell", "is_fast_sell"]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
                 widget.stateChanged.connect(self._on_config_changed)
@@ -184,46 +188,46 @@ class UIAdapter:
         """根据配置更新UI"""
         # 更新模式选择
         # TODO 适配新UI
-        if hasattr(self.ui, 'tabWidget'):
-            mode_index = config.get('trading_mode', TradingMode.HOARDING).value
+        if hasattr(self.ui, "tabWidget"):
+            mode_index = config.get("trading_mode", TradingMode.HOARDING).value
             self.ui.tabWidget.setCurrentIndex(mode_index)
 
         # 更新滚仓模式选项
-        if hasattr(self.ui, 'comboBox_mode1_option'):
-            rolling_option = config.get('rolling_option', 0)
+        if hasattr(self.ui, "comboBox_mode1_option"):
+            rolling_option = config.get("rolling_option", 0)
             self.ui.comboBox_mode1_option.setCurrentIndex(rolling_option)
 
         # 更新数值输入
-        if hasattr(self.ui, 'textEdit_ideal_price'):
-            self.ui.textEdit_ideal_price.setPlainText(str(config.get('ideal_price', 0)))
+        if hasattr(self.ui, "textEdit_ideal_price"):
+            self.ui.textEdit_ideal_price.setPlainText(str(config.get("ideal_price", 0)))
 
-        if hasattr(self.ui, 'textEdit_unacceptable_price'):
-            self.ui.textEdit_unacceptable_price.setPlainText(str(config.get('max_price', 0)))
+        if hasattr(self.ui, "textEdit_unacceptable_price"):
+            self.ui.textEdit_unacceptable_price.setPlainText(str(config.get("max_price", 0)))
 
-        if hasattr(self.ui, 'textEdit_hoarding_loop_gap'):
-            self.ui.textEdit_hoarding_loop_gap.setPlainText(str(int(config.get('hoarding_loop_interval', 150))))
+        if hasattr(self.ui, "textEdit_hoarding_loop_gap"):
+            self.ui.textEdit_hoarding_loop_gap.setPlainText(str(int(config.get("hoarding_loop_interval", 150))))
 
-        if hasattr(self.ui, 'textEdit_rolling_loop_gap'):
-            self.ui.textEdit_rolling_loop_gap.setPlainText(str(int(config.get('rolling_loop_interval', 50))))
+        if hasattr(self.ui, "textEdit_rolling_loop_gap"):
+            self.ui.textEdit_rolling_loop_gap.setPlainText(str(int(config.get("rolling_loop_interval", 50))))
 
-        if hasattr(self.ui, 'textEdit_fast_sell_threshold'):
-            self.ui.textEdit_fast_sell_threshold.setPlainText(str(config.get('fast_sell_threshold', 200000)))
+        if hasattr(self.ui, "textEdit_fast_sell_threshold"):
+            self.ui.textEdit_fast_sell_threshold.setPlainText(str(config.get("fast_sell_threshold", 200000)))
 
         # 更新复选框
-        if hasattr(self.ui, 'is_convertiable'):
-            self.ui.is_convertiable.setChecked(config.get('item_type', ItemType.CONVERTIBLE) == ItemType.CONVERTIBLE)
+        if hasattr(self.ui, "is_convertible"):
+            self.ui.is_convertible.setChecked(config.get("item_type", ItemType.CONVERTIBLE) == ItemType.CONVERTIBLE)
 
-        if hasattr(self.ui, 'is_key_mode'):
-            self.ui.is_key_mode.setChecked(config.get('key_mode', False))
+        if hasattr(self.ui, "is_key_mode"):
+            self.ui.is_key_mode.setChecked(config.get("key_mode", False))
 
-        if hasattr(self.ui, 'is_half_coin_mode'):
-            self.ui.is_half_coin_mode.setChecked(config.get('use_balance_calculation', False))
+        if hasattr(self.ui, "is_half_coin_mode"):
+            self.ui.is_half_coin_mode.setChecked(config.get("use_balance_calculation", False))
 
-        if hasattr(self.ui, 'is_auto_sell'):
-            self.ui.is_auto_sell.setChecked(config.get('auto_sell', True))
+        if hasattr(self.ui, "is_auto_sell"):
+            self.ui.is_auto_sell.setChecked(config.get("auto_sell", True))
 
-        if hasattr(self.ui, 'is_fast_sell'):
-            self.ui.is_fast_sell.setChecked(config.get('fast_sell', True))
+        if hasattr(self.ui, "is_fast_sell"):
+            self.ui.is_fast_sell.setChecked(config.get("fast_sell", True))
 
     def _on_mode_changed(self, index: int) -> None:
         """模式改变处理"""
@@ -246,57 +250,56 @@ class UIAdapter:
         config = {}
 
         # 模式
-        if hasattr(self.ui, 'tabWidget'):
-            config['trading_mode'] = self.ui.tabWidget.currentIndex()
+        if hasattr(self.ui, "tabWidget"):
+            config["trading_mode"] = self.ui.tabWidget.currentIndex()
 
         # 滚仓选项
-        if hasattr(self.ui, 'comboBox_mode1_option'):
-            config['rolling_option'] = self.ui.comboBox_mode1_option.currentIndex()
+        if hasattr(self.ui, "comboBox_mode1_option"):
+            config["rolling_option"] = self.ui.comboBox_mode1_option.currentIndex()
 
         # 数值参数
         try:
-            if hasattr(self.ui, 'textEdit_ideal_price'):
-                text = self.ui.textEdit_ideal_price.toPlainText().replace(',', '')
-                config['ideal_price'] = int(text) if text else 0
+            if hasattr(self.ui, "textEdit_ideal_price"):
+                text = self.ui.textEdit_ideal_price.toPlainText().replace(",", "")
+                config["ideal_price"] = int(text) if text else 0
 
-            if hasattr(self.ui, 'textEdit_unacceptable_price'):
-                text = self.ui.textEdit_unacceptable_price.toPlainText().replace(',', '')
-                config['max_price'] = int(text) if text else 0
+            if hasattr(self.ui, "textEdit_unacceptable_price"):
+                text = self.ui.textEdit_unacceptable_price.toPlainText().replace(",", "")
+                config["max_price"] = int(text) if text else 0
 
-            if hasattr(self.ui, 'textEdit_hoarding_loop_gap'):
-                text = self.ui.textEdit_hoarding_loop_gap.toPlainText().replace(',', '')
-                config['hoarding_loop_interval'] = int(text) if text else 150
+            if hasattr(self.ui, "textEdit_hoarding_loop_gap"):
+                text = self.ui.textEdit_hoarding_loop_gap.toPlainText().replace(",", "")
+                config["hoarding_loop_interval"] = int(text) if text else 150
 
-            if hasattr(self.ui, 'textEdit_rolling_loop_gap'):
-                text = self.ui.textEdit_rolling_loop_gap.toPlainText().replace(',', '')
-                config['rolling_loop_interval'] = int(text) if text else 50
+            if hasattr(self.ui, "textEdit_rolling_loop_gap"):
+                text = self.ui.textEdit_rolling_loop_gap.toPlainText().replace(",", "")
+                config["rolling_loop_interval"] = int(text) if text else 50
 
-            if hasattr(self.ui, 'textEdit_fast_sell_threshold'):
-                text = self.ui.textEdit_fast_sell_threshold.toPlainText().replace(',', '')
-                config['fast_sell_threshold'] = int(text) if text else 200000
-        except ValueError:
-            pass
-
+            if hasattr(self.ui, "textEdit_fast_sell_threshold"):
+                text = self.ui.textEdit_fast_sell_threshold.toPlainText().replace(",", "")
+                config["fast_sell_threshold"] = int(text) if text else 200000
+        except ValueError as e:
+            print("UI配置参数错误:", e)
         # 物品类型
         item_type = 1  # 默认不可兑换
-        if hasattr(self.ui, 'is_convertiable') and self.ui.is_convertiable.isChecked():
+        if hasattr(self.ui, "is_convertible") and self.ui.is_convertible.isChecked():
             item_type = 0
 
-        config['item_type'] = item_type
+        config["item_type"] = item_type
 
         # 钥匙卡模式
-        if hasattr(self.ui, 'is_key_mode'):
-            config['key_mode'] = self.ui.is_key_mode.isChecked()
+        if hasattr(self.ui, "is_key_mode"):
+            config["key_mode"] = self.ui.is_key_mode.isChecked()
 
         # 其他选项
-        if hasattr(self.ui, 'is_half_coin_mode'):
-            config['use_balance_calculation'] = self.ui.is_half_coin_mode.isChecked()
+        if hasattr(self.ui, "is_half_coin_mode"):
+            config["use_balance_calculation"] = self.ui.is_half_coin_mode.isChecked()
 
-        if hasattr(self.ui, 'is_auto_sell'):
-            config['auto_sell'] = self.ui.is_auto_sell.isChecked()
+        if hasattr(self.ui, "is_auto_sell"):
+            config["auto_sell"] = self.ui.is_auto_sell.isChecked()
 
-        if hasattr(self.ui, 'is_fast_sell'):
-            config['fast_sell'] = self.ui.is_fast_sell.isChecked()
+        if hasattr(self.ui, "is_fast_sell"):
+            config["fast_sell"] = self.ui.is_fast_sell.isChecked()
 
         return config
 
@@ -330,33 +333,33 @@ class UIAdapter:
 
     def _on_status_changed(self, status: str) -> None:
         """状态改变处理"""
-        if hasattr(self.ui, 'label_status'):
+        if hasattr(self.ui, "label_status"):
             self.ui.label_status.setText(f"状态: {status}")
 
     def _on_error_occurred(self, error: str) -> None:
         """错误处理"""
         print(f"交易错误: {error}")
-        if hasattr(self.ui, 'label_status'):
+        if hasattr(self.ui, "label_status"):
             self.ui.label_status.setText(f"错误: {error}")
 
     def _on_price_updated(self, price: int) -> None:
         """价格更新处理"""
-        if hasattr(self.ui, 'label_current_price'):
+        if hasattr(self.ui, "label_current_price"):
             self.ui.label_current_price.setText(f"当前价格: {price}")
 
     def _on_balance_updated(self, balance: int) -> None:
         """余额更新处理"""
-        if hasattr(self.ui, 'label_balance'):
+        if hasattr(self.ui, "label_balance"):
             self.ui.label_balance.setText(f"哈夫币余额: {balance}")
 
     def _on_trading_started(self) -> None:
         """交易开始处理"""
-        if hasattr(self.ui, 'label_status'):
+        if hasattr(self.ui, "label_status"):
             self.ui.label_status.setText("状态: 运行中")
 
     def _on_trading_stopped(self) -> None:
         """交易停止处理"""
-        if hasattr(self.ui, 'label_status'):
+        if hasattr(self.ui, "label_status"):
             self.ui.label_status.setText("状态: 已停止")
 
     def cleanup(self) -> None:
@@ -368,8 +371,8 @@ class UIAdapter:
             event_bus.error_occurred.disconnect(self._on_error_occurred)
             event_bus.price_updated.disconnect(self._on_price_updated)
             event_bus.balance_updated.disconnect(self._on_balance_updated)
-        except:
-            pass
+        except Exception as e:
+            print("断开事件总线连接失败:", e)
 
         if self.worker:
             self.worker.stop_trading()

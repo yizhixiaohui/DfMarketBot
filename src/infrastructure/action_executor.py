@@ -2,9 +2,10 @@
 """
 动作执行器基础设施
 """
+import platform
 import threading
 import time
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import keyboard
 import pyautogui
@@ -26,11 +27,11 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         # 锁用于线程安全
         self._lock = threading.Lock()
 
-    def click_position(self, coordinates: Tuple[float, float], right_click=False) -> None:
+    def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """点击指定坐标位置"""
         try:
             with self._lock:
-                x, y = coordinates
+                x, y = position
                 # 确保坐标是整数
                 x, y = int(x), int(y)
 
@@ -41,10 +42,10 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 else:
                     pyautogui.click()
                 if self.debug:
-                    print(f'click position ({x}, {y})')
+                    print(f"click position ({x}, {y})")
 
         except Exception as e:
-            raise ActionExecutionException(f"点击位置({x}, {y})失败: {e}")
+            raise ActionExecutionException(f"点击位置({x}, {y})失败: {e}") from e
 
     def press_key(self, key: str) -> None:
         """按下指定按键"""
@@ -52,10 +53,10 @@ class PyAutoGUIActionExecutor(IActionExecutor):
             with self._lock:
                 pyautogui.press(key)
                 if self.debug:
-                    print(f'press key {key}')
+                    print(f"press key {key}")
 
         except Exception as e:
-            raise ActionExecutionException(f"按键失败: {e}")
+            raise ActionExecutionException(f"按键失败: {e}") from e
 
     def key_down(self, key: str) -> None:
         """按下指定按键"""
@@ -63,10 +64,10 @@ class PyAutoGUIActionExecutor(IActionExecutor):
             with self._lock:
                 pyautogui.keyDown(key)
                 if self.debug:
-                    print(f'press key {key}')
+                    print(f"press key {key}")
 
         except Exception as e:
-            raise ActionExecutionException(f"按键失败: {e}")
+            raise ActionExecutionException(f"按键失败: {e}") from e
 
     def key_up(self, key: str) -> None:
         """按下指定按键"""
@@ -74,10 +75,10 @@ class PyAutoGUIActionExecutor(IActionExecutor):
             with self._lock:
                 pyautogui.keyUp(key)
                 if self.debug:
-                    print(f'press key {key}')
+                    print(f"press key {key}")
 
         except Exception as e:
-            raise ActionExecutionException(f"按键失败: {e}")
+            raise ActionExecutionException(f"按键失败: {e}") from e
 
     def multi_key_press(self, a, b, interval=0.03):
         self.key_down(a)
@@ -95,7 +96,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 pyautogui.typewrite(text, interval=0.04)
 
         except Exception as e:
-            raise ActionExecutionException(f"输入文本失败: {e}")
+            raise ActionExecutionException(f"输入文本失败: {e}") from e
 
     def scroll(self, clicks: int) -> None:
         """滚动鼠标滚轮"""
@@ -104,7 +105,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 pyautogui.scroll(clicks)
 
         except Exception as e:
-            raise ActionExecutionException(f"滚动失败: {e}")
+            raise ActionExecutionException(f"滚动失败: {e}") from e
 
     def move_mouse(self, position: Tuple[float, float]) -> None:
         """移动鼠标到指定位置"""
@@ -113,32 +114,29 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                 x, y = int(position[0]), int(position[1])
                 pyautogui.moveTo(x, y)
                 if self.debug:
-                    print(f'move to ({x}, {y})')
+                    print(f"move to ({x}, {y})")
         except Exception as e:
-            raise ActionExecutionException(f"移动鼠标失败: {e}")
+            raise ActionExecutionException(f"移动鼠标失败: {e}") from e
 
     def get_mouse_position(self) -> Point:
         """获取当前鼠标位置"""
         try:
             return pyautogui.position()
         except Exception as e:
-            raise ActionExecutionException(f"获取鼠标位置失败: {e}")
+            raise ActionExecutionException(f"获取鼠标位置失败: {e}") from e
 
-    def wait_for_key(self, key: str):
+    def wait_for_key(self, key: str) -> None:
         """等待按键按下"""
         try:
             # 在macOS上暂时返回True，避免管理员权限问题
-            import platform
             if platform.system() == "Darwin":
                 # macOS系统，暂时跳过键盘监听
-                import time
                 time.sleep(1)  # 默认等待1秒
-                return True
-            else:
-                # Windows系统，使用keyboard库
-                keyboard.wait(key)
+                return
+            # Windows系统，使用keyboard库
+            keyboard.wait(key)
         except Exception as e:
-            raise ActionExecutionException(f"按键失败: {e}")
+            raise ActionExecutionException(f"按键失败: {e}") from e
 
 
 class MockActionExecutor(IActionExecutor):
@@ -148,12 +146,12 @@ class MockActionExecutor(IActionExecutor):
         self.log_actions = log_actions
         self.actions = []
 
-    def click_position(self, coordinates: Tuple[float, float], right_click=False) -> None:
+    def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """模拟点击位置"""
-        action = {"type": "click", "coordinates": coordinates}
+        action = {"type": "click", "coordinates": position}
         self.actions.append(action)
         if self.log_actions:
-            print(f"模拟点击: {coordinates}")
+            print(f"模拟点击: {position}")
 
     def press_key(self, key: str) -> None:
         """模拟按键"""
@@ -208,7 +206,6 @@ class ActionExecutorFactory:
         """创建动作执行器"""
         if executor_type == "pyautogui":
             return PyAutoGUIActionExecutor()
-        elif executor_type == "mock":
+        if executor_type == "mock":
             return MockActionExecutor(**kwargs)
-        else:
-            raise ValueError(f"不支持的动作执行器类型: {executor_type}")
+        raise ValueError(f"不支持的动作执行器类型: {executor_type}")

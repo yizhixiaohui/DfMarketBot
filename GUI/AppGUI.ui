@@ -319,7 +319,7 @@
          <string>理想价格</string>
         </property>
        </widget>
-       <widget class="QCheckBox" name="is_convertiable">
+       <widget class="QCheckBox" name="is_convertible">
         <property name="enabled">
          <bool>true</bool>
         </property>

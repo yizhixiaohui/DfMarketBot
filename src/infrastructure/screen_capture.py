@@ -2,7 +2,7 @@
 """
 屏幕捕获基础设施
 """
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pyautogui
@@ -16,10 +16,10 @@ class ScreenCapture:
 
     def capture_region(self, coordinates: List[float]) -> np.ndarray:
         """捕获指定区域的屏幕截图
-        
+
         Args:
             coordinates: [x1_ratio, y1_ratio, x2_ratio, y2_ratio] 相对坐标
-            
+
         Returns:
             截图的numpy数组
         """
@@ -44,10 +44,10 @@ class ScreenCapture:
 
     def capture_window(self, window_title: str = None) -> np.ndarray:
         """捕获指定窗口的截图
-        
+
         Args:
             window_title: 窗口标题，如果为None则捕获整个屏幕
-            
+
         Returns:
             窗口截图的numpy数组
         """
@@ -57,10 +57,10 @@ class ScreenCapture:
 
     def get_window_position(self, window_title: str) -> Optional[Tuple[int, int, int, int]]:
         """获取窗口位置
-        
+
         Args:
             window_title: 窗口标题
-            
+
         Returns:
             (left, top, right, bottom) 绝对坐标，或None
         """

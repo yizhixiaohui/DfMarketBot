@@ -5,7 +5,7 @@
 from typing import Optional
 
 from ..core.exceptions import TradingException
-from ..core.interfaces import ITradingService, TradingConfig, MarketData
+from ..core.interfaces import ITradingService, MarketData, TradingConfig
 from ..infrastructure.action_executor import ActionExecutorFactory
 from ..infrastructure.ocr_engine import TemplateOCREngine
 from ..infrastructure.screen_capture import ScreenCapture
@@ -42,13 +42,13 @@ class TradingService(ITradingService):
             print("交易服务初始化成功")
 
         except Exception as e:
-            raise TradingException(f"交易服务初始化失败: {e}")
+            raise TradingException(f"交易服务初始化失败: {e}") from e
 
     def prepare(self) -> None:
         try:
             self.current_mode.prepare()
         except Exception as e:
-            raise TradingException(f"交易服务准备失败: {e}")
+            raise TradingException(f"交易服务准备失败: {e}") from e
 
     def execute_cycle(self) -> bool:
         """执行一个交易周期"""
@@ -61,7 +61,7 @@ class TradingService(ITradingService):
             return res
 
         except Exception as e:
-            raise TradingException(f"交易周期执行失败: {e}")
+            raise TradingException(f"交易周期执行失败: {e}") from e
 
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
@@ -71,7 +71,7 @@ class TradingService(ITradingService):
 
     def stop(self) -> None:
         """停止交易服务"""
-        if self.current_mode and hasattr(self.current_mode, 'stop'):
+        if self.current_mode and hasattr(self.current_mode, "stop"):
             self.current_mode.stop()
         self.current_mode = None
         self.current_config = None
@@ -84,30 +84,27 @@ class TradingService(ITradingService):
             if test_image is None or test_image.size == 0:
                 raise TradingException("屏幕捕获失败")
         except Exception as e:
-            raise TradingException(f"屏幕捕获不可用: {e}")
+            raise TradingException(f"屏幕捕获不可用: {e}") from e
 
         # 检查OCR引擎
         try:
             test_image = self.screen_capture.capture_region([0, 0, 256, 144])
             self.ocr_engine.image_to_string(test_image)
         except Exception as e:
-            raise TradingException(f"OCR引擎不可用: {e}")
+            raise TradingException(f"OCR引擎不可用: {e}") from e
 
         # 检查动作执行器
         try:
             self.action_executor.get_mouse_position()
         except Exception as e:
-            raise TradingException(f"动作执行器不可用: {e}")
+            raise TradingException(f"动作执行器不可用: {e}") from e
 
     def _switch_mode(self, config: TradingConfig) -> None:
         """切换交易模式"""
         try:
             # 创建新的交易模式
             new_mode = TradingModeFactory.create_mode(
-                config,
-                self.ocr_engine,
-                self.screen_capture,
-                self.action_executor
+                config, self.ocr_engine, self.screen_capture, self.action_executor
             )
 
             # 初始化新模式
@@ -119,4 +116,4 @@ class TradingService(ITradingService):
             print(f"切换到模式: {config.trading_mode}")
 
         except Exception as e:
-            raise TradingException(f"切换交易模式失败: {e}")
+            raise TradingException(f"切换交易模式失败: {e}") from e

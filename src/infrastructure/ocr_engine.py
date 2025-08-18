@@ -10,10 +10,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-if __name__ == '__main__':
+try:
     from src.core.exceptions import OCRException
     from src.core.interfaces import IOCREngine
-else:
+except ImportError:
     from ..core.exceptions import OCRException
     from ..core.interfaces import IOCREngine
 
@@ -23,10 +23,7 @@ class TemplateOCREngine(IOCREngine):
 
     def __init__(self, templates_dir: str = None):
         if templates_dir is None:
-            templates_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                "templates"
-            )
+            templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates")
 
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
@@ -68,7 +65,7 @@ class TemplateOCREngine(IOCREngine):
                 # 加载带前缀的模板 (prefix_0.png~prefix_9.png)
                 font_prefixes = set()
                 for template_file in self.templates_dir.glob("*_*.png"):
-                    parts = template_file.stem.split('_')
+                    parts = template_file.stem.split("_")
                     if len(parts) == 2 and parts[1].isdigit():
                         font_prefixes.add(parts[0])
 
@@ -94,7 +91,7 @@ class TemplateOCREngine(IOCREngine):
                     raise FileNotFoundError("未找到有效的数字模板文件")
 
         except Exception as e:
-            raise OCRException(f"加载模板失败: {e}")
+            raise OCRException(f"加载模板失败: {e}") from e
 
     def image_to_string(self, image: np.ndarray) -> str:
         """将图像转换为数字字符串"""
@@ -124,28 +121,25 @@ class TemplateOCREngine(IOCREngine):
                     locations = np.where(result >= 0.7)  # 匹配阈值
 
                     for pt in zip(*locations[::-1]):
-                        digits_info.append({
-                            'digit': digit,
-                            'x': pt[0],
-                            'score': result[pt[1], pt[0]],
-                            'font': font_name
-                        })
+                        digits_info.append(
+                            {"digit": digit, "x": pt[0], "score": result[pt[1], pt[0]], "font": font_name}
+                        )
 
             # 非极大值抑制，去除重叠检测
-            digits_info.sort(key=lambda x: -x['score'])
+            digits_info.sort(key=lambda x: -x["score"])
             filtered = []
 
             for info in digits_info:
-                x = info['x']
+                x = info["x"]
                 overlap = False
 
                 # 检查是否与已选区域重叠
                 for selected in filtered:
-                    template_width = self._templates[info['font']][info['digit']].shape[1]
-                    selected_width = self._templates[selected['font']][selected['digit']].shape[1]
+                    template_width = self._templates[info["font"]][info["digit"]].shape[1]
+                    selected_width = self._templates[selected["font"]][selected["digit"]].shape[1]
                     max_width = max(template_width, selected_width)
 
-                    if abs(x - selected['x']) < max_width * 0.7:  # 重叠阈值
+                    if abs(x - selected["x"]) < max_width * 0.7:  # 重叠阈值
                         overlap = True
                         break
 
@@ -153,11 +147,11 @@ class TemplateOCREngine(IOCREngine):
                     filtered.append(info)
 
             # 按x坐标排序，拼接成字符串
-            filtered.sort(key=lambda x: x['x'])
-            return ''.join(str(d['digit']) for d in filtered)
+            filtered.sort(key=lambda x: x["x"])
+            return "".join(str(d["digit"]) for d in filtered)
 
         except Exception as e:
-            raise OCRException(f"OCR识别失败: {e}")
+            raise OCRException(f"OCR识别失败: {e}") from e
 
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板是否存在于图像中"""
@@ -187,7 +181,7 @@ class TemplateOCREngine(IOCREngine):
             return max_val >= 0.7
 
         except Exception as e:
-            raise OCRException(f"模板检测失败: {e}")
+            raise OCRException(f"模板检测失败: {e}") from e
 
     @staticmethod
     def get_pixel_color(img: np.ndarray, x: int, y: int):
@@ -215,14 +209,14 @@ class TemplateOCREngine(IOCREngine):
         # 获取颜色值
         if len(img.shape) == 3:  # 彩色图像
             return tuple(img[y, x])
-        else:  # 灰度图像
-            return int(img[y, x])
+        # 灰度图像
+        return int(img[y, x])
 
 
 class MockOCREngine(IOCREngine):
     """OCR引擎的模拟实现，用于测试"""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.recognized_text = "1234"  # 默认返回的文本
         self.template_detected = False
 
@@ -230,7 +224,7 @@ class MockOCREngine(IOCREngine):
         """模拟OCR识别"""
         return self.recognized_text
 
-    def detect_template(self, image: np.ndarray) -> bool:
+    def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """模拟模板检测"""
         return self.template_detected
 
@@ -255,12 +249,11 @@ class OCREngineFactory:
         """创建OCR引擎"""
         if engine_type == "template":
             return TemplateOCREngine(**kwargs)
-        elif engine_type == "mock":
+        if engine_type == "mock":
             return MockOCREngine(**kwargs)
-        else:
-            raise ValueError(f"不支持的OCR引擎类型: {engine_type}")
+        raise ValueError(f"不支持的OCR引擎类型: {engine_type}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     a = "test.png"
     print(a[:-4])

@@ -1,0 +1,174 @@
+[MASTER]
+# 指定Python源代码目录
+init-hook='import sys; sys.path.extend(["./src", "./GUI", "./tests"])'
+
+# 忽略的文件和目录
+ignore=CVS,.git,.tox,.env,venv,env,node_modules
+
+# Python版本
+py-version=3.8
+
+[MESSAGES CONTROL]
+# 禁用一些不必要的检查
+disable=
+    missing-docstring,           # 不要求所有函数都有文档字符串
+    invalid-name,                # 允许使用短变量名
+    too-few-public-methods,      # 允许少量公共方法的类
+    too-many-arguments,          # 允许函数有多个参数
+    too-many-instance-attributes, # 允许类有多个实例属性
+    too-many-locals,             # 允许函数有多个局部变量
+    too-many-branches,           # 允许复杂的条件逻辑
+    too-many-statements,         # 允许函数有更多语句
+    too-many-return-statements,  # 允许函数有更多返回语句
+    broad-except,               # 允许捕获通用异常
+    protected-access,           # 允许访问受保护成员
+    no-name-in-module,          # 允许从模块导入特定名称
+    import-error,               # 处理导入错误
+    no-member,                  # 处理成员访问错误
+    unused-argument,            # 允许未使用的参数（常见于回调函数）
+    duplicate-code,             # 允许代码重复
+    fixme,                      # 允许TODO/FIXME注释
+
+# 启用一些有用的检查
+enable=
+    useless-suppression,        # 报告无用的pylint禁用注释
+
+[REPORTS]
+# 输出格式
+output-format=text
+
+# 生成报告
+reports=no
+
+# 评分阈值
+score=yes
+fail-under=8.0
+
+[REFACTORING]
+# 最大嵌套块深度
+max-nested-blocks=5
+
+[BASIC]
+# 命名风格
+function-rgx=[a-z_][a-z0-9_]{2,50}$
+variable-rgx=[a-z_][a-z0-9_]{1,30}$
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{1,30}$
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+method-rgx=[a-z_][a-z0-9_]{2,50}$
+
+# 允许的属性名
+good-names=i,j,k,ex,Run,_,x,y,X,Y,x1,y1,x2,y2,dx,dy
+
+# 内置属性名
+bad-names=foo,bar,baz,toto,tutu,tata
+
+# 名称长度
+name-group=
+include-naming-hint=no
+property-classes=abc.abstractproperty
+
+[FORMAT]
+# 最大行长度
+max-line-length=120
+
+# 期望的缩进字符串
+indent-string='    '
+
+# 最大模块行数
+max-module-lines=2000
+
+[LOGGING]
+# 日志格式
+logging-modules=logging
+
+[MISCELLANEOUS]
+# 允许TODO注释
+notes=FIXME,XXX,TODO
+
+[SIMILARITIES]
+# 最小相似行数
+min-similarity-lines=4
+
+# 忽略导入
+ignore-imports=yes
+
+# 忽略文档字符串
+ignore-docstrings=yes
+
+# 忽略注释
+ignore-comments=yes
+
+[TYPECHECK]
+# 忽略某些模块的member检查
+ignored-modules=cv2,numpy,PyQt5,pyautogui,keyboard
+
+# 忽略某些类的member检查
+ignored-classes=cv2,numpy.ndarray,PyQt5.QtWidgets,PyQt5.QtCore,PyQt5.QtGui
+
+[VARIABLES]
+# 允许定义但未使用的变量
+allowed-redefined-builtins=dict,list
+
+# 额外的内置变量
+additional-builtins=
+
+# 应该被视为常量的变量名
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+[CLASSES]
+# 定义有效的类方法名
+valid-classmethod-first-arg=cls
+valid-metaclass-classmethod-first-arg=cls
+
+# 忽略mixin类
+ignore-mixin-members=yes
+
+[DESIGN]
+# 最大参数数量
+max-args=8
+
+# 最大属性数量
+max-attributes=10
+
+# 最大布尔表达式数量
+max-bool-expr=5
+
+# 最大分支数量
+max-branches=12
+
+# 最大局部变量数量
+max-locals=20
+
+# 最大父类数量
+max-parents=7
+
+# 最大公共方法数量
+max-public-methods=20
+
+# 最大返回语句数量
+max-returns=6
+
+# 最大语句数量
+max-statements=100
+
+# 最小公共方法数量
+min-public-methods=0
+
+[IMPORTS]
+# 允许通配符导入
+allow-wildcard-with-all=no
+
+# 允许从任何模块导入
+allow-any-import-level=
+
+# 扩展模块后缀
+extension-pkg-whitelist=cv2,numpy,PyQt5,pyautogui,keyboard
+
+[EXCEPTIONS]
+# 总是返回的异常
+overgeneral-exceptions=builtins.Exception
