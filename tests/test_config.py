@@ -63,8 +63,6 @@ def test_yaml_config_manager():
         assert "hoarding_loop_interval: 100" in yaml_content, "YAML应该包含更新的值"
         print("✓ YAML格式正确")
 
-        return True
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -116,8 +114,6 @@ def test_json_config_manager():
         assert json_data["hoarding_loop_interval"] == 75, "JSON应该包含更新的值"
         print("✓ JSON格式正确")
 
-        return True
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -147,8 +143,6 @@ def test_rolling_options_config():
         assert config.rolling_options[0]["buy_price"] == 1000, "第一个选项价格应该是1000"
         assert config.rolling_options[2]["buy_count"] == 3000, "第三个选项数量应该是3000"
         print("✓ 自定义滚仓选项配置成功")
-
-        return True
 
     finally:
         shutil.rmtree(temp_dir)
@@ -191,8 +185,6 @@ def test_enum_serialization():
         assert reloaded.item_type == ItemType.NON_CONVERTIBLE, "JSON应该正确序列化枚举"
         print("✓ JSON枚举序列化成功")
 
-        return True
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -213,8 +205,6 @@ def test_base_config_manager():
         assert hasattr(json_manager, "save_config"), "应该有save_config方法"
         assert hasattr(json_manager, "update_config"), "应该有update_config方法"
         print("✓ 基础配置管理器功能正确")
-
-        return True
 
     finally:
         shutil.rmtree(temp_dir)

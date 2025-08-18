@@ -31,8 +31,6 @@ def test_config_factory_creation():
         assert isinstance(json_manager, IConfigManager), "JSON管理器应该实现IConfigManager接口"
         print("✓ JSON配置管理器创建成功")
 
-        return True
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -50,8 +48,6 @@ def test_global_config_manager():
     assert isinstance(manager1, IConfigManager), "应该实现IConfigManager接口"
 
     print("✓ 全局配置管理器单例模式正确")
-
-    return True
 
 
 def test_config_format_switching():
@@ -71,8 +67,6 @@ def test_config_format_switching():
 
     print("✓ 配置格式切换功能正确")
 
-    return True
-
 
 def test_interface_compliance():
     """测试接口合规性"""
@@ -90,8 +84,6 @@ def test_interface_compliance():
     assert config is not None, "应该能加载配置"
 
     print("✓ 接口合规性测试通过")
-
-    return True
 
 
 if __name__ == "__main__":

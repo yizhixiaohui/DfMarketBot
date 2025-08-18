@@ -22,4 +22,15 @@ line_length = 120
 known_first_party = ["src"]
 skip = [".git", "__pycache__", "venv", ".venv"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
 # autopep8 configuration removed - using Black as primary formatter

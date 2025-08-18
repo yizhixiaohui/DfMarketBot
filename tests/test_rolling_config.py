@@ -6,20 +6,30 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pytest
 
 from src.config.config_manager import YamlConfigManager as ConfigManager
 from src.core.interfaces import MarketData
 from src.services.strategy import RollingStrategy
 
+# 自动添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def test_rolling_config_loading():
+
+@pytest.fixture
+def config_manager():
+    """Fixture to initialize the ConfigManager"""
+    return ConfigManager()
+
+@pytest.fixture
+def config(config_manager):
+    """Fixture to load the configuration"""
+    return config_manager.load_config()
+
+
+def test_rolling_config_loading(config):
     """测试滚仓配置加载"""
     print("=== 测试滚仓配置动态加载 ===")
-
-    # 创建配置管理器
-    config_manager = ConfigManager()
-    config = config_manager.load_config()
 
     # 验证配置包含滚仓选项
     print("✓ 配置文件加载成功")
@@ -51,16 +61,13 @@ def test_rolling_config_loading():
             print(f"  目标价格: {target_price}")
             print(f"  最低价格: {min_price}")
             print(f"  购买数量: {option_config['buy_count']}")
+            assert target_price > 0
+            assert min_price > 0
 
-    return True
 
-
-def test_config_hot_reload():
+def test_config_hot_reload(config_manager, config):
     """测试配置热更新"""
     print("\n=== 测试配置热更新 ===")
-
-    config_manager = ConfigManager()
-    config = config_manager.load_config()
 
     # 修改配置
     original_option = config.rolling_option
@@ -75,18 +82,16 @@ def test_config_hot_reload():
     print(f"  - 原选项: {original_option}")
     print(f"  - 新选项: {updated_config.rolling_option}")
 
+    # 验证选项是否正确更新
+    assert updated_config.rolling_option == new_option, "选项更新失败"
+
     # 恢复原始配置
     config_manager.update_config({"rolling_option": original_option})
 
-    return True
 
-
-def test_custom_rolling_options():
+def test_custom_rolling_options(config_manager):
     """测试自定义滚仓选项"""
     print("\n=== 测试自定义滚仓选项 ===")
-
-    config_manager = ConfigManager()
-    config_manager.load_config()
 
     # 添加新的自定义选项
     custom_options = [
@@ -105,7 +110,8 @@ def test_custom_rolling_options():
     print(f"  - 可用选项: {len(updated_config.rolling_options)} 个")
     print(f"  - 新选项4: {updated_config.rolling_options[4] if len(updated_config.rolling_options) > 4 else '不存在'}")
 
-    return True
+    assert len(updated_config.rolling_options) == 4, "自定义选项数量不正确"
+    assert updated_config.rolling_options[3] == custom_options[3], "自定义选项内容不正确"
 
 
 if __name__ == "__main__":

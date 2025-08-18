@@ -8,6 +8,7 @@ import os
 import sys
 from typing import List
 
+import pytest
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
 
@@ -20,16 +21,17 @@ from src.ui.overlay import TransparentOverlay
 class TestEventBus:
     """事件总线测试类"""
 
-    def __init__(self):
-        self.app = QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """设置测试环境"""
+        self.app = QApplication.instance() or QApplication(sys.argv)
         self.overlay = TransparentOverlay()
         self.received_texts: List[str] = []
-
-    def setup_test(self):
-        """设置测试环境"""
         self.overlay.show()
-        # 连接信号到测试槽
         event_bus.overlay_text_updated.connect(self._on_text_received)
+        yield
+        event_bus.overlay_text_updated.disconnect(self._on_text_received)
+        self.overlay.close()
 
     def _on_text_received(self, text: str):
         """接收文本更新的测试槽"""
@@ -128,28 +130,28 @@ class TestEventBus:
         assert self.overlay.label.text() == messages[-1]
         print("✅ 性能测试通过")
 
-    def run_all_tests(self):
-        """运行所有测试"""
-        print("🧪 开始事件总线测试...")
-        self.setup_test()
-
-        try:
-            self.test_basic_text_update()
-            self.test_multiple_text_updates()
-            self.test_empty_text()
-            self.test_long_text()
-            self.test_special_characters()
-            self.test_performance()
-
-            print("\n🎉 所有测试通过！")
-            return True
-
-        except Exception as e:
-            print(f"\n❌ 测试失败: {e}")
-            return False
-
-        finally:
-            self.overlay.close()
+    # def run_all_tests(self):
+    #     """运行所有测试"""
+    #     print("🧪 开始事件总线测试...")
+    #     self.setup_test()
+    #
+    #     try:
+    #         self.test_basic_text_update()
+    #         self.test_multiple_text_updates()
+    #         self.test_empty_text()
+    #         self.test_long_text()
+    #         self.test_special_characters()
+    #         self.test_performance()
+    #
+    #         print("\n🎉 所有测试通过！")
+    #         return True
+    #
+    #     except Exception as e:
+    #         print(f"\n❌ 测试失败: {e}")
+    #         return False
+    #
+    #     finally:
+    #         self.overlay.close()
 
 
 def main():

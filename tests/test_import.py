@@ -1,81 +1,99 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 测试导入所有模块
 """
-import os
-import sys
-
-# 添加src目录到Python路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+import pytest
 
 
-def test_imports():
-    """测试所有模块导入"""
-    try:
-        # 测试核心接口
+class TestModuleImports:
+    """模块导入测试类"""
 
-        print("✅ 核心接口导入成功")
+    def test_core_interfaces_import(self):
+        """测试核心接口导入"""
+        try:
+            from src.core.interfaces import ItemType, TradingConfig, TradingMode
+            assert ItemType is not None
+            assert TradingConfig is not None
+            assert TradingMode is not None
+        except ImportError as e:
+            pytest.fail(f"核心接口导入失败: {e}")
 
-        # 测试配置管理
-        from src.config.config_factory import ConfigFactory
+    def test_config_management_import(self):
+        """测试配置管理导入"""
+        try:
+            from src.config.config_factory import ConfigFactory
+            assert ConfigFactory is not None
+        except ImportError as e:
+            pytest.fail(f"配置管理导入失败: {e}")
 
-        print("✅ 配置管理导入成功")
+    def test_trading_service_import(self):
+        """测试交易服务导入"""
+        try:
+            from src.services.trading_service import TradingService
+            assert TradingService is not None
+        except ImportError as e:
+            pytest.fail(f"交易服务导入失败: {e}")
 
-        # 测试服务层
-        from src.services.trading_service import TradingService
+    def test_detector_import(self):
+        """测试检测器导入"""
+        try:
+            from src.services.detector import (
+                HoardingModeDetector,
+                PriceDetector,
+                RollingModeDetector,
+            )
+            assert HoardingModeDetector is not None
+            assert PriceDetector is not None
+            assert RollingModeDetector is not None
+        except ImportError as e:
+            pytest.fail(f"检测器导入失败: {e}")
 
-        print("✅ 交易服务导入成功")
+    def test_trading_modes_import(self):
+        """测试交易模式导入"""
+        try:
+            from src.services.trading_modes import (
+                HoardingTradingMode,
+                RollingTradingMode,
+                TradingModeFactory,
+            )
+            assert HoardingTradingMode is not None
+            assert RollingTradingMode is not None
+            assert TradingModeFactory is not None
+        except ImportError as e:
+            pytest.fail(f"交易模式导入失败: {e}")
 
-        # 测试检测器
-        from src.services.detector import HoardingModeDetector, PriceDetector, RollingModeDetector
+    def test_infrastructure_import(self):
+        """测试基础设施导入"""
+        try:
+            from src.infrastructure.action_executor import ActionExecutorFactory
+            from src.infrastructure.ocr_engine import TemplateOCREngine
+            from src.infrastructure.screen_capture import ScreenCapture
+            assert ActionExecutorFactory is not None
+            assert TemplateOCREngine is not None
+            assert ScreenCapture is not None
+        except ImportError as e:
+            pytest.fail(f"基础设施导入失败: {e}")
 
-        print("✅ 检测器导入成功")
+    def test_ui_adapter_import(self):
+        """测试UI适配器导入"""
+        try:
+            from src.ui.adapter import TradingWorker, UIAdapter
+            assert TradingWorker is not None
+            assert UIAdapter is not None
+        except ImportError as e:
+            pytest.fail(f"UI适配器导入失败: {e}")
 
-        # 测试交易模式
-        from src.services.trading_modes import HoardingTradingMode, RollingTradingMode, TradingModeFactory
+    def test_event_bus_import(self):
+        """测试事件总线导入"""
+        try:
+            from src.core.event_bus import event_bus
+            assert event_bus is not None
+        except ImportError as e:
+            pytest.fail(f"事件总线导入失败: {e}")
 
-        print("✅ 交易模式导入成功")
-
-        # 测试基础设施
-        from src.infrastructure.action_executor import ActionExecutorFactory
-        from src.infrastructure.ocr_engine import TemplateOCREngine
-        from src.infrastructure.screen_capture import ScreenCapture
-
-        print("✅ 基础设施导入成功")
-
-        # 测试UI适配器
-        from src.ui.adapter import TradingWorker, UIAdapter
-
-        print("✅ UI适配器导入成功")
-
-        # 测试事件总线
-        from src.core.event_bus import event_bus
-
-        print("✅ 事件总线导入成功")
-
-        # 测试主程序
+    def test_ui_file_import(self):
+        """测试UI文件导入（可选）"""
         try:
             from GUI.AppGUI import Ui_MainWindow
-
-            print("✅ UI文件导入成功")
-        except ImportError:
-            print("⚠️ UI文件导入跳过（可能在非GUI环境）")
-
-        return True
-
-    except Exception as e:
-        print(f"❌ 导入失败: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    print("开始测试模块导入...")
-    success = test_imports()
-    if success:
-        print("\n🎉 所有模块导入成功！")
-    else:
-        print("\n💥 存在导入错误，请检查依赖和代码")
+            assert Ui_MainWindow is not None
+        except ImportError as e:
+            pytest.fail(f"UI文件导入失败: {e}")

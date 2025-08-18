@@ -6,6 +6,8 @@
 import os
 import sys
 
+import pytest
+
 from src.core.interfaces import TradingConfig
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,15 +23,14 @@ def test_imports():
         print("✓ DFMarketBot.py 导入成功")
     except Exception as e:
         print(f"✗ DFMarketBot.py 导入失败: {e}")
-        return False
-
+        pytest.fail("✗ DFMarketBot.py 导入失败")
     try:
         from src.core.interfaces import IPriceDetector, ITradingMode, ITradingService
 
         print("✓ 核心接口导入成功")
     except Exception as e:
         print(f"✗ 核心接口导入失败: {e}")
-        return False
+        pytest.fail("✗ 核心接口导入失败")
 
     try:
         from src.services.trading_service import TradingService
@@ -37,7 +38,7 @@ def test_imports():
         print("✓ 交易服务导入成功")
     except Exception as e:
         print(f"✗ 交易服务导入失败: {e}")
-        return False
+        pytest.fail("✗ 交易服务导入失败")
 
     try:
         from src.infrastructure.ocr_engine import TemplateOCREngine
@@ -45,7 +46,7 @@ def test_imports():
         print("✓ OCR引擎导入成功")
     except Exception as e:
         print(f"✗ OCR引擎导入失败: {e}")
-        return False
+        pytest.fail("✗ OCR引擎导入失败")
 
     try:
         from src.infrastructure.action_executor import ActionExecutorFactory
@@ -53,9 +54,7 @@ def test_imports():
         print("✓ 动作执行器导入成功")
     except Exception as e:
         print(f"✗ 动作执行器导入失败: {e}")
-        return False
-
-    return True
+        pytest.fail("✗ 动作执行器导入失败")
 
 
 def test_ocr_engine():
@@ -74,13 +73,11 @@ def test_ocr_engine():
             print(f"✓ 模板加载成功，共{len(ocr._templates)}组模板")
         else:
             print("✗ 模板加载失败")
-            return False
-
-        return True
+            pytest.fail("✗ 模板加载失败")
 
     except Exception as e:
         print(f"✗ OCR引擎测试失败: {e}")
-        return False
+        pytest.fail(f"✗ OCR引擎测试失败: {e}")
 
 
 def test_trading_service():
@@ -102,11 +99,9 @@ def test_trading_service():
         except Exception as e:
             print(f"⚠ 交易服务初始化警告: {e}（可能在非Windows环境）")
 
-        return True
-
     except Exception as e:
         print(f"✗ 交易服务测试失败: {e}")
-        return False
+        pytest.fail(f"✗ 交易服务测试失败: {e}")
 
 
 def test_configuration():
@@ -124,12 +119,13 @@ def test_configuration():
         print(f"  - 交易模式: {getattr(config, 'trading_mode', '未设置')}")
         print(f"  - 理想价格: {getattr(config, 'ideal_price', '未设置')}")
         print(f"  - 最大价格: {getattr(config, 'max_price', '未设置')}")
-
-        return True
+        assert config.trading_mode is not None
+        assert config.ideal_price > 0
+        assert config.max_price > 0
 
     except Exception as e:
         print(f"✗ 配置文件测试失败: {e}")
-        return False
+        pytest.fail(f"✗ 配置文件测试失败: {e}")
 
 
 def main():

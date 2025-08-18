@@ -6,6 +6,8 @@
 import os
 import sys
 
+import pytest
+
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -46,15 +48,9 @@ def test_rolling_config_ui():
         else:
             print("\n使用 --ui 参数启动UI界面进行测试")
 
-        return True
-
     except Exception as e:
         print(f"✗ 测试失败: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
+        pytest.fail(f"✗ 测试失败: {e}")
 
 def test_config_integration():
     """测试配置集成"""
@@ -99,14 +95,9 @@ def test_config_integration():
         # 恢复原始配置
         config_manager.update_config({"rolling_options": config.rolling_options})
 
-        return True
-
     except Exception as e:
         print(f"✗ 配置集成测试失败: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
+        pytest.fail(f"✗ 测试失败: {e}")
 
 
 if __name__ == "__main__":
