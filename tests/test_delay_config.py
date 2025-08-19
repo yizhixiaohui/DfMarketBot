@@ -286,7 +286,7 @@ class TestDelayConfigManager(unittest.TestCase):
     def setUp(self):
         """测试前准备"""
         self.temp_dir = tempfile.mkdtemp()
-        self.config_path = os.path.join(self.temp_dir, "test_timing_config.yaml")
+        self.config_path = os.path.join(self.temp_dir, "test_delay_config.yaml")
         self.manager = DelayConfigManager(self.config_path)
 
     def tearDown(self):

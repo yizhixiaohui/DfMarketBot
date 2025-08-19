@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-import yaml
+from ruamel.yaml import YAML
 
 
 class ConfigSerializer(ABC):
@@ -20,13 +20,32 @@ class ConfigSerializer(ABC):
 class YamlSerializer(ConfigSerializer):
     """YAML 序列化器"""
 
+    def __init__(self):
+        self.yaml = YAML()
+        self.yaml.preserve_quotes = True
+        self.yaml.indent(sequence=4, offset=2)
+
     def load(self, file_path: str) -> Dict[str, Any]:
         with open(file_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
+            return self.yaml.load(f) or {}
 
     def save(self, file_path: str, data: Dict[str, Any]):
+        old_data = {}
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                old_data = self.yaml.load(f) or {}
+        except FileNotFoundError:
+            old_data = {}
+
+        # 逐层更新，而不是覆盖掉整个 dict，这样能尽量保持注释位置
+        if isinstance(old_data, dict):
+            old_data.update(data)
+            new_data = old_data
+        else:
+            new_data = data
+
         with open(file_path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+            self.yaml.dump(new_data, f)
 
 
 class JsonSerializer(ConfigSerializer):
