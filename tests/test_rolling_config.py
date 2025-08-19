@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from src.config.config_manager import YamlConfigManager as ConfigManager
+from src.config.config_manager import TradingConfigManager as ConfigManager
 from src.core.interfaces import MarketData
 from src.services.strategy import RollingStrategy
 

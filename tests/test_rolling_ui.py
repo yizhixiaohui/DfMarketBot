@@ -25,7 +25,7 @@ def test_rolling_config_ui():
         print("✓ 成功导入RollingConfigUI")
 
         # 测试配置管理器
-        from src.config.config_manager import YamlConfigManager as ConfigManager
+        from src.config.config_manager import TradingConfigManager as ConfigManager
 
         config_manager = ConfigManager()
         config = config_manager.load_config()
@@ -57,10 +57,10 @@ def test_config_integration():
     print("\n=== 测试配置集成 ===")
 
     try:
-        from src.config.config_manager import YamlConfigManager
+        from src.config.config_manager import TradingConfigManager
 
         # 测试配置加载
-        config_manager = YamlConfigManager()
+        config_manager = TradingConfigManager()
         config = config_manager.load_config()
 
         # 验证rolling_options是数组格式

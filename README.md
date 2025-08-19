@@ -126,10 +126,10 @@ DFMarketBot/
 pytest
 
 # 运行特定测试文件
-pytest tests/test_config.py
+pytest tests/test_trading_config.py
 
 # 运行特定测试函数
-pytest tests/test_config.py::test_yaml_config_manager
+pytest tests/test_trading_config.py::test_trading_config_manager
 
 # 显示详细输出
 pytest -v

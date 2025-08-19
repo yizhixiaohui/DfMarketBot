@@ -7,9 +7,10 @@ from typing import Any, Dict
 from PyQt5.QtCore import QMutex, QThread
 
 from ..config.config_factory import ConfigFactory
+from ..config.trading_config import ItemType, TradingMode
 from ..core.event_bus import event_bus
 from ..core.exceptions import TradingException
-from ..core.interfaces import IConfigManager, ItemType, ITradingService, TradingMode
+from ..core.interfaces import IConfigManager, ITradingService
 from ..services.trading_service import TradingService
 
 
@@ -187,7 +188,6 @@ class UIAdapter:
     def _update_ui_from_config(self, config: Dict[str, Any]) -> None:
         """根据配置更新UI"""
         # 更新模式选择
-        # TODO 适配新UI
         if hasattr(self.ui, "tabWidget"):
             mode_index = config.get("trading_mode", TradingMode.HOARDING).value
             self.ui.tabWidget.setCurrentIndex(mode_index)

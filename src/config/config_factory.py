@@ -3,58 +3,63 @@
 配置管理器工厂
 提供统一的配置管理器创建接口，屏蔽底层实现细节
 """
-from typing import Optional
+from typing import Dict, Type, Optional
 
-from ..core.interfaces import IConfigManager
-from .config_manager import JsonConfigManager, YamlConfigManager
+try:
+    from src.core.interfaces import IConfigManager
+    from src.config.config_manager import TradingConfigManager, DelayConfigManager
+except ImportError:
+    from ..core.interfaces import IConfigManager
+    from .config_manager import TradingConfigManager, DelayConfigManager
 
 
 class ConfigFactory:
     """配置管理器工厂类"""
 
-    _config_manager: Optional[IConfigManager] = None
-    _config_format: str = "yaml"  # 默认使用YAML格式
+    CONFIG_MANAGERS: Dict[str, Type[IConfigManager]] = {
+        "trading": TradingConfigManager,
+        "delay": DelayConfigManager,
+    }
+    _instances: Dict[str, IConfigManager] = {}
 
     @classmethod
-    def set_config_format(cls, format_type: str) -> None:
-        """
-        设置配置格式
-
-        Args:
-            format_type: 配置格式，支持 "json" 或 "yaml"
-        """
-        if format_type.lower() not in ["json", "yaml"]:
-            raise ValueError("配置格式必须是 'json' 或 'yaml'")
-        cls._config_format = format_type.lower()
-        cls._config_manager = None  # 重置配置管理器
-
-    @classmethod
-    def get_config_manager(cls) -> IConfigManager:
+    def get_config_manager(cls, config_type: str = "trading") -> IConfigManager:
         """
         获取配置管理器实例
+
+        Args:
+            config_type: 配置类型，例如 "trading" 或 "delay"
 
         Returns:
             IConfigManager: 配置管理器接口实例
         """
-        if cls._config_manager is None:
-            if cls._config_format == "json":
-                cls._config_manager = JsonConfigManager()
-            else:
-                cls._config_manager = YamlConfigManager()
-        return cls._config_manager
+        if config_type not in cls.CONFIG_MANAGERS:
+            raise ValueError(f"Unsupported config type: {config_type}")
+
+        if config_type not in cls._instances:
+            manager_class = cls.CONFIG_MANAGERS[config_type]
+            cls._instances[config_type] = manager_class()
+
+        return cls._instances[config_type]
 
     @classmethod
-    def create_config_manager(cls, format_type: str = "yaml", config_path: str = None) -> IConfigManager:
+    def create_config_manager(cls, config_type:str = "trading", config_path: Optional[str] = None) -> IConfigManager:
         """
         创建指定格式的配置管理器
 
         Args:
-            format_type: 配置格式，支持 "json" 或 "yaml"
+            config_type: 配置类型
             config_path: 配置文件路径
 
         Returns:
             IConfigManager: 配置管理器接口实例
         """
-        if format_type.lower() == "json":
-            return JsonConfigManager(config_path)
-        return YamlConfigManager(config_path)
+        if config_type not in cls.CONFIG_MANAGERS:
+            raise ValueError(f"Unsupported config type: {config_type}")
+
+        manager_class = cls.CONFIG_MANAGERS[config_type]
+        return manager_class(config_path)
+
+
+if __name__ == '__main__':
+    pass

@@ -22,14 +22,9 @@ def test_config_factory_creation():
 
     try:
         # 测试YAML格式
-        yaml_manager = ConfigFactory.create_config_manager("yaml", os.path.join(temp_dir, "test.yaml"))
-        assert isinstance(yaml_manager, IConfigManager), "YAML管理器应该实现IConfigManager接口"
-        print("✓ YAML配置管理器创建成功")
-
-        # 测试JSON格式
-        json_manager = ConfigFactory.create_config_manager("json", os.path.join(temp_dir, "test.json"))
-        assert isinstance(json_manager, IConfigManager), "JSON管理器应该实现IConfigManager接口"
-        print("✓ JSON配置管理器创建成功")
+        manager = ConfigFactory.create_config_manager(config_path=os.path.join(temp_dir, "test.yaml"))
+        assert isinstance(manager, IConfigManager), "配置管理器应该实现IConfigManager接口"
+        print("✓ Trading配置管理器创建成功")
 
     finally:
         shutil.rmtree(temp_dir)
@@ -42,28 +37,29 @@ def test_global_config_manager():
     # 获取默认管理器
     manager1 = ConfigFactory.get_config_manager()
     manager2 = ConfigFactory.get_config_manager()
+    manager3 = ConfigFactory.get_config_manager("delay")
+    manager4 = ConfigFactory.get_config_manager("delay")
 
     # 验证是同一个实例
     assert manager1 is manager2, "应该返回同一个实例"
+    assert manager3 is manager4, "应该返回同一个实例"
+    assert manager1 is not manager3, "应该返回不同实例"
     assert isinstance(manager1, IConfigManager), "应该实现IConfigManager接口"
+    assert isinstance(manager3, IConfigManager), "应该实现IConfigManager接口"
 
     print("✓ 全局配置管理器单例模式正确")
 
 
-def test_config_format_switching():
-    """测试配置格式切换"""
-    print("\n=== 测试配置格式切换 ===")
+def test_config_type_switching():
+    """测试配置类型切换"""
+    print("\n=== 测试配置类型切换 ===")
 
-    # 切换到JSON格式
-    ConfigFactory.set_config_format("json")
-    json_manager = ConfigFactory.get_config_manager()
+    trading_manager = ConfigFactory.get_config_manager("trading")
 
-    # 切换到YAML格式
-    ConfigFactory.set_config_format("yaml")
-    yaml_manager = ConfigFactory.get_config_manager()
+    delay_manager = ConfigFactory.get_config_manager("delay")
 
     # 验证是不同的实例
-    assert json_manager is not yaml_manager, "切换格式后应该返回不同实例"
+    assert trading_manager is not delay_manager, "切换格式后应该返回不同实例"
 
     print("✓ 配置格式切换功能正确")
 
@@ -92,7 +88,7 @@ if __name__ == "__main__":
     tests = [
         test_config_factory_creation,
         test_global_config_manager,
-        test_config_format_switching,
+        test_config_type_switching,
         test_interface_compliance,
     ]
 

@@ -4,74 +4,11 @@
 """
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from enum import Enum
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Generic, Optional, Tuple, Type, TypeVar
 
 import numpy as np
 
-
-class TradingMode(Enum):
-    """交易模式枚举"""
-
-    ROLLING = 0  # 滚仓模式 - 配装页面购买
-    HOARDING = 1  # 屯仓模式 - 交易页面购买
-
-
-class ItemType(Enum):
-    """物品类型枚举"""
-
-    CONVERTIBLE = 0
-    NON_CONVERTIBLE = 1
-
-
-@dataclass
-class TradingConfig:
-    """交易配置数据类"""
-
-    ideal_price: int = 0
-    key_mode: bool = False
-    max_price: int = 0
-    rolling_loop_interval: int = 50
-    hoarding_loop_interval: int = 150
-    item_type: ItemType = ItemType.CONVERTIBLE
-    use_balance_calculation: bool = False
-    trading_mode: TradingMode = TradingMode.HOARDING
-    rolling_option: int = 0  # 滚仓模式下的配装选项
-    rolling_options: list = None  # 滚仓选项配置数组
-    screen_width: int = 2560
-    screen_height: int = 1440
-    auto_sell: bool = True
-    fast_sell: bool = True
-    fast_sell_threshold: int = 200000
-    log_level: str = "INFO"
-
-    def __post_init__(self):
-        """验证配置参数"""
-        if self.ideal_price < 0:
-            raise ValueError("理想价格不能为负数")
-        if self.max_price < 0:
-            raise ValueError("最高价格不能为负数")
-        if self.rolling_loop_interval <= 0:
-            raise ValueError("循环间隔必须大于0")
-        if self.hoarding_loop_interval <= 0:
-            raise ValueError("循环间隔必须大于0")
-        if self.screen_width <= 0 or self.screen_height <= 0:
-            raise ValueError("屏幕分辨率必须大于0")
-
-        # 处理整数到枚举的转换
-        if isinstance(self.trading_mode, int):
-            self.trading_mode = TradingMode(self.trading_mode)
-        if isinstance(self.item_type, int):
-            self.item_type = ItemType(self.item_type)
-
-        # 设置默认滚仓选项配置
-        if self.rolling_options is None:
-            self.rolling_options = [
-                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
-            ]
+from src.config.trading_config import TradingConfig
 
 
 @dataclass
@@ -131,6 +68,10 @@ class ITradingStrategy(ABC):
         """获取购买数量"""
 
 
+# 定义泛型类型
+TConfig = TypeVar('TConfig', bound=object)
+
+
 class ITradingMode(ABC):
     """交易模式接口"""
 
@@ -171,40 +112,44 @@ class ILogger(ABC):
         """debug日志"""
 
 
-class IConfigManager(ABC):
-    """配置管理器接口"""
+class IConfigManager(ABC, Generic[TConfig]):
+    """配置管理器接口（泛型版本）"""
+    def __init__(self, config_path: str = None):
+        pass
 
     @abstractmethod
-    def load_config(self) -> TradingConfig:
+    def load_config(self) -> TConfig:
         """加载配置"""
+        raise NotImplementedError
 
     @abstractmethod
-    def save_config(self, config: TradingConfig) -> None:
+    def save_config(self, config: TConfig) -> None:
         """保存配置"""
+        raise NotImplementedError
 
     @abstractmethod
-    def update_config(self, updates: Dict[str, Any]) -> TradingConfig:
+    def update_config(self, updates: Dict[str, Any]) -> TConfig:
         """更新配置"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def reload_config(self) -> TConfig:
+        """重新加载配置（支持热更新）"""
+        raise NotImplementedError
 
     @staticmethod
-    def _config_to_dict(config: TradingConfig) -> Dict[str, Any]:
+    def _config_to_dict(config: TConfig) -> Dict[str, Any]:
         """将配置对象转换为字典"""
-        config_dict = asdict(config)
-        # 处理枚举类型
-        config_dict["trading_mode"] = config.trading_mode.value
-        config_dict["item_type"] = config.item_type.value
-        return config_dict
+        if hasattr(config, 'to_dict'):
+            return config.to_dict()
+        return asdict(config)
 
     @staticmethod
-    def _dict_to_config(config_dict: Dict[str, Any]) -> TradingConfig:
+    def _dict_to_config(config_dict: Dict[str, Any], config_class: Type[TConfig]) -> TConfig:
         """将字典转换为配置对象"""
-        # 处理枚举类型
-        if "trading_mode" in config_dict:
-            config_dict["trading_mode"] = TradingMode(config_dict["trading_mode"])
-        if "item_type" in config_dict:
-            config_dict["item_type"] = ItemType(config_dict["item_type"])
-
-        return TradingConfig(**config_dict)
+        if hasattr(config_class, 'from_dict'):
+            return config_class.from_dict(config_dict)
+        return config_class(**config_dict)
 
 
 class IOCREngine(ABC):

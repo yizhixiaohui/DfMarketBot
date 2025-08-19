@@ -4,8 +4,9 @@
 """
 from typing import Any, Dict
 
+from ..config.trading_config import TradingMode
 from ..core.event_bus import event_bus
-from ..core.interfaces import ITradingStrategy, MarketData, TradingConfig, TradingMode
+from ..core.interfaces import ITradingStrategy, MarketData, TradingConfig
 
 
 class HoardingStrategy(ITradingStrategy):

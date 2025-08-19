@@ -10,10 +10,8 @@ class TestModuleImports:
     def test_core_interfaces_import(self):
         """测试核心接口导入"""
         try:
-            from src.core.interfaces import ItemType, TradingConfig, TradingMode
-            assert ItemType is not None
-            assert TradingConfig is not None
-            assert TradingMode is not None
+            from src.core.interfaces import MarketData
+            assert MarketData is not None
         except ImportError as e:
             pytest.fail(f"核心接口导入失败: {e}")
 

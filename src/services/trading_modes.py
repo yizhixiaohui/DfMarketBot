@@ -7,18 +7,20 @@ import time
 from typing import Dict, Optional, Tuple
 
 try:
+    from src.config.trading_config import ItemType, TradingConfig, TradingMode
     from src.core.event_bus import event_bus
     from src.core.exceptions import TradingException
-    from src.core.interfaces import ItemType, ITradingMode, MarketData, TradingConfig, TradingMode
+    from src.core.interfaces import ITradingMode, MarketData
     from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
     from src.infrastructure.ocr_engine import TemplateOCREngine
     from src.infrastructure.screen_capture import ScreenCapture
     from src.services.detector import HoardingModeDetector, RollingModeDetector
     from src.services.strategy import StrategyFactory
 except ImportError:
+    from ..config.trading_config import ItemType, TradingConfig, TradingMode
     from ..core.event_bus import event_bus
     from ..core.exceptions import TradingException
-    from ..core.interfaces import ItemType, ITradingMode, MarketData, TradingConfig, TradingMode
+    from ..core.interfaces import ITradingMode, MarketData
     from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
     from ..infrastructure.ocr_engine import TemplateOCREngine
     from ..infrastructure.screen_capture import ScreenCapture
@@ -89,9 +91,9 @@ class HoardingTradingMode(ITradingMode):
             )
 
             if (
-                self.config.use_balance_calculation
-                and self.last_buy_quantity != 0
-                and self.last_balance == self.current_balance
+                    self.config.use_balance_calculation
+                    and self.last_buy_quantity != 0
+                    and self.last_balance == self.current_balance
             ):
                 self.buy_failed_count += 1
             else:
@@ -592,10 +594,10 @@ class TradingModeFactory:
 
     @staticmethod
     def create_mode(
-        config: TradingConfig,
-        ocr_engine: TemplateOCREngine,
-        screen_capture: ScreenCapture,
-        action_executor: ActionExecutor,
+            config: TradingConfig,
+            ocr_engine: TemplateOCREngine,
+            screen_capture: ScreenCapture,
+            action_executor: ActionExecutor,
     ) -> ITradingMode:
         """根据类型创建交易模式"""
         if config.trading_mode == TradingMode.HOARDING:
