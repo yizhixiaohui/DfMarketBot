@@ -8,6 +8,8 @@ import os
 import platform
 import sys
 
+from DFMarketBot import main as app_main
+
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,8 +27,6 @@ def main():
         print("   在Windows上运行时将正常使用键盘监听")
 
     try:
-        from DFMarketBot import main as app_main
-
         app_main()
     except KeyboardInterrupt:
         print("\n程序被用户中断")

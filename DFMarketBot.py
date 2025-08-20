@@ -25,7 +25,7 @@ def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
     except Exception as e:
-        print('检查管理员权限失败:', e)
+        print("检查管理员权限失败:", e)
         return False
 
 

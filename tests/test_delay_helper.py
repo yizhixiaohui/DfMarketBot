@@ -22,25 +22,20 @@ class TestDelayHelper(unittest.TestCase):
         self.config_path = os.path.join(self.temp_dir, "test_delay_config.yaml")
 
         # 创建测试用的延迟配置
-        self.test_config = DelayConfig(delays={
-            "hoarding_mode": {
-                "enter_action": 0.05,
-                "refresh_operation": 0.01,
-                "buy_operation": 0.0
-            },
-            "rolling_mode": {
-                "balance_detection": 0.3,
-                "buy_operation": 2.0,
-                "sell_preparation": 0.3
+        self.test_config = DelayConfig(
+            delays={
+                "hoarding_mode": {"enter_action": 0.05, "refresh_operation": 0.01, "buy_operation": 0.0},
+                "rolling_mode": {"balance_detection": 0.3, "buy_operation": 2.0, "sell_preparation": 0.3},
             }
-        })
+        )
 
     def tearDown(self):
         """测试后清理"""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_init(self, mock_factory):
         """测试DelayHelper初始化"""
         mock_manager = Mock()
@@ -55,7 +50,7 @@ class TestDelayHelper(unittest.TestCase):
         # 验证配置被加载
         mock_manager.load_config.assert_called()
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_delay(self, mock_factory):
         """测试获取延迟时间"""
         mock_manager = Mock()
@@ -72,8 +67,8 @@ class TestDelayHelper(unittest.TestCase):
         delay = helper.get_delay("nonexistent")
         self.assertEqual(delay, 0.0)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
-    @patch('time.sleep')
+    @patch("src.utils.delay_helper.ConfigFactory")
+    @patch("time.sleep")
     def test_sleep(self, mock_sleep, mock_factory):
         """测试延迟执行"""
         mock_manager = Mock()
@@ -96,7 +91,7 @@ class TestDelayHelper(unittest.TestCase):
         helper.sleep("nonexistent")
         mock_sleep.assert_not_called()
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_mode_delays(self, mock_factory):
         """测试获取模式延迟配置"""
         mock_manager = Mock()
@@ -107,14 +102,10 @@ class TestDelayHelper(unittest.TestCase):
 
         # 测试获取存在的模式
         delays = helper.get_mode_delays(TradingMode.HOARDING)
-        expected = {
-            "enter_action": 0.05,
-            "refresh_operation": 0.01,
-            "buy_operation": 0.0
-        }
+        expected = {"enter_action": 0.05, "refresh_operation": 0.01, "buy_operation": 0.0}
         self.assertEqual(delays, expected)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_has_operation(self, mock_factory):
         """测试检查操作是否存在"""
         mock_manager = Mock()
@@ -132,7 +123,7 @@ class TestDelayHelper(unittest.TestCase):
         # 测试不存在的模式
         self.assertFalse(helper.has_operation("enter_action11"))
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_available_modes(self, mock_factory):
         """测试获取可用模式列表"""
         mock_manager = Mock()
@@ -146,7 +137,7 @@ class TestDelayHelper(unittest.TestCase):
         self.assertIn("rolling_mode", modes)
         self.assertEqual(len(modes), 2)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_mode_operations(self, mock_factory):
         """测试获取模式操作列表"""
         mock_manager = Mock()
@@ -160,7 +151,7 @@ class TestDelayHelper(unittest.TestCase):
         expected = ["enter_action", "refresh_operation", "buy_operation"]
         self.assertEqual(sorted(operations), sorted(expected))
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_reload_config(self, mock_factory):
         """测试重新加载配置"""
         mock_manager = Mock()
@@ -177,7 +168,7 @@ class TestDelayHelper(unittest.TestCase):
         self.assertTrue(result)
         mock_manager.load_config.assert_called_once()
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_reload_config_failure(self, mock_factory):
         """测试重新加载失败的情况"""
         mock_manager = Mock()
@@ -190,7 +181,7 @@ class TestDelayHelper(unittest.TestCase):
         result = helper.reload_config()
         self.assertFalse(result)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_config_info(self, mock_factory):
         """测试获取配置信息"""
         mock_manager = Mock()
@@ -207,7 +198,7 @@ class TestDelayHelper(unittest.TestCase):
         self.assertIn("rolling_mode", info["mode_names"])
         self.assertEqual(info["total_operations"], 6)  # 3 + 3 operations
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_get_config_info_no_config(self, mock_factory):
         """测试无配置时的信息获取"""
         mock_manager = Mock()
@@ -222,7 +213,7 @@ class TestDelayHelper(unittest.TestCase):
         self.assertEqual(info["modes"], 0)
         self.assertEqual(info["total_operations"], 0)
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_thread_safety(self, mock_factory):
         """测试线程安全性"""
         mock_manager = Mock()
@@ -271,7 +262,7 @@ class TestDelayHelper(unittest.TestCase):
         self.assertEqual(len(results), expected_results)
         self.assertTrue(all(delay == 0.05 for delay in results))
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_str_and_repr(self, mock_factory):
         """测试字符串表示方法"""
         mock_manager = Mock()
@@ -303,7 +294,7 @@ class TestGlobalDelayHelper(unittest.TestCase):
 class TestDelayHelperErrorHandling(unittest.TestCase):
     """DelayHelper错误处理测试"""
 
-    @patch('src.utils.delay_helper.ConfigFactory')
+    @patch("src.utils.delay_helper.ConfigFactory")
     def test_config_manager_exception(self, mock_factory):
         """测试配置管理器异常处理"""
         mock_manager = Mock()
@@ -321,5 +312,5 @@ class TestDelayHelperErrorHandling(unittest.TestCase):
         self.assertEqual(info["status"], "no_config")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

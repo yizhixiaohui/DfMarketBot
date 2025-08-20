@@ -33,11 +33,11 @@ class DelayConfig:
 
     def get_delay(self, mode: str, operation: str) -> float:
         """获取指定模式和操作的延迟时间
-        
+
         Args:
             mode: 交易模式（'hoarding_mode' 或 'rolling_mode'）
             operation: 操作名称
-        
+
         Returns:
             延迟时间（秒），如果不存在则返回0.0
         """
@@ -47,12 +47,12 @@ class DelayConfig:
 
     def set_delay(self, mode: str, operation: str, delay: float) -> None:
         """设置指定模式和操作的延迟时间
-        
+
         Args:
             mode: 交易模式
             operation: 操作名称
             delay: 延迟时间（秒，支持毫秒级精度）
-        
+
         Raises:
             ValueError: 当延迟时间为负数时
         """
@@ -71,10 +71,10 @@ class DelayConfig:
 
     def get_mode_delays(self, mode: str) -> Dict[str, float]:
         """获取指定模式的所有延迟配置
-        
+
         Args:
             mode: 交易模式名称
-            
+
         Returns:
             该模式下所有操作的延迟配置字典副本
         """
@@ -84,11 +84,11 @@ class DelayConfig:
 
     def update_mode_delays(self, mode: str, delays: Dict[str, float]) -> None:
         """更新指定模式的延迟配置
-        
+
         Args:
             mode: 交易模式名称
             delays: 要更新的延迟配置字典
-            
+
         Raises:
             ValueError: 当参数类型错误或延迟值无效时
         """
@@ -136,11 +136,11 @@ class DelayConfig:
 
     def remove_operation(self, mode: str, operation: str) -> bool:
         """移除指定的操作配置
-        
+
         Args:
             mode: 交易模式名称
             operation: 操作名称
-            
+
         Returns:
             是否成功移除（如果操作不存在则返回False）
         """
@@ -152,10 +152,10 @@ class DelayConfig:
 
     def clear_mode(self, mode: str) -> bool:
         """清空指定模式的所有延迟配置
-        
+
         Args:
             mode: 交易模式名称
-            
+
         Returns:
             是否成功清空（如果模式不存在则返回False）
         """
@@ -170,15 +170,15 @@ class DelayConfig:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'DelayConfig':
+    def from_dict(cls, data: Dict[str, Any]) -> "DelayConfig":
         """从字典创建配置对象"""
         if not isinstance(data, dict):
             raise ValueError("数据必须是字典类型")
 
-        if 'delays' not in data:
+        if "delays" not in data:
             raise ValueError("配置数据中缺少 'delays' 字段")
 
-        return cls(delays=data['delays'])
+        return cls(delays=data["delays"])
 
     def __str__(self) -> str:
         """字符串表示"""

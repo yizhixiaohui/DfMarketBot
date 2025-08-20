@@ -51,7 +51,7 @@ class TestEventBus:
         # 验证结果
         assert test_text in self.received_texts, f"期望收到 '{test_text}'，实际收到: {self.received_texts}"
         assert (
-                self.overlay.label.text() == test_text
+            self.overlay.label.text() == test_text
         ), f"悬浮窗文本应为 '{test_text}'，实际为: {self.overlay.label.text()}"
         print("✅ 基本文本更新测试通过")
 

@@ -43,7 +43,7 @@ class ConfigFactory:
         return cls._instances[config_type]
 
     @classmethod
-    def create_config_manager(cls, config_type:str = "trading", config_path: Optional[str] = None) -> IConfigManager:
+    def create_config_manager(cls, config_type: str = "trading", config_path: Optional[str] = None) -> IConfigManager:
         """
         创建指定格式的配置管理器
 
@@ -61,5 +61,5 @@ class ConfigFactory:
         return manager_class(config_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

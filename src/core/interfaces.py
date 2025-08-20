@@ -69,7 +69,7 @@ class ITradingStrategy(ABC):
 
 
 # 定义泛型类型
-TConfig = TypeVar('TConfig', bound=object)
+TConfig = TypeVar("TConfig", bound=object)
 
 
 class ITradingMode(ABC):
@@ -114,6 +114,7 @@ class ILogger(ABC):
 
 class IConfigManager(ABC, Generic[TConfig]):
     """配置管理器接口（泛型版本）"""
+
     def __init__(self, config_path: str = None):
         pass
 
@@ -140,14 +141,14 @@ class IConfigManager(ABC, Generic[TConfig]):
     @staticmethod
     def _config_to_dict(config: TConfig) -> Dict[str, Any]:
         """将配置对象转换为字典"""
-        if hasattr(config, 'to_dict'):
+        if hasattr(config, "to_dict"):
             return config.to_dict()
         return asdict(config)
 
     @staticmethod
     def _dict_to_config(config_dict: Dict[str, Any], config_class: Type[TConfig]) -> TConfig:
         """将字典转换为配置对象"""
-        if hasattr(config_class, 'from_dict'):
+        if hasattr(config_class, "from_dict"):
             return config_class.from_dict(config_dict)
         return config_class(**config_dict)
 

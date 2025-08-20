@@ -1,6 +1,7 @@
 """
 测试导入所有模块
 """
+
 import pytest
 
 
@@ -11,6 +12,7 @@ class TestModuleImports:
         """测试核心接口导入"""
         try:
             from src.core.interfaces import MarketData
+
             assert MarketData is not None
         except ImportError as e:
             pytest.fail(f"核心接口导入失败: {e}")
@@ -19,6 +21,7 @@ class TestModuleImports:
         """测试配置管理导入"""
         try:
             from src.config.config_factory import ConfigFactory
+
             assert ConfigFactory is not None
         except ImportError as e:
             pytest.fail(f"配置管理导入失败: {e}")
@@ -27,6 +30,7 @@ class TestModuleImports:
         """测试交易服务导入"""
         try:
             from src.services.trading_service import TradingService
+
             assert TradingService is not None
         except ImportError as e:
             pytest.fail(f"交易服务导入失败: {e}")
@@ -39,6 +43,7 @@ class TestModuleImports:
                 PriceDetector,
                 RollingModeDetector,
             )
+
             assert HoardingModeDetector is not None
             assert PriceDetector is not None
             assert RollingModeDetector is not None
@@ -53,6 +58,7 @@ class TestModuleImports:
                 RollingTradingMode,
                 TradingModeFactory,
             )
+
             assert HoardingTradingMode is not None
             assert RollingTradingMode is not None
             assert TradingModeFactory is not None
@@ -65,6 +71,7 @@ class TestModuleImports:
             from src.infrastructure.action_executor import ActionExecutorFactory
             from src.infrastructure.ocr_engine import TemplateOCREngine
             from src.infrastructure.screen_capture import ScreenCapture
+
             assert ActionExecutorFactory is not None
             assert TemplateOCREngine is not None
             assert ScreenCapture is not None
@@ -75,6 +82,7 @@ class TestModuleImports:
         """测试UI适配器导入"""
         try:
             from src.ui.adapter import TradingWorker, UIAdapter
+
             assert TradingWorker is not None
             assert UIAdapter is not None
         except ImportError as e:
@@ -84,6 +92,7 @@ class TestModuleImports:
         """测试事件总线导入"""
         try:
             from src.core.event_bus import event_bus
+
             assert event_bus is not None
         except ImportError as e:
             pytest.fail(f"事件总线导入失败: {e}")
@@ -92,6 +101,7 @@ class TestModuleImports:
         """测试UI文件导入（可选）"""
         try:
             from GUI.AppGUI import Ui_MainWindow
+
             assert Ui_MainWindow is not None
         except ImportError as e:
             pytest.fail(f"UI文件导入失败: {e}")

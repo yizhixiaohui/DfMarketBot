@@ -162,79 +162,81 @@ class DelayConfigManager(BaseConfigManager[DelayConfig]):
 
     def _create_default_config(self) -> DelayConfig:
         """创建基于当前硬编码值的默认配置"""
-        return DelayConfig(delays={
-            "hoarding_mode": {
-                "enter_action": 0.05,  # time.sleep(0.05) in prepare()
-                "balance_detection": 0.0,  # self.action_executor.move_mouse() 无延迟
-                "buy_operation": 0.0,  # 购买操作无额外延迟
-                "refresh_operation": 0.01,  # time.sleep(0.01) in _execute_refresh()
-                "escape_key": 0.0,  # 按ESC键无延迟
-                "re_enter": 0.0  # 重新进入无延迟
-            },
-            "rolling_mode": {
-                # 执行完刷新操作(按esc)后的等待时间
-                "after_refresh": 0.01,
-                # 鼠标挪到哈夫币详情页面后，等待检测前的延迟
-                "balance_detection": 0.3,
-                # 初始化完成后延迟的时间（初始化主要会检测一遍现在的哈夫币，用于计算收益）
-                "initialization": 0.4,
-                # 按L进入配装页，点击切换配装之前的延迟
-                "before_option_switch": 0.01,
-                # 点击切换配装之后的延迟，延迟后才会检测价格，以防买到高价
-                "after_option_switch": 0.05,
-                # 价格异常后重试的延迟，异常原因主要是配装时卡顿导致价格迟迟没有出现
-                "price_detection_retry": 0.05,
-                # 点击购买按钮后，检测是否购买成功(也就是是否有弹窗)前的延迟，设置久一点让弹窗动画播完再检测
-                "after_buy": 2.0,
-                # 检测到购买失败(也就是有失败弹窗)后，按下esc退出后的延迟
-                "after_check_purchase_failure": 1.0,
-                # 检测到彻底购买失败(也就是弹窗失败后检测到余额也没变)后，等待退出前的延迟
-                "after_buy_failed": 0.4,
-                # 检测到没有购买失败弹窗(也就是购买成功)后，准备检测余额并执行售卖动作前的延迟，这里
-                "after_buy_success": 1.0,
-                # 售卖流程整体完成后，准备邮件领钱之前的延迟，自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
-                "before_get_mail": 0.3,
-                # 邮件领钱完成后，会按下esc返回进入邮件之前的页面（一般来说是仓库)，等待它完全退出邮件窗口的延迟
-                "after_get_mail": 2.0,
-                # 邮件领完钱后，会回到仓库页面，这里是在仓库页面按下esc后的延迟，用于等待回到配装页面
-                "buy_success_refresh_final": 2.0,
-                # 购买流程全部完成后会检测一次余额，用于计算下次盈利的基础值，这里是检测余额后执行下一步前的延迟
-                "after_get_mail_and_detect_balance": 0.3,
-                # 点击进入仓库页面后的延迟
-                "after_enter_storage": 1.0,
-                # 点击转移全部按钮后的延迟
-                "after_transfer_all": 1.0,
-                # 鼠标挪到待售卖物品后的延迟
-                "after_move_to_sell_item": 0.3,
-                # 鼠标右键点击待售卖物品后的延迟
-                "after_right_click_sell_item": 0.5,
-                # 等待出售窗口出现的延迟
-                "sell_window_wait": 1.0,
-                # 购买窗口出现后，点击出售按钮后的延迟
-                "after_sell_button_click": 0.7,
-                # 解决售卖卡顿出现时的点击间隔(按esc -> delay -> 进入仓库 -> delay)
-                "resolve_sell_stuck": 1.0,
-                # 点击售卖价格输入框后的延迟
-                "after_sell_price_text_click": 0.5,
-                # 全选售卖价格后的延迟
-                "after_select_sell_text_price": 0.5,
-                # 设置售卖价格后的延迟(不管是不是快速售卖，当一切价格设置完成后，准备售卖前的延迟)
-                "after_set_sell_price": 1.0,
-                # 设置售卖价格逻辑整体完成后(也就是最后点击完滑块的步骤)等待的延迟
-                "after_set_sell_price_finish": 1.0,
-                # 检测到售卖数量超出当前可售栏最大值后，按下esc退出售卖后的延迟时间
-                "after_sale_column_full": 1.0,
-                # 鼠标挪到待售卖物品详情后的延迟(用于检测税后价格，计算单价和子弹数量)
-                "after_move_to_sell_detail": 0.3,
-                # 最终成功点击完售卖按钮，成功售卖后的延迟
-                "after_sell_finish": 1.0,
-                # 点击右上角进入邮箱后的延迟
-                "after_mail_button_click": 1.0,
-                # 邮箱界面点击交易行类别邮件后的延迟
-                "after_mail_trade_click": 1.0,
-                # 邮箱界面点击领取全部后的延迟(点完会跳出哈夫币领取的弹框，这里是等待它完全弹出)
-                "after_mail_get_click": 2.0,
-                # 邮箱界面领取完哈夫币，然后再次点击一下退出这个界面，之后的延迟
-                "after_confirm_mail_click": 1.0
+        return DelayConfig(
+            delays={
+                "hoarding_mode": {
+                    "enter_action": 0.05,  # time.sleep(0.05) in prepare()
+                    "balance_detection": 0.0,  # self.action_executor.move_mouse() 无延迟
+                    "buy_operation": 0.0,  # 购买操作无额外延迟
+                    "refresh_operation": 0.01,  # time.sleep(0.01) in _execute_refresh()
+                    "escape_key": 0.0,  # 按ESC键无延迟
+                    "re_enter": 0.0,  # 重新进入无延迟
+                },
+                "rolling_mode": {
+                    # 执行完刷新操作(按esc)后的等待时间
+                    "after_refresh": 0.01,
+                    # 鼠标挪到哈夫币详情页面后，等待检测前的延迟
+                    "balance_detection": 0.3,
+                    # 初始化完成后延迟的时间（初始化主要会检测一遍现在的哈夫币，用于计算收益）
+                    "initialization": 0.4,
+                    # 按L进入配装页，点击切换配装之前的延迟
+                    "before_option_switch": 0.01,
+                    # 点击切换配装之后的延迟，延迟后才会检测价格，以防买到高价
+                    "after_option_switch": 0.05,
+                    # 价格异常后重试的延迟，异常原因主要是配装时卡顿导致价格迟迟没有出现
+                    "price_detection_retry": 0.05,
+                    # 点击购买按钮后，检测是否购买成功(也就是是否有弹窗)前的延迟，设置久一点让弹窗动画播完再检测
+                    "after_buy": 2.0,
+                    # 检测到购买失败(也就是有失败弹窗)后，按下esc退出后的延迟
+                    "after_check_purchase_failure": 1.0,
+                    # 检测到彻底购买失败(也就是弹窗失败后检测到余额也没变)后，等待退出前的延迟
+                    "after_buy_failed": 0.4,
+                    # 检测到没有购买失败弹窗(也就是购买成功)后，准备检测余额并执行售卖动作前的延迟，这里
+                    "after_buy_success": 1.0,
+                    # 售卖流程整体完成后，准备邮件领钱之前的延迟，自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
+                    "before_get_mail": 0.3,
+                    # 邮件领钱完成后，会按下esc返回进入邮件之前的页面（一般来说是仓库)，等待它完全退出邮件窗口的延迟
+                    "after_get_mail": 2.0,
+                    # 邮件领完钱后，会回到仓库页面，这里是在仓库页面按下esc后的延迟，用于等待回到配装页面
+                    "buy_success_refresh_final": 2.0,
+                    # 购买流程全部完成后会检测一次余额，用于计算下次盈利的基础值，这里是检测余额后执行下一步前的延迟
+                    "after_get_mail_and_detect_balance": 0.3,
+                    # 点击进入仓库页面后的延迟
+                    "after_enter_storage": 1.0,
+                    # 点击转移全部按钮后的延迟
+                    "after_transfer_all": 1.0,
+                    # 鼠标挪到待售卖物品后的延迟
+                    "after_move_to_sell_item": 0.3,
+                    # 鼠标右键点击待售卖物品后的延迟
+                    "after_right_click_sell_item": 0.5,
+                    # 等待出售窗口出现的延迟
+                    "sell_window_wait": 1.0,
+                    # 购买窗口出现后，点击出售按钮后的延迟
+                    "after_sell_button_click": 0.7,
+                    # 解决售卖卡顿出现时的点击间隔(按esc -> delay -> 进入仓库 -> delay)
+                    "resolve_sell_stuck": 1.0,
+                    # 点击售卖价格输入框后的延迟
+                    "after_sell_price_text_click": 0.5,
+                    # 全选售卖价格后的延迟
+                    "after_select_sell_text_price": 0.5,
+                    # 设置售卖价格后的延迟(不管是不是快速售卖，当一切价格设置完成后，准备售卖前的延迟)
+                    "after_set_sell_price": 1.0,
+                    # 设置售卖价格逻辑整体完成后(也就是最后点击完滑块的步骤)等待的延迟
+                    "after_set_sell_price_finish": 1.0,
+                    # 检测到售卖数量超出当前可售栏最大值后，按下esc退出售卖后的延迟时间
+                    "after_sale_column_full": 1.0,
+                    # 鼠标挪到待售卖物品详情后的延迟(用于检测税后价格，计算单价和子弹数量)
+                    "after_move_to_sell_detail": 0.3,
+                    # 最终成功点击完售卖按钮，成功售卖后的延迟
+                    "after_sell_finish": 1.0,
+                    # 点击右上角进入邮箱后的延迟
+                    "after_mail_button_click": 1.0,
+                    # 邮箱界面点击交易行类别邮件后的延迟
+                    "after_mail_trade_click": 1.0,
+                    # 邮箱界面点击领取全部后的延迟(点完会跳出哈夫币领取的弹框，这里是等待它完全弹出)
+                    "after_mail_get_click": 2.0,
+                    # 邮箱界面领取完哈夫币，然后再次点击一下退出这个界面，之后的延迟
+                    "after_confirm_mail_click": 1.0,
+                },
             }
-        })
+        )

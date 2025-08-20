@@ -17,16 +17,8 @@ class TestDelayConfig(unittest.TestCase):
     def setUp(self):
         """测试前准备"""
         self.valid_delays = {
-            "hoarding_mode": {
-                "enter_action": 0.05,
-                "balance_detection": 0.0,
-                "buy_operation": 0.0
-            },
-            "rolling_mode": {
-                "balance_detection": 0.3,
-                "initialization": 0.4,
-                "buy_operation": 2.0
-            }
+            "hoarding_mode": {"enter_action": 0.05, "balance_detection": 0.0, "buy_operation": 0.0},
+            "rolling_mode": {"balance_detection": 0.3, "initialization": 0.4, "buy_operation": 2.0},
         }
         self.config = DelayConfig(delays=self.valid_delays)
 
@@ -135,11 +127,7 @@ class TestDelayConfig(unittest.TestCase):
     def test_get_mode_delays(self):
         """测试获取模式延迟配置"""
         mode_delays = self.config.get_mode_delays("hoarding_mode")
-        expected = {
-            "enter_action": 0.05,
-            "balance_detection": 0.0,
-            "buy_operation": 0.0
-        }
+        expected = {"enter_action": 0.05, "balance_detection": 0.0, "buy_operation": 0.0}
         self.assertEqual(mode_delays, expected)
 
     def test_get_mode_delays_nonexistent(self):
@@ -312,9 +300,7 @@ class TestDelayConfigManager(unittest.TestCase):
 
     def test_save_and_load_config(self):
         """测试保存和加载配置"""
-        original_config = DelayConfig(delays={
-            "test_mode": {"test_operation": 0.123}
-        })
+        original_config = DelayConfig(delays={"test_mode": {"test_operation": 0.123}})
 
         self.manager.save_config(original_config)
         loaded_config = self.manager.load_config()
@@ -327,11 +313,7 @@ class TestDelayConfigManager(unittest.TestCase):
         original_config = self.manager.load_config()
 
         # 更新配置
-        updates = {
-            "delays": {
-                "hoarding_mode": {"enter_action": 0.123}
-            }
-        }
+        updates = {"delays": {"hoarding_mode": {"enter_action": 0.123}}}
         updated_config = self.manager.update_config(updates)
 
         self.assertEqual(updated_config.get_delay("hoarding_mode", "enter_action"), 0.123)
@@ -345,7 +327,7 @@ class TestDelayConfigManager(unittest.TestCase):
         reloaded_config = self.manager.reload_config()
         self.assertEqual(config.delays, reloaded_config.delays)
 
-    @patch('builtins.open', side_effect=IOError("File access error"))
+    @patch("builtins.open", side_effect=IOError("File access error"))
     def test_load_config_error_handling(self, mock_file):
         """测试加载配置时的错误处理"""
         # 当文件访问出错时，应该返回默认配置
@@ -358,5 +340,5 @@ class TestDelayConfigManager(unittest.TestCase):
         self.assertEqual(config_class, DelayConfig)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

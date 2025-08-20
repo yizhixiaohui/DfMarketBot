@@ -21,10 +21,8 @@ except ImportError:
 
 class DelayHelper:
     """延迟操作辅助类，提供便捷的延迟获取和执行方法"""
-    MODE_MAPPING = {
-        TradingMode.ROLLING: "rolling_mode",
-        TradingMode.HOARDING: "hoarding_mode"
-    }
+
+    MODE_MAPPING = {TradingMode.ROLLING: "rolling_mode", TradingMode.HOARDING: "hoarding_mode"}
 
     def __init__(self, mode: TradingMode = TradingMode.ROLLING):
         """初始化DelayHelper"""
@@ -35,7 +33,6 @@ class DelayHelper:
 
         # 初始加载配置
         self._load_config()
-
 
     def set_mode(self, mode: TradingMode) -> None:
         """
@@ -51,7 +48,7 @@ class DelayHelper:
     def get_delay(self, operation: str) -> float:
         """
         获取延迟时间
-        
+
         Args:
             operation: 操作名称
 
@@ -67,7 +64,7 @@ class DelayHelper:
     def sleep(self, operation: str) -> None:
         """
         直接执行延迟操作
-        
+
         Args:
             operation: 操作名称
         """
@@ -78,10 +75,10 @@ class DelayHelper:
     def get_mode_delays(self, mode: TradingMode) -> dict:
         """
         获取指定模式的所有延迟配置
-        
+
         Args:
             mode: 交易模式名称
-            
+
         Returns:
             该模式下所有操作的延迟配置字典
         """
@@ -94,11 +91,11 @@ class DelayHelper:
     def has_operation(self, operation: str, mode: TradingMode = TradingMode.ROLLING) -> bool:
         """
         检查是否存在指定的操作配置
-        
+
         Args:
             operation: 操作名称
             mode: 交易模式，默认为"rolling_mode"
-            
+
         Returns:
             是否存在该操作配置
         """
@@ -115,7 +112,7 @@ class DelayHelper:
     def get_available_modes(self) -> list:
         """
         获取所有可用的交易模式列表
-        
+
         Returns:
             交易模式名称列表
         """
@@ -144,7 +141,7 @@ class DelayHelper:
     def reload_config(self) -> bool:
         """
         重新加载配置（用于配置修改后手动刷新）
-        
+
         Returns:
             是否成功重新加载
         """
@@ -154,7 +151,7 @@ class DelayHelper:
     def _load_config(self) -> bool:
         """
         加载配置（内部方法，调用时需要持有锁）
-        
+
         Returns:
             是否成功加载
         """
@@ -168,37 +165,27 @@ class DelayHelper:
     def get_config_info(self) -> dict:
         """
         获取配置信息摘要
-        
+
         Returns:
             包含配置统计信息的字典
         """
         with self._lock:
             if self._cached_config is None:
-                return {
-                    "status": "no_config",
-                    "modes": 0,
-                    "total_operations": 0
-                }
+                return {"status": "no_config", "modes": 0, "total_operations": 0}
 
             modes = self._cached_config.get_all_modes()
-            total_operations = sum(
-                len(self._cached_config.get_mode_operations(mode))
-                for mode in modes
-            )
+            total_operations = sum(len(self._cached_config.get_mode_operations(mode)) for mode in modes)
 
-            return {
-                "status": "loaded",
-                "modes": len(modes),
-                "mode_names": modes,
-                "total_operations": total_operations
-            }
+            return {"status": "loaded", "modes": len(modes), "mode_names": modes, "total_operations": total_operations}
 
     def __str__(self) -> str:
         """字符串表示"""
         info = self.get_config_info()
-        return (f"DelayHelper(status={info['status']}, "
-                f"modes={info['modes']}, "
-                f"operations={info['total_operations']})")
+        return (
+            f"DelayHelper(status={info['status']}, "
+            f"modes={info['modes']}, "
+            f"operations={info['total_operations']})"
+        )
 
     def __repr__(self) -> str:
         """调试表示"""

@@ -21,6 +21,7 @@ def config_manager():
     """Fixture to initialize the ConfigManager"""
     return ConfigManager()
 
+
 @pytest.fixture
 def config(config_manager):
     """Fixture to load the configuration"""

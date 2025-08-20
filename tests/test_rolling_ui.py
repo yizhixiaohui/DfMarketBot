@@ -52,6 +52,7 @@ def test_rolling_config_ui():
         print(f"✗ 测试失败: {e}")
         pytest.fail(f"✗ 测试失败: {e}")
 
+
 def test_config_integration():
     """测试配置集成"""
     print("\n=== 测试配置集成 ===")

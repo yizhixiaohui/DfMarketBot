@@ -94,9 +94,9 @@ class HoardingTradingMode(ITradingMode):
             )
 
             if (
-                    self.config.use_balance_calculation
-                    and self.last_buy_quantity != 0
-                    and self.last_balance == self.current_balance
+                self.config.use_balance_calculation
+                and self.last_buy_quantity != 0
+                and self.last_balance == self.current_balance
             ):
                 self.buy_failed_count += 1
             else:
@@ -602,10 +602,10 @@ class TradingModeFactory:
 
     @staticmethod
     def create_mode(
-            config: TradingConfig,
-            ocr_engine: TemplateOCREngine,
-            screen_capture: ScreenCapture,
-            action_executor: ActionExecutor,
+        config: TradingConfig,
+        ocr_engine: TemplateOCREngine,
+        screen_capture: ScreenCapture,
+        action_executor: ActionExecutor,
     ) -> ITradingMode:
         """根据类型创建交易模式"""
         if config.trading_mode == TradingMode.HOARDING:
