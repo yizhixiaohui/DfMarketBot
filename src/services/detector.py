@@ -51,7 +51,7 @@ class PriceDetector(IPriceDetector):
                 print(f"detected {value_name}:", value)
                 return value
 
-            time.sleep(0.01)
+            time.sleep(0.005)
 
         raise PriceDetectionException(f"{value_name}检测失败")
 
@@ -106,20 +106,21 @@ class RollingModeDetector(PriceDetector):
 
     def check_purchase_failure(self) -> bool:
         """检查购买是否失败"""
-        try:
-            coords = self.coordinates["rolling_mode"]["failure_check"]
-            screenshot = self.screen_capture.capture_region(coords)
-            return self.ocr_engine.detect_template(screenshot, "option_failed")
-        except Exception as e:
-            print("检测失败:", e)
-            return False
+        return self._match_template("failure_check", "option_failed")
+
+    def check_stuck(self) -> bool:
+        """检查循环是否卡死"""
+        return self._match_template("stuck_check", "equipment")
 
     def check_sell_window(self) -> bool:
         """检查仓库出售页面是不是无法售卖（三角洲bug）"""
+        return self._match_template("failure_check", "sell")
+
+    def _match_template(self, coords: str, template_name: str):
         try:
-            coords = self.coordinates["rolling_mode"]["failure_check"]
+            coords = self.coordinates["rolling_mode"][coords]
             screenshot = self.screen_capture.capture_region(coords)
-            return self.ocr_engine.detect_template(screenshot, "sell")
+            return self.ocr_engine.detect_template(screenshot, template_name)
         except Exception as e:
             print("检测失败:", e)
             return False
@@ -166,6 +167,10 @@ class RollingModeDetector(PriceDetector):
         """检测当前售卖的最小价格"""
         return self._detect_area("min_sell_price_area")
 
+    def detect_second_min_sell_price(self) -> int:
+        """检测当前售卖的最小价格"""
+        return self._detect_area("second_min_sell_price_area")
+
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
         return self._detect_area("min_sell_price_count_area")
@@ -184,6 +189,7 @@ class RollingModeDetector(PriceDetector):
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
+            print(coords)
             return self._detect_value(coords, abnormal_value=abnormal_value)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
@@ -193,5 +199,5 @@ if __name__ == "__main__":
     sc = ScreenCapture()
     ocr = TemplateOCREngine("L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates")
     detector = RollingModeDetector(sc, ocr)
-    test_res = detector._detect_area("min_sell_price_count_area", abnormal_value=0)
+    test_res = detector.detect_second_min_sell_price()
     print(test_res)

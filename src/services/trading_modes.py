@@ -56,6 +56,7 @@ class HoardingTradingMode(ITradingMode):
         self.strategy = factory.create_strategy(config)
         self.refresh_strategy = factory.create_refresh_strategy(config)
         self._should_stop = False
+        delay_helper.reload_config()
         delay_helper.set_mode(TradingMode.HOARDING)
 
     def stop(self) -> None:
@@ -192,6 +193,7 @@ class RollingTradingMode(ITradingMode):
         self.option_configs = config.rolling_options
         self.last_balance = None
         self._should_stop = False
+        delay_helper.reload_config()
         delay_helper.set_mode(TradingMode.ROLLING)
         if kwargs.get("profit", None):
             self.profit = kwargs.get("profit")
@@ -259,11 +261,26 @@ class RollingTradingMode(ITradingMode):
             event_bus.emit_overlay_text_updated(
                 f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]"
             )
-
+            second_detect = False
             # 执行交易决策
             if min_price < current_price <= target_price:
-                # 购买
-                self._execute_buy()
+                if second_detect:
+                    delay_helper.sleep("second_price_detection_retry")
+                    second_detect_price = self.detector.detect_price()
+                    if min_price < second_detect_price <= target_price:
+                        event_bus.emit_overlay_text_updated(
+                            f"二次检测成功({current_price}, {second_detect_price})，执行购买"
+                        )
+                        # 购买
+                        self._execute_buy()
+                    else:
+                        event_bus.emit_overlay_text_updated(
+                            f"二次检测失败({current_price}, {second_detect_price})，跳过购买"
+                        )
+                        self._execute_refresh()
+                        return not self._should_stop
+                else:
+                    self._execute_buy()
 
                 # 检查购买是否成功
                 delay_helper.sleep("after_buy")
@@ -286,12 +303,12 @@ class RollingTradingMode(ITradingMode):
                 self.append_to_sell_log(f"购买成功, 总花费: {cost}, 当前盈利: {self.profit}")
                 event_bus.emit_overlay_text_updated(f"购买成功, 总花费[{cost}], 当前盈利: {self.profit}")
 
-                current = time.localtime()
-                if (current.tm_hour > 1) or (current.tm_hour == 1 and current.tm_min >= 55):
-                    return False
+                # current = time.localtime()
+                # if current.tm_hour == 1 and current.tm_min >= 55:
+                #     return False
 
                 # 检查停止信号再执行售卖
-                if self._should_stop or self.config.auto_sell:
+                if self._should_stop or not self.config.auto_sell:
                     return False
 
                 self._execute_auto_sell(cost)
@@ -319,6 +336,9 @@ class RollingTradingMode(ITradingMode):
             return not self._should_stop  # 如果收到停止信号则返回False
 
         except Exception as e:
+            if self.detector.check_stuck():
+                print("检测到卡死，尝试脱离卡死")
+                self._execute_refresh()
             raise TradingException(f"滚仓模式交易失败: {e}") from e
 
     def _update_statistics(self):
@@ -425,7 +445,7 @@ class RollingTradingMode(ITradingMode):
         self._enter_sell_interface_with_retry(item_pos, sell_pos)
 
         # 设置售卖价格
-        min_sell_price = self._set_sell_price(sell_ratio, cycle_index, fast_sell=True)
+        min_sell_price = self._set_sell_price(sell_ratio, cycle_index, fast_sell=self.config.fast_sell)
 
         # 获取售卖信息并确认
         return self._confirm_sell_transaction(cycle_index, min_sell_price)
@@ -486,7 +506,7 @@ class RollingTradingMode(ITradingMode):
         sell_y = min_sell_pos[1]
 
         min_sell_price = self.detector.detect_min_sell_price()
-        # second_min_sell_price = self.detector.detect_second_min_sell_price()
+        second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
 
         if fast_sell and min_sell_price > 0 and min_sell_price_count > self.config.fast_sell_threshold:
@@ -494,9 +514,9 @@ class RollingTradingMode(ITradingMode):
             delay_helper.sleep("after_sell_price_text_click")
             self.action_executor.multi_key_press("ctrl", "a")
             delay_helper.sleep("after_select_sell_text_price")
-            min_sell_price = min_sell_price - 10
             # 先算出柱子插件，再减去一个柱子差价
-            # min_sell_price = min_sell_price - (second_min_sell_price - min_sell_price)
+            min_sell_price = min_sell_price - (second_min_sell_price - min_sell_price)
+            event_bus.emit_overlay_text_updated(f"计算最低价: {min_sell_price}")
             self.action_executor.type_text(str(min_sell_price))
         else:
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["min_sell_price_button"])

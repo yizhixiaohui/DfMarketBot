@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>447</width>
-    <height>279</height>
+    <width>448</width>
+    <height>315</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -193,7 +193,7 @@
         <property name="geometry">
          <rect>
           <x>230</x>
-          <y>10</y>
+          <y>110</y>
           <width>191</width>
           <height>31</height>
          </rect>
@@ -214,7 +214,7 @@
         <property name="geometry">
          <rect>
           <x>230</x>
-          <y>110</y>
+          <y>10</y>
           <width>181</width>
           <height>31</height>
          </rect>
@@ -319,7 +319,7 @@
          <string>理想价格</string>
         </property>
        </widget>
-       <widget class="QCheckBox" name="is_convertible">
+       <widget class="QCheckBox" name="is_convertiable">
         <property name="enabled">
          <bool>true</bool>
         </property>

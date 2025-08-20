@@ -86,6 +86,8 @@ class TemplateOCREngine(IOCREngine):
                 self._load_pic("option_failed.png")
                 # 加载售卖框模板
                 self._load_pic("sell.png")
+                # 加载装备模板
+                self._load_pic("equipment.png")
 
                 if not self._templates:
                     raise FileNotFoundError("未找到有效的数字模板文件")
