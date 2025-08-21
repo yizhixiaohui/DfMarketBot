@@ -74,35 +74,6 @@ def test_overlay_integration():
         print("⚠️  PyQt5未安装，跳过GUI测试")
 
 
-def main():
-    """主测试函数"""
-    print("=" * 50)
-    print("悬浮窗集成测试")
-    print("=" * 50)
-
-    try:
-        # 测试事件总线
-        success1 = test_event_bus_functionality()
-
-        # 测试悬浮窗集成
-        success2 = test_overlay_integration()
-
-        if success1 and success2:
-            print("\n🎉 所有测试通过！")
-            print("✅ 事件总线功能正常")
-            print("✅ 悬浮窗集成正常")
-            return True
-        print("\n❌ 测试失败")
-        return False
-
-    except Exception as e:
-        print(f"\n❌ 测试异常: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    test_event_bus_functionality()
+    test_overlay_integration()

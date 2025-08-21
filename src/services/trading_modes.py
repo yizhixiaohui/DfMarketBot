@@ -270,11 +270,11 @@ class RollingTradingMode(ITradingMode):
                 f"总盈利[{self.profit}] 总购买数[{self.count}] 循环次数[{self.loop_count}] "
                 f"购买成功[{self.buy_success_count}] 购买失败[{self.buy_failed_count}]"
             )
-            second_detect = False
+
             # 执行交易决策
             if min_price < current_price <= target_price:
                 delay_helper.sleep("before_buy")
-                if second_detect:
+                if self.config.second_detect:
                     delay_helper.sleep("second_price_detection_retry")
                     second_detect_price = self.detector.detect_price()
                     if min_price < second_detect_price <= target_price:
@@ -512,6 +512,19 @@ class RollingTradingMode(ITradingMode):
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["enter_storage"])
         delay_helper.sleep("resolve_sell_stuck")
 
+    def _get_fast_sell_threshold(self) -> int:
+        """获取当前配装的快速售卖阈值"""
+        # 检查配置和选项的有效性
+        if (
+            not self.option_configs
+            or self.config.rolling_option < 0
+            or self.config.rolling_option >= len(self.option_configs)
+        ):
+            return 0  # 默认总是启用快速售卖
+
+        current_option = self.option_configs[self.config.rolling_option]
+        return current_option.get("fast_sell_threshold", 0)
+
     def _set_sell_price(self, sell_ratio: float, cycle_index: int, fast_sell=False) -> int:
         """设置售卖价格"""
         if self._should_stop:
@@ -526,7 +539,10 @@ class RollingTradingMode(ITradingMode):
         second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
 
-        if fast_sell and min_sell_price > 0 and min_sell_price_count > self.config.fast_sell_threshold:
+        # 使用当前配装的快速售卖阈值
+        fast_sell_threshold = self._get_fast_sell_threshold()
+
+        if fast_sell and min_sell_price > 0 and min_sell_price_count > fast_sell_threshold:
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_price_text"])
             delay_helper.sleep("after_sell_price_text_click")
             self.action_executor.multi_key_press("ctrl", "a")

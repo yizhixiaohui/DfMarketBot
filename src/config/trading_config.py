@@ -37,6 +37,7 @@ class TradingConfig:
     fast_sell: bool = True
     fast_sell_threshold: int = 200000
     log_level: str = "INFO"
+    second_detect: bool = False
 
     def __post_init__(self):
         """验证配置参数"""
@@ -60,11 +61,17 @@ class TradingConfig:
         # 设置默认滚仓选项配置
         if self.rolling_options is None:
             self.rolling_options = [
-                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
+                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 0},
             ]
+
+        # 确保所有滚仓选项都包含 fast_sell_threshold 字段（向后兼容性）
+        self._ensure_fast_sell_threshold_in_rolling_options()
+
+        # 验证所有滚仓选项的配置
+        self._validate_rolling_options()
 
     def to_dict(self):
         """序列化为 dict，枚举转 value"""
@@ -72,6 +79,37 @@ class TradingConfig:
         config_dict["trading_mode"] = config_dict["trading_mode"].value
         config_dict["item_type"] = config_dict["item_type"].value
         return config_dict
+
+    def _ensure_fast_sell_threshold_in_rolling_options(self):
+        """确保所有滚仓选项都包含 fast_sell_threshold 字段，提供向后兼容性"""
+        if self.rolling_options:
+            for option in self.rolling_options:
+                if "fast_sell_threshold" not in option:
+                    option["fast_sell_threshold"] = 0  # 默认值为0，表示总是启用快速售卖
+                elif option["fast_sell_threshold"] < 0:
+                    option["fast_sell_threshold"] = 0  # 负数重置为0
+
+    def _validate_rolling_options(self):
+        """验证所有滚仓选项的配置有效性"""
+        if not self.rolling_options:
+            return
+
+        for i, option in enumerate(self.rolling_options):
+            # 验证必需字段
+            required_fields = ["buy_price", "min_buy_price", "buy_count", "fast_sell_threshold"]
+            for field in required_fields:
+                if field not in option:
+                    raise ValueError(f"滚仓选项 {i} 缺少必需字段: {field}")
+
+            # 验证数值有效性
+            if option["buy_price"] < 0:
+                raise ValueError(f"滚仓选项 {i} 的购买价格不能为负数")
+            if option["min_buy_price"] < 0:
+                raise ValueError(f"滚仓选项 {i} 的最低购买价格不能为负数")
+            if option["buy_count"] <= 0:
+                raise ValueError(f"滚仓选项 {i} 的购买数量必须大于0")
+            if option["fast_sell_threshold"] < 0:
+                raise ValueError(f"滚仓选项 {i} 的快速售卖阈值不能为负数")
 
     @classmethod
     def from_dict(cls, config_dict: Dict[str, Any]) -> "TradingConfig":

@@ -22,10 +22,10 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from src.config.config_factory import ConfigFactory
-
 # 添加项目根目录到Python路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.config.config_factory import ConfigFactory
 
 
 class RollingConfigUI(QMainWindow):
@@ -69,8 +69,8 @@ class RollingConfigUI(QMainWindow):
 
         # 表格
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["选项", "购买价格", "最低价格", "购买数量"])
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["选项", "购买价格", "最低价格", "购买数量", "快速售卖阈值"])
 
         # 设置表格样式
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -112,10 +112,10 @@ class RollingConfigUI(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "错误", f"加载配置失败: {str(e)}")
             self.rolling_options = [
-                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
+                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 0},
             ]
             self.refresh_table()
 
@@ -145,6 +145,12 @@ class RollingConfigUI(QMainWindow):
                 count_item = QTableWidgetItem(str(option["buy_count"]))
                 count_item.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(row, 3, count_item)
+
+                # 快速售卖阈值
+                fast_sell_threshold = option.get("fast_sell_threshold", 0)
+                threshold_item = QTableWidgetItem(str(fast_sell_threshold))
+                threshold_item.setTextAlignment(Qt.AlignCenter)
+                self.table.setItem(row, 4, threshold_item)
         finally:
             self._updating_table = False  # 更新完成
 
@@ -171,6 +177,10 @@ class RollingConfigUI(QMainWindow):
 
             value = int(item.text())
 
+            # 快速售卖阈值需要额外验证（必须为非负整数）
+            if column == 4 and value < 0:
+                raise ValueError("快速售卖阈值必须为非负整数")
+
             # 根据列更新对应的配置值
             if column == 1:  # 购买价格
                 self.rolling_options[row]["buy_price"] = value
@@ -178,6 +188,8 @@ class RollingConfigUI(QMainWindow):
                 self.rolling_options[row]["min_buy_price"] = value
             elif column == 3:  # 购买数量
                 self.rolling_options[row]["buy_count"] = value
+            elif column == 4:  # 快速售卖阈值
+                self.rolling_options[row]["fast_sell_threshold"] = value
 
             # 立即保存配置到文件
             try:
@@ -186,24 +198,29 @@ class RollingConfigUI(QMainWindow):
             except Exception as e:
                 self.statusBar().showMessage(f"配置更新失败: {str(e)}")
 
-        except ValueError:
+        except ValueError as e:
             # 如果输入无效，恢复原来的值
             self._updating_table = True  # 防止递归
             try:
                 self.refresh_table()
             finally:
                 self._updating_table = False
-            QMessageBox.warning(self, "警告", "请输入有效的数字")
+
+            # 显示具体的错误信息
+            if "快速售卖阈值" in str(e):
+                self.statusBar().showMessage(f"配置更新失败: {str(e)}")
+            else:
+                self.statusBar().showMessage("配置更新失败: 请输入有效的数字")
 
     def reset_to_default(self):
         """重置为默认配置"""
         reply = QMessageBox.question(self, "确认", "确定要重置为默认配置吗？这将覆盖当前所有配置。")
         if reply == QMessageBox.Yes:
             self.rolling_options = [
-                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740},
+                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
+                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 0},
             ]
             self.refresh_table()
             self.save_config()
