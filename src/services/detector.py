@@ -112,6 +112,12 @@ class RollingModeDetector(PriceDetector):
         """检查循环是否卡死"""
         return self._match_template("stuck_check", "equipment")
 
+    def check_stuck2(self) -> bool:
+        """检查循环是否卡死"""
+        return self._match_template("stuck_check2_teqingchu", "enter_teqingchu") and not self._match_template(
+            "stuck_check2_equipment_scheme", "equipment_scheme"
+        )
+
     def check_sell_window(self) -> bool:
         """检查仓库出售页面是不是无法售卖（三角洲bug）"""
         return self._match_template("failure_check", "sell")
@@ -199,5 +205,7 @@ if __name__ == "__main__":
     sc = ScreenCapture()
     ocr = TemplateOCREngine("L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates")
     detector = RollingModeDetector(sc, ocr)
-    test_res = detector.detect_second_min_sell_price()
+    test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
+    print(test_res)
+    test_res = detector._match_template("stuck_check2_teqingchu", "enter_teqingchu")
     print(test_res)

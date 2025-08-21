@@ -2,6 +2,7 @@
 """
 UI适配层 - 连接新架构与现有PyQt5 UI
 """
+import time
 from typing import Any, Dict
 
 from PyQt5.QtCore import QMutex, QThread
@@ -76,7 +77,7 @@ class TradingWorker(QThread):
             # 初始化交易服务
             self.trading_service.initialize(current_config)
             self.trading_service.prepare()
-
+            last_time = time.time()
             while True:
                 self._mutex.lock()
                 if not self._running:
@@ -88,7 +89,9 @@ class TradingWorker(QThread):
                 try:
                     # 执行交易周期
                     should_continue = self.trading_service.execute_cycle()
-
+                    cur_time = time.time()
+                    print(f"上轮耗时: {int((cur_time - last_time) * 1000)}ms")
+                    last_time = cur_time
                     # 获取最新数据
                     market_data = self.trading_service.get_market_data()
 

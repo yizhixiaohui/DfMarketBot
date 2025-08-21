@@ -19,6 +19,8 @@ delays:
     after_option_switch: 0.05
     # 价格异常后重试的延迟，异常原因主要是配装时卡顿导致价格迟迟没有出现
     price_detection_retry: 0.005
+    # 购买之前的延迟(二次检测场景会在检测前执行延迟)
+    before_buy: 0.0
     # 识别到可购买后，再执行一次延迟进行二次价格检测，主要是为了防止刷新太快买到高价子弹
     second_price_detection_retry: 0.03
     # 点击购买按钮后，检测是否购买成功(也就是是否有弹窗)前的延迟，设置久一点让弹窗动画播完再检测
@@ -32,7 +34,7 @@ delays:
     # 售卖流程整体完成后，准备邮件领钱之前的延迟，自动售卖结束时已经有1s间隔了，这里延迟可以不用太高
     before_get_mail: 0.3
     # 邮件领钱完成后，会按下esc返回进入邮件之前的页面（一般来说是仓库)，等待它完全退出邮件窗口的延迟
-    after_get_mail: 2.0
+    after_get_mail: 1.4
     # 邮件领完钱后，会回到仓库页面，这里是在仓库页面按下esc后的延迟，用于等待回到配装页面
     buy_success_refresh_final: 2.0
     # 购买流程全部完成后会检测一次余额，用于计算下次盈利的基础值，这里是检测余额后执行下一步前的延迟
@@ -73,3 +75,17 @@ delays:
     after_mail_get_click: 2.0
     # 邮箱界面领取完哈夫币，然后再次点击一下退出这个界面，之后的延迟
     after_confirm_mail_click: 1.0
+
+    # 切换大战场解除卡顿 #
+    # 烽火行动页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
+    before_open_mode_select_menu_tarkov_mode: 1.0
+    # 战场模式页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
+    before_open_mode_select_menu_battlefield_mode: 2.0
+    # 按下esc打开切换菜单后，等待按下战场模式或烽火行动模式按钮前的延迟
+    before_select_mode: 1.0
+    # 按下行前备战按钮进入地图选择页前等待的延迟
+    before_select_map: 1.0
+    # 进入地图选择页后，选择零号大坝前等待的延迟
+    before_select_zero_dam: 1.5
+    # 选择零号大坝后，点击开始行动按钮前等待的延迟
+    before_start_action: 1.0

@@ -186,6 +186,9 @@ class RollingTradingMode(ITradingMode):
         self.count = 0
         # 停止标志
         self._should_stop = False
+        self.loop_count = 0
+        self.buy_failed_count = 0
+        self.buy_success_count = 0
 
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化滚仓模式"""
@@ -230,6 +233,11 @@ class RollingTradingMode(ITradingMode):
             if not option_config:
                 return False
 
+            if self.loop_count > 0 and self.loop_count % 300 == 0:
+                time.sleep(1)
+                self._switch_to_battlefield_and_return()
+            self.loop_count += 1
+
             target_price = option_config["buy_price"] * option_config["buy_count"]
             min_price = option_config["min_buy_price"] * option_config["buy_count"]
 
@@ -245,7 +253,6 @@ class RollingTradingMode(ITradingMode):
                 if current_price > min_price:
                     break
                 print(f"价格小于异常价格，重新检测({i}/5)")
-                event_bus.emit_overlay_text_updated(f"价格小于异常价格，重新检测({i + 1}/5)")
                 delay_helper.sleep("price_detection_retry")
             # 存储市场数据
             self.current_market_data = MarketData(
@@ -256,14 +263,17 @@ class RollingTradingMode(ITradingMode):
                 f"滚仓模式: 单价={option_config['buy_price']}, "
                 f"数量={option_config['buy_count']}, "
                 f"总价={target_price}, 最低价={min_price}, "
-                f"当前价={current_price}"
+                f"当前价={current_price}, 循环次数: {self.loop_count}"
             )
             event_bus.emit_overlay_text_updated(
-                f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]"
+                f"当前价格[{current_price}] 目标价格[{target_price}] "
+                f"总盈利[{self.profit}] 总购买数[{self.count}] 循环次数[{self.loop_count}] "
+                f"购买成功[{self.buy_success_count}] 购买失败[{self.buy_failed_count}]"
             )
             second_detect = False
             # 执行交易决策
             if min_price < current_price <= target_price:
+                delay_helper.sleep("before_buy")
                 if second_detect:
                     delay_helper.sleep("second_price_detection_retry")
                     second_detect_price = self.detector.detect_price()
@@ -290,12 +300,14 @@ class RollingTradingMode(ITradingMode):
                     cur_balance = self._detect_balance()
                     if cur_balance == self.last_balance:
                         print("购买失败！")
+                        self.buy_failed_count += 1
                         self._update_statistics()
                         delay_helper.sleep("after_buy_failed")
                         return True
                     print("部分购买失败，执行售卖")
                 else:
                     print("购买成功！")
+                    self.buy_success_count += 1
                     delay_helper.sleep("after_buy_success")
                     cur_balance = self._detect_balance()
                 cost = self.last_balance - cur_balance
@@ -337,8 +349,13 @@ class RollingTradingMode(ITradingMode):
 
         except Exception as e:
             if self.detector.check_stuck():
-                print("检测到卡死，尝试脱离卡死")
+                print("检测到点入装备界面，尝试脱离卡死")
                 self._execute_refresh()
+            elif self.detector.check_stuck2():
+                # 没有L按钮进入配装界面
+                self._execute_refresh()
+                time.sleep(1)
+                self._enter_action_window()
             raise TradingException(f"滚仓模式交易失败: {e}") from e
 
     def _update_statistics(self):
@@ -588,6 +605,28 @@ class RollingTradingMode(ITradingMode):
         delay_helper.sleep("after_confirm_mail_click")
         self.action_executor.press_key("esc")
 
+    def _switch_to_battlefield_and_return(self):
+        """切换到大战场模式解除卡顿，再切回来"""
+        self._execute_refresh()
+        delay_helper.sleep("before_open_mode_select_menu_tarkov_mode")
+        self._execute_refresh()
+        delay_helper.sleep("before_select_mode")
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["battlefield_mode_button"])
+        delay_helper.sleep("before_open_mode_select_menu_battlefield_mode")
+        self._execute_refresh()
+        delay_helper.sleep("before_select_mode")
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["tarkov_mode_button"])
+        delay_helper.sleep("before_select_map")
+        self._enter_action_window()
+
+    def _enter_action_window(self):
+        """从主界面进入到行动界面"""
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["prepare_equipment_button"])
+        delay_helper.sleep("before_select_zero_dam")
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["zero_dam_button"])
+        delay_helper.sleep("before_start_action")
+        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["start_action_button"])
+
     def get_market_data(self) -> Optional[MarketData]:
         """获取当前市场数据"""
         return self.current_market_data
@@ -648,4 +687,5 @@ if __name__ == "__main__":
     executor = ActionExecutor()
     test_mode = RollingTradingMode(detector, executor)
     test_mode.initialize(TradingConfig(), profit=300000, count=123456)
-    print(test_mode.profit, test_mode.count)
+    time.sleep(1)
+    test_mode._switch_to_battlefield_and_return()

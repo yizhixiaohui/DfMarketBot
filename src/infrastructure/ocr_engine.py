@@ -36,12 +36,12 @@ class TemplateOCREngine(IOCREngine):
         # 加载模板
         self._load_templates()
 
-    def _load_pic(self, pic_name: str):
+    def _load_pic(self, pic_name: str, threshold=127):
         sell_template_path = self.templates_dir / pic_name
         if sell_template_path.exists():
             template = cv2.imread(str(sell_template_path), cv2.IMREAD_GRAYSCALE)
             if template is not None:
-                _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                _, binary = cv2.threshold(template, threshold, 255, cv2.THRESH_BINARY)
                 template_name = pic_name if not pic_name.endswith(".png") else pic_name[:-4]
                 self._pic_templates[template_name] = binary
 
@@ -88,6 +88,8 @@ class TemplateOCREngine(IOCREngine):
                 self._load_pic("sell.png")
                 # 加载装备模板
                 self._load_pic("equipment.png")
+                self._load_pic("enter_teqingchu.png", 50)
+                self._load_pic("equipment_scheme.png", 50)
 
                 if not self._templates:
                     raise FileNotFoundError("未找到有效的数字模板文件")
@@ -160,7 +162,6 @@ class TemplateOCREngine(IOCREngine):
         try:
             if self._pic_templates is None or self._pic_templates[template_name] is None:
                 return False
-
             # 确保图像是numpy数组
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
