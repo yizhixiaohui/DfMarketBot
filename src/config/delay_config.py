@@ -43,7 +43,13 @@ class DelayConfig:
         """
         if not isinstance(mode, str) or not isinstance(operation, str):
             return 0.0
-        return self.delays.get(mode, {}).get(operation, 0.0)
+        res = self.delays.get(mode)
+        if res is None:
+            raise ValueError(f"未找到模式: {res}")
+        delay = res.get(operation, None)
+        if delay is None:
+            raise ValueError(f"未找到对应操作: {operation}")
+        return delay
 
     def set_delay(self, mode: str, operation: str, delay: float) -> None:
         """设置指定模式和操作的延迟时间

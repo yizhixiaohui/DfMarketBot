@@ -168,14 +168,15 @@ class UIAdapter:
             "textEdit_ideal_price",
             "textEdit_unacceptable_price",
             "textEdit_hoarding_loop_gap",
-            "textEdit_fast_sell_threshold",
+            "textEdit_switch_to_battlefield_count",
         ]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
                 widget.textChanged.connect(self._on_config_changed)
 
         # 连接复选框信号
-        for widget_name in ["is_convertible", "is_key_mode", "is_half_coin_mode", "is_auto_sell", "is_fast_sell"]:
+        for widget_name in ["is_convertible", "is_key_mode", "is_half_coin_mode", "is_auto_sell", "is_fast_sell",
+                            "is_second_detect", "is_switch_to_battlefield"]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
                 widget.stateChanged.connect(self._on_config_changed)
@@ -213,8 +214,8 @@ class UIAdapter:
         if hasattr(self.ui, "textEdit_rolling_loop_gap"):
             self.ui.textEdit_rolling_loop_gap.setPlainText(str(int(config.get("rolling_loop_interval", 50))))
 
-        if hasattr(self.ui, "textEdit_fast_sell_threshold"):
-            self.ui.textEdit_fast_sell_threshold.setPlainText(str(config.get("fast_sell_threshold", 200000)))
+        if hasattr(self.ui, "textEdit_switch_to_battlefield_count"):
+            self.ui.textEdit_switch_to_battlefield_count.setPlainText(str(config.get("switch_to_battlefield_count", 300)))
 
         # 更新复选框
         if hasattr(self.ui, "is_convertible"):
@@ -231,6 +232,12 @@ class UIAdapter:
 
         if hasattr(self.ui, "is_fast_sell"):
             self.ui.is_fast_sell.setChecked(config.get("fast_sell", True))
+
+        if hasattr(self.ui, "is_second_detect"):
+            self.ui.is_second_detect.setChecked(config.get("second_detect", False))
+
+        if hasattr(self.ui, "is_switch_to_battlefield"):
+            self.ui.is_switch_to_battlefield.setChecked(config.get("switch_to_battlefield", False))
 
     def _on_mode_changed(self, index: int) -> None:
         """模式改变处理"""
@@ -278,9 +285,9 @@ class UIAdapter:
                 text = self.ui.textEdit_rolling_loop_gap.toPlainText().replace(",", "")
                 config["rolling_loop_interval"] = int(text) if text else 50
 
-            if hasattr(self.ui, "textEdit_fast_sell_threshold"):
-                text = self.ui.textEdit_fast_sell_threshold.toPlainText().replace(",", "")
-                config["fast_sell_threshold"] = int(text) if text else 200000
+            if hasattr(self.ui, "textEdit_switch_to_battlefield_count"):
+                text = self.ui.textEdit_switch_to_battlefield_count.toPlainText().replace(",", "")
+                config["switch_to_battlefield_count"] = int(text) if text else 300
         except ValueError as e:
             print("UI配置参数错误:", e)
         # 物品类型
@@ -303,6 +310,12 @@ class UIAdapter:
 
         if hasattr(self.ui, "is_fast_sell"):
             config["fast_sell"] = self.ui.is_fast_sell.isChecked()
+
+        if hasattr(self.ui, "is_second_detect"):
+            config["second_detect"] = self.ui.is_second_detect.isChecked()
+
+        if hasattr(self.ui, "is_switch_to_battlefield"):
+            config["switch_to_battlefield"] = self.ui.is_switch_to_battlefield.isChecked()
 
         return config
 

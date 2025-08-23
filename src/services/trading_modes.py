@@ -10,9 +10,8 @@ try:
     from src.config.trading_config import ItemType, TradingConfig, TradingMode
     from src.core.event_bus import event_bus
     from src.core.exceptions import TradingException
-    from src.core.interfaces import ITradingMode, MarketData
+    from src.core.interfaces import ITradingMode, MarketData, IOCREngine
     from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
-    from src.infrastructure.ocr_engine import TemplateOCREngine
     from src.infrastructure.screen_capture import ScreenCapture
     from src.services.detector import HoardingModeDetector, RollingModeDetector
     from src.services.strategy import StrategyFactory
@@ -21,9 +20,8 @@ except ImportError:
     from ..config.trading_config import ItemType, TradingConfig, TradingMode
     from ..core.event_bus import event_bus
     from ..core.exceptions import TradingException
-    from ..core.interfaces import ITradingMode, MarketData
+    from ..core.interfaces import ITradingMode, MarketData, IOCREngine
     from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
-    from ..infrastructure.ocr_engine import TemplateOCREngine
     from ..infrastructure.screen_capture import ScreenCapture
     from ..services.detector import HoardingModeDetector, RollingModeDetector
     from ..services.strategy import StrategyFactory
@@ -233,9 +231,10 @@ class RollingTradingMode(ITradingMode):
             if not option_config:
                 return False
 
-            if self.loop_count > 0 and self.loop_count % 300 == 0:
+            if self.config.switch_to_battlefield and self.loop_count > 0 and self.loop_count % self.config.switch_to_battlefield_count == 0:
                 time.sleep(1)
                 self._switch_to_battlefield_and_return()
+                time.sleep(0.5)
             self.loop_count += 1
 
             target_price = option_config["buy_price"] * option_config["buy_count"]
@@ -266,7 +265,7 @@ class RollingTradingMode(ITradingMode):
                 f"当前价={current_price}, 循环次数: {self.loop_count}"
             )
             event_bus.emit_overlay_text_updated(
-                f"当前价格[{current_price}] 目标价格[{target_price}] "
+                f"当前价格[{current_price}, {current_price/option_config['buy_count']}] 目标价格[{target_price}] "
                 f"总盈利[{self.profit}] 总购买数[{self.count}] 循环次数[{self.loop_count}] "
                 f"购买成功[{self.buy_success_count}] 购买失败[{self.buy_failed_count}]"
             )
@@ -294,7 +293,9 @@ class RollingTradingMode(ITradingMode):
 
                 # 检查购买是否成功
                 delay_helper.sleep("after_buy")
+                print('执行检测购买失败')
                 if self.detector.check_purchase_failure():
+                    print("购买失败！")
                     self._execute_refresh()
                     delay_helper.sleep("after_check_purchase_failure")
                     cur_balance = self._detect_balance()
@@ -337,7 +338,7 @@ class RollingTradingMode(ITradingMode):
                 delay_helper.sleep("buy_success_refresh_final")
                 self.last_balance = self._detect_balance()
                 event_bus.emit_overlay_text_updated(
-                    f"当前价格[{current_price}] 目标价格[{target_price}] 总盈利[{self.profit}] 总购买数[{self.count}]"
+                    f"当前价格[{current_price}, {current_price/option_config['buy_count']}] 总购买数[{self.count}]"
                 )
                 delay_helper.sleep("after_get_mail_and_detect_balance")
             else:
@@ -678,7 +679,7 @@ class TradingModeFactory:
     @staticmethod
     def create_mode(
         config: TradingConfig,
-        ocr_engine: TemplateOCREngine,
+        ocr_engine: IOCREngine,
         screen_capture: ScreenCapture,
         action_executor: ActionExecutor,
     ) -> ITradingMode:
@@ -697,11 +698,12 @@ class TradingModeFactory:
 
 
 if __name__ == "__main__":
+    from src.infrastructure.ocr_engine import TemplateOCREngine
     sc = ScreenCapture()
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
     executor = ActionExecutor()
     test_mode = RollingTradingMode(detector, executor)
     test_mode.initialize(TradingConfig(), profit=300000, count=123456)
-    time.sleep(1)
-    test_mode._switch_to_battlefield_and_return()
+    res = test_mode._wait_for_sell_window()
+    print(res)

@@ -6,9 +6,11 @@ OCR引擎基础设施 - 基于模板匹配的图像识别
 import os
 import threading
 from pathlib import Path
+from typing import Tuple
 
 import cv2
 import numpy as np
+import pyautogui
 
 try:
     from src.core.exceptions import OCRException
@@ -21,9 +23,12 @@ except ImportError:
 class TemplateOCREngine(IOCREngine):
     """基于模板匹配的OCR引擎"""
 
-    def __init__(self, templates_dir: str = None):
+    def __init__(self, templates_dir: str = None, resolution: Tuple[int, int] = None):
         if templates_dir is None:
-            templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates")
+            if resolution is None:
+                resolution = pyautogui.size()
+            templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                         f"templates/{resolution[0]}x{resolution[1]}")
 
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
@@ -248,7 +253,7 @@ class OCREngineFactory:
     """OCR引擎工厂"""
 
     @staticmethod
-    def create_engine(engine_type: str = "template", **kwargs):
+    def create_engine(engine_type: str = "template", **kwargs) -> IOCREngine:
         """创建OCR引擎"""
         if engine_type == "template":
             return TemplateOCREngine(**kwargs)

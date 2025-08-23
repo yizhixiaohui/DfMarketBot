@@ -7,7 +7,7 @@ from typing import Optional
 from ..core.exceptions import TradingException
 from ..core.interfaces import ITradingService, MarketData, TradingConfig
 from ..infrastructure.action_executor import ActionExecutorFactory
-from ..infrastructure.ocr_engine import TemplateOCREngine
+from ..infrastructure.ocr_engine import OCREngineFactory
 from ..infrastructure.screen_capture import ScreenCapture
 from ..services.trading_modes import TradingModeFactory
 
@@ -18,7 +18,7 @@ class TradingService(ITradingService):
     def __init__(self):
         # 初始化基础设施
         self.screen_capture = ScreenCapture()
-        self.ocr_engine = TemplateOCREngine()
+        self.ocr_engine = OCREngineFactory.create_engine("template")
         self.action_executor = ActionExecutorFactory.create_executor("pyautogui")
 
         # 初始化交易模式

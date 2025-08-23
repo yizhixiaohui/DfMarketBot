@@ -51,23 +51,6 @@ class TestDelayHelper(unittest.TestCase):
         mock_manager.load_config.assert_called()
 
     @patch("src.utils.delay_helper.ConfigFactory")
-    def test_get_delay(self, mock_factory):
-        """测试获取延迟时间"""
-        mock_manager = Mock()
-        mock_manager.load_config.return_value = self.test_config
-        mock_factory.get_config_manager.return_value = mock_manager
-
-        helper = DelayHelper(TradingMode.HOARDING)
-
-        # 测试获取存在的延迟
-        delay = helper.get_delay("enter_action")
-        self.assertEqual(delay, 0.05)
-
-        # 测试获取不存在的操作
-        delay = helper.get_delay("nonexistent")
-        self.assertEqual(delay, 0.0)
-
-    @patch("src.utils.delay_helper.ConfigFactory")
     @patch("time.sleep")
     def test_sleep(self, mock_sleep, mock_factory):
         """测试延迟执行"""
@@ -84,11 +67,6 @@ class TestDelayHelper(unittest.TestCase):
         # 测试零延迟（不应该调用sleep）
         mock_sleep.reset_mock()
         helper.sleep("buy_operation")
-        mock_sleep.assert_not_called()
-
-        # 测试不存在的操作（不应该调用sleep）
-        mock_sleep.reset_mock()
-        helper.sleep("nonexistent")
         mock_sleep.assert_not_called()
 
     @patch("src.utils.delay_helper.ConfigFactory")

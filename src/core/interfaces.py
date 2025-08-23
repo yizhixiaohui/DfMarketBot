@@ -164,6 +164,11 @@ class IOCREngine(ABC):
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板匹配"""
 
+    @staticmethod
+    @abstractmethod
+    def get_pixel_color(img: np.ndarray, x: int, y: int):
+        """检测固定点的像素值"""
+
 
 class ITradingService(ABC):
     """交易服务接口"""

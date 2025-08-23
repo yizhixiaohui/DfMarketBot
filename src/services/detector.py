@@ -7,26 +7,25 @@ import time
 from abc import abstractmethod
 from typing import List, Optional, Tuple
 
+import cv2
 import numpy as np
 
 try:
     from src.config.coordinates import CoordinateConfig
     from src.core.exceptions import BalanceDetectionException, PriceDetectionException
-    from src.core.interfaces import IPriceDetector
-    from src.infrastructure.ocr_engine import TemplateOCREngine
+    from src.core.interfaces import IPriceDetector, IOCREngine
     from src.infrastructure.screen_capture import ScreenCapture
 except ImportError:
     from ..config.coordinates import CoordinateConfig
     from ..core.exceptions import BalanceDetectionException, PriceDetectionException
-    from ..core.interfaces import IPriceDetector
-    from ..infrastructure.ocr_engine import TemplateOCREngine
+    from ..core.interfaces import IPriceDetector, IOCREngine
     from ..infrastructure.screen_capture import ScreenCapture
 
 
 class PriceDetector(IPriceDetector):
     """价格检测器基类"""
 
-    def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine):
+    def __init__(self, screen_capture: ScreenCapture, ocr_engine: IOCREngine):
         self.screen_capture = screen_capture
         self.ocr_engine = ocr_engine
         self.coordinates = CoordinateConfig.restore_coordinates(screen_capture.width, screen_capture.height)
@@ -86,7 +85,7 @@ class PriceDetector(IPriceDetector):
 class HoardingModeDetector(PriceDetector):
     """屯仓模式检测器"""
 
-    def __init__(self, screen_capture: ScreenCapture, ocr_engine: TemplateOCREngine, item_convertible: bool = False):
+    def __init__(self, screen_capture: ScreenCapture, ocr_engine: IOCREngine, item_convertible: bool = False):
         super().__init__(screen_capture, ocr_engine)
         self.item_convertible = item_convertible
 
@@ -202,10 +201,13 @@ class RollingModeDetector(PriceDetector):
 
 
 if __name__ == "__main__":
+    from src.infrastructure.ocr_engine import TemplateOCREngine
     sc = ScreenCapture()
-    ocr = TemplateOCREngine("L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates")
+    print(sc.width, sc.height)
+    ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
-    test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
-    print(test_res)
-    test_res = detector._match_template("stuck_check2_teqingchu", "enter_teqingchu")
-    print(test_res)
+    detector.detect_balance()
+    # test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
+    # print(test_res)
+    # test_res = detector._match_template("stuck_check2_teqingchu", "enter_teqingchu")
+    # print(test_res)

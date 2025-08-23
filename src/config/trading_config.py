@@ -35,9 +35,10 @@ class TradingConfig:
     screen_height: int = 1440
     auto_sell: bool = True
     fast_sell: bool = True
-    fast_sell_threshold: int = 200000
     log_level: str = "INFO"
     second_detect: bool = False
+    switch_to_battlefield: bool = False
+    switch_to_battlefield_count: int = 300
 
     def __post_init__(self):
         """验证配置参数"""

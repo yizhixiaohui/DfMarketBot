@@ -75,13 +75,15 @@ class TestDelayConfig(unittest.TestCase):
 
     def test_get_delay_nonexistent_mode(self):
         """测试获取不存在的模式"""
-        delay = self.config.get_delay("nonexistent_mode", "operation")
-        self.assertEqual(delay, 0.0)
+        with self.assertRaises(ValueError) as context:
+            delay = self.config.get_delay("nonexistent_mode", "operation")
+        self.assertIn("未找到模式", str(context.exception))
 
     def test_get_delay_nonexistent_operation(self):
         """测试获取不存在的操作"""
-        delay = self.config.get_delay("hoarding_mode", "nonexistent_operation")
-        self.assertEqual(delay, 0.0)
+        with self.assertRaises(ValueError) as context:
+            delay = self.config.get_delay("hoarding_mode", "nonexistent_operation")
+        self.assertIn("未找到对应操作", str(context.exception))
 
     def test_get_delay_invalid_types(self):
         """测试无效参数类型"""
