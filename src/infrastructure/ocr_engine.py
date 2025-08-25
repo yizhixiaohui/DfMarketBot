@@ -6,6 +6,7 @@ OCR引擎基础设施 - 基于模板匹配的图像识别
 import os
 import threading
 import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Tuple
 
@@ -66,8 +67,8 @@ class TemplateOCREngine(IOCREngine):
                     if template_path.exists():
                         template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
                         if template is not None:
-                            _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
-                            # _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                            # _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                            _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                             default_group[i] = binary
 
                 if default_group:
@@ -119,16 +120,13 @@ class TemplateOCREngine(IOCREngine):
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
 
-            # 转换为灰度图
-            if len(image.shape) == 3:
-                if image.shape[2] == 3:  # RGB
-                    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-                elif image.shape[2] == 4:  # RGBA
-                    gray = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)
-                else:
-                    gray = image
-            else:
-                gray = image
+            gray = self._image_to_gray(image)
+            # 二值化处理
+            # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            #
+            # # 形态学操作去除小噪声点
+            # kernel = np.ones((2, 2), np.uint8)
+            # gray = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
 
             digits_info = []
 
@@ -172,6 +170,20 @@ class TemplateOCREngine(IOCREngine):
         except Exception as e:
             raise OCRException(f"OCR识别失败: {e}") from e
 
+    @staticmethod
+    def _image_to_gray(image: np.ndarray) -> np.ndarray:
+        """转换为灰度图"""
+        if len(image.shape) == 3:
+            if image.shape[2] == 3:  # RGB
+                gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            elif image.shape[2] == 4:  # RGBA
+                gray = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)
+            else:
+                gray = image
+        else:
+            gray = image
+        return gray
+
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板是否存在于图像中"""
         try:
@@ -181,16 +193,7 @@ class TemplateOCREngine(IOCREngine):
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
 
-            # 转换为灰度图
-            if len(image.shape) == 3:
-                if image.shape[2] == 3:  # RGB
-                    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-                elif image.shape[2] == 4:  # RGBA
-                    gray = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)
-                else:
-                    gray = image
-            else:
-                gray = image
+            gray = self._image_to_gray(image)
 
             # 模板匹配
             result = cv2.matchTemplate(gray, self._pic_templates[template_name], cv2.TM_CCOEFF_NORMED)
@@ -231,6 +234,151 @@ class TemplateOCREngine(IOCREngine):
         return int(img[y, x])
 
 
+class TemplateContoursOCREngine(TemplateOCREngine):
+
+    def __init__(self, templates_dir: str = None, resolution: Tuple[int, int] = None):
+        super().__init__(templates_dir, resolution)
+        self.confidence_threshold = 0.7
+
+    def _preprocess_image(self, image):
+        """预处理输入图像"""
+        # 转换为灰度图
+        gray = self._image_to_gray(image)
+
+        # 二值化处理
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        # 形态学操作去除小噪声点
+        kernel = np.ones((2, 2), np.uint8)
+        cleaned = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+        return cleaned
+
+    @staticmethod
+    def _find_digit_contours(binary_image):
+        """找到图像中的数字轮廓"""
+        # 寻找轮廓
+        contours, _ = cv2.findContours(
+            binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        digit_contours = []
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+
+            # 过滤太小或太大的区域
+            if 5 < w < 100 and 10 < h < 100:
+                # 计算宽高比，过滤非数字形状
+                aspect_ratio = w / h
+                if 0.3 < aspect_ratio < 1.2:
+                    digit_contours.append((x, y, w, h))
+
+        # 按x坐标排序，确保从左到右识别
+        digit_contours.sort(key=lambda c: c[0])
+
+        return digit_contours
+
+    def _match_digit(self, roi, font_name, digit):
+        """使用特定字体模板匹配数字"""
+        template = self._templates[font_name][digit]
+
+        # 调整模板大小以匹配ROI
+        if roi.shape != template.shape:
+            roi = cv2.resize(roi, (template.shape[1], template.shape[0]), interpolation=cv2.INTER_NEAREST)
+        # 模板匹配
+        result = cv2.matchTemplate(roi, template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, _ = cv2.minMaxLoc(result)
+
+        return max_val
+
+    def _determine_best_font_and_digits(self, digit_regions, binary_image):
+        """
+        确定最佳匹配字体并同时识别数字
+
+        Args:
+            digit_regions: 数字区域列表
+            binary_image: 二值化后的图像
+
+        Returns:
+            best_font: 最佳字体名称
+            digit_results: 每个区域的识别结果列表 (digit, confidence)
+            avg_confidence: 平均置信度
+        """
+        font_scores = defaultdict(float)
+        font_digit_results = {}  # 存储每种字体下每个区域的识别结果
+
+        for font_name in self._templates:
+            total_confidence = 0
+            valid_digits = 0
+            digit_results = []
+
+            for x, y, w, h in digit_regions:
+                roi = binary_image[y:y + h, x:x + w]
+
+                best_digit = -1
+                best_confidence = 0
+
+                for digit in range(10):
+                    confidence = self._match_digit(roi, font_name, digit)
+                    if confidence > best_confidence:
+                        best_confidence = confidence
+                        best_digit = digit
+
+                digit_results.append((best_digit, best_confidence))
+
+                if best_confidence > self.confidence_threshold:
+                    total_confidence += best_confidence
+                    valid_digits += 1
+
+            # 存储该字体的识别结果
+            font_digit_results[font_name] = digit_results
+
+            if valid_digits > 0:
+                font_scores[font_name] = total_confidence / valid_digits
+
+        if not font_scores:
+            return None, [], 0
+
+        # 返回平均置信度最高的字体及其识别结果
+        best_font = max(font_scores.items(), key=lambda x: x[1])[0]
+        digit_results = font_digit_results[best_font]
+        avg_confidence = font_scores[best_font]
+
+        return best_font, digit_results, avg_confidence
+
+    def image_to_string(self, image: np.ndarray) -> str:
+        """
+        识别图像中的连续数字
+
+        Args:
+            image: 包含连续数字的图像
+
+        Returns:
+            result: 识别到的数字字符串
+        """
+        # 预处理图像
+        binary_image = self._preprocess_image(image)
+        # 找到数字轮廓
+        digit_regions = self._find_digit_contours(binary_image)
+
+        if not digit_regions:
+            return ""
+
+        _, digit_results, _ = self._determine_best_font_and_digits(digit_regions, binary_image)
+
+        # 使用最佳字体识别每个数字
+        result = ""
+        confidences = []
+
+        for digit, confidence in digit_results:
+            if confidence > self.confidence_threshold:
+                result += str(digit)
+                confidences.append(confidence)
+            # else:
+            #     result += "?"  # 无法识别的数字用?代替
+
+        return result
+
+
 class MockOCREngine(IOCREngine):
     """OCR引擎的模拟实现，用于测试"""
 
@@ -245,6 +393,11 @@ class MockOCREngine(IOCREngine):
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """模拟模板检测"""
         return self.template_detected
+
+    @staticmethod
+    def get_pixel_color(img: np.ndarray, x: int, y: int):
+        """检测像素点的颜色"""
+        return 100, 100, 100
 
     def recognize_price(self, image: np.ndarray) -> int:
         """模拟价格识别"""
@@ -265,6 +418,8 @@ class OCREngineFactory:
     @staticmethod
     def create_engine(engine_type: str = "template", **kwargs) -> IOCREngine:
         """创建OCR引擎"""
+        if engine_type == "template_contour":
+            return TemplateContoursOCREngine(**kwargs)
         if engine_type == "template":
             return TemplateOCREngine(**kwargs)
         if engine_type == "mock":
@@ -273,17 +428,18 @@ class OCREngineFactory:
 
 
 if __name__ == "__main__":
-    ocr = TemplateOCREngine()
-    sc = ScreenCapture()
+    ocr = TemplateContoursOCREngine(resolution=(1920,1080))
+    # ocr = TemplateOCREngine(resolution=(1920,1080))
+    sc = ScreenCapture(resolution=(1920,1080))
     start = time.time()
     # screenshot = sc.capture_region([461, 739, 532, 762])
     screenshot = cv2.imread(
         "L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases\\11364360.png"
     )
-    cv2.imshow("debug", screenshot)
-    cv2.waitKey()
+    # cv2.imshow("debug", screenshot)
+    # cv2.waitKey()
     res = ocr.image_to_string(screenshot)
     print(res)
-    # for i in range(100):
-    #     ocr.image_to_string(screenshot)
-    # print("fps:", 100 / (time.time() - start))
+    for _ in range(100):
+        ocr.image_to_string(screenshot)
+    print("fps:", 100 / (time.time() - start))
