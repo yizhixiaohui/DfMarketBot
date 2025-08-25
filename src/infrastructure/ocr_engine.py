@@ -88,8 +88,17 @@ class TemplateOCREngine(IOCREngine):
                         if template_path.exists():
                             template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
                             if template is not None:
-                                _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                                # _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                                if prefix == "g":
+                                    _, binary = cv2.threshold(template, 50, 255, cv2.THRESH_BINARY)
+                                else:
+                                    _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL,
+                                                               cv2.CHAIN_APPROX_SIMPLE)
+                                if contours:
+                                    x, y, w, h = cv2.boundingRect(contours[0])
+                                    binary = template[y:y + h, x:x + w]
+                                _, binary = cv2.threshold(binary, 0, 255,
+                                                                   cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                                 group[i] = binary
 
                     if len(group) == 10:
@@ -247,11 +256,9 @@ class TemplateContoursOCREngine(TemplateOCREngine):
 
         # 二值化处理
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
 
-        # 形态学操作去除小噪声点
-        kernel = np.ones((2, 2), np.uint8)
-        cleaned = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-        return cleaned
+        return binary
 
     @staticmethod
     def _find_digit_contours(binary_image):
@@ -363,8 +370,8 @@ class TemplateContoursOCREngine(TemplateOCREngine):
         if not digit_regions:
             return ""
 
-        _, digit_results, _ = self._determine_best_font_and_digits(digit_regions, binary_image)
-
+        best_font, digit_results, avg_confidence = self._determine_best_font_and_digits(digit_regions, binary_image)
+        print(best_font, digit_results, avg_confidence)
         # 使用最佳字体识别每个数字
         result = ""
         confidences = []
