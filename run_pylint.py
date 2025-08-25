@@ -24,7 +24,7 @@ def run_pylint_on_directory(directory):
 
     if not dir_path.exists():
         print(f"目录 {directory} 不存在，跳过...")
-        return
+        return 0
 
     print(f"\n{'='*60}")
     print(f"正在检查 {directory} 目录...")
@@ -35,7 +35,7 @@ def run_pylint_on_directory(directory):
 
     if not python_files:
         print(f"在 {directory} 中没有找到Python文件")
-        return
+        return 0
 
     # 构建pylint命令
     cmd = [sys.executable, "-m", "pylint", "--rcfile", str(PYLINTRC), "--output-format=colorized"]
@@ -106,29 +106,28 @@ def main():
         if target.endswith(".py"):
             # 检查单个文件
             return run_pylint_on_file(target)
-        else:
-            # 检查指定目录
-            return run_pylint_on_directory(target)
+        # 检查指定目录
+        return run_pylint_on_directory(target)
+
+    # 检查所有配置的目录
+    print("开始检查项目代码质量...")
+
+    total_errors = 0
+
+    for directory in CHECK_DIRS:
+        errors = run_pylint_on_directory(directory)
+        if errors is not None:
+            total_errors += errors
+
+    print(f"\n{'='*60}")
+    print("检查完成！")
+
+    if total_errors == 0:
+        print("✅ 所有代码都通过了pylint检查")
     else:
-        # 检查所有配置的目录
-        print("开始检查项目代码质量...")
+        print(f"⚠️  发现 {total_errors} 个问题，请查看上面的详细信息")
 
-        total_errors = 0
-
-        for directory in CHECK_DIRS:
-            errors = run_pylint_on_directory(directory)
-            if errors is not None:
-                total_errors += errors
-
-        print(f"\n{'='*60}")
-        print("检查完成！")
-
-        if total_errors == 0:
-            print("✅ 所有代码都通过了pylint检查")
-        else:
-            print(f"⚠️  发现 {total_errors} 个问题，请查看上面的详细信息")
-
-        return total_errors
+    return total_errors
 
 
 if __name__ == "__main__":

@@ -7,15 +7,17 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import pyautogui
-
 from mss import mss
 
 
 class ScreenCapture:
     """屏幕捕获服务"""
 
-    def __init__(self):
-        self.width, self.height = pyautogui.size()
+    def __init__(self, resolution: Tuple[int, int] = None):
+        if not resolution:
+            self.width, self.height = pyautogui.size()
+        else:
+            self.width, self.height = resolution
 
     def capture_region(self, coordinates: List[float]) -> np.ndarray:
         """捕获指定区域的屏幕截图
@@ -68,8 +70,7 @@ class ScreenCapture:
         return None
 
 
-if __name__ == '__main__':
-    import cv2
+if __name__ == "__main__":
     sc = ScreenCapture()
     start = time.time()
     count = 0

@@ -7,7 +7,7 @@ import time
 from typing import Any, Dict, Type
 
 from .delay_config import DelayConfig
-from .serializer import ConfigSerializer, YamlSerializer, JsonSerializer
+from .serializer import ConfigSerializer, JsonSerializer, YamlSerializer
 
 try:
     from src.core.exceptions import ConfigurationException

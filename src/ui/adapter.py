@@ -175,8 +175,15 @@ class UIAdapter:
                 widget.textChanged.connect(self._on_config_changed)
 
         # 连接复选框信号
-        for widget_name in ["is_convertible", "is_key_mode", "is_half_coin_mode", "is_auto_sell", "is_fast_sell",
-                            "is_second_detect", "is_switch_to_battlefield"]:
+        for widget_name in [
+            "is_convertible",
+            "is_key_mode",
+            "is_half_coin_mode",
+            "is_auto_sell",
+            "is_fast_sell",
+            "is_second_detect",
+            "is_switch_to_battlefield",
+        ]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
                 widget.stateChanged.connect(self._on_config_changed)
@@ -215,7 +222,9 @@ class UIAdapter:
             self.ui.textEdit_rolling_loop_gap.setPlainText(str(int(config.get("rolling_loop_interval", 50))))
 
         if hasattr(self.ui, "textEdit_switch_to_battlefield_count"):
-            self.ui.textEdit_switch_to_battlefield_count.setPlainText(str(config.get("switch_to_battlefield_count", 300)))
+            self.ui.textEdit_switch_to_battlefield_count.setPlainText(
+                str(config.get("switch_to_battlefield_count", 300))
+            )
 
         # 更新复选框
         if hasattr(self.ui, "is_convertible"):

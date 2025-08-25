@@ -3,14 +3,14 @@
 配置管理器工厂
 提供统一的配置管理器创建接口，屏蔽底层实现细节
 """
-from typing import Dict, Type, Optional
+from typing import Dict, Optional, Type
 
 try:
+    from src.config.config_manager import DelayConfigManager, TradingConfigManager
     from src.core.interfaces import IConfigManager
-    from src.config.config_manager import TradingConfigManager, DelayConfigManager
 except ImportError:
     from ..core.interfaces import IConfigManager
-    from .config_manager import TradingConfigManager, DelayConfigManager
+    from .config_manager import DelayConfigManager, TradingConfigManager
 
 
 class ConfigFactory:

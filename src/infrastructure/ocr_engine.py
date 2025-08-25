@@ -30,8 +30,10 @@ class TemplateOCREngine(IOCREngine):
         if templates_dir is None:
             if resolution is None:
                 resolution = pyautogui.size()
-            templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                         f"templates/{resolution[0]}x{resolution[1]}")
+            templates_dir = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                f"templates/{resolution[0]}x{resolution[1]}",
+            )
 
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
@@ -275,7 +277,9 @@ if __name__ == "__main__":
     sc = ScreenCapture()
     start = time.time()
     # screenshot = sc.capture_region([461, 739, 532, 762])
-    screenshot = cv2.imread("L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases\\11364360.png")
+    screenshot = cv2.imread(
+        "L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases\\11364360.png"
+    )
     cv2.imshow("debug", screenshot)
     cv2.waitKey()
     res = ocr.image_to_string(screenshot)

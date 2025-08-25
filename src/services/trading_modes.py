@@ -10,7 +10,7 @@ try:
     from src.config.trading_config import ItemType, TradingConfig, TradingMode
     from src.core.event_bus import event_bus
     from src.core.exceptions import TradingException
-    from src.core.interfaces import ITradingMode, MarketData, IOCREngine
+    from src.core.interfaces import IOCREngine, ITradingMode, MarketData
     from src.infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
     from src.infrastructure.screen_capture import ScreenCapture
     from src.services.detector import HoardingModeDetector, RollingModeDetector
@@ -20,7 +20,7 @@ except ImportError:
     from ..config.trading_config import ItemType, TradingConfig, TradingMode
     from ..core.event_bus import event_bus
     from ..core.exceptions import TradingException
-    from ..core.interfaces import ITradingMode, MarketData, IOCREngine
+    from ..core.interfaces import IOCREngine, ITradingMode, MarketData
     from ..infrastructure.action_executor import PyAutoGUIActionExecutor as ActionExecutor
     from ..infrastructure.screen_capture import ScreenCapture
     from ..services.detector import HoardingModeDetector, RollingModeDetector
@@ -229,7 +229,11 @@ class RollingTradingMode(ITradingMode):
             if not option_config:
                 return False
 
-            if self.config.switch_to_battlefield and self.loop_count > 0 and self.loop_count % self.config.switch_to_battlefield_count == 0:
+            if (
+                self.config.switch_to_battlefield
+                and self.loop_count > 0
+                and self.loop_count % self.config.switch_to_battlefield_count == 0
+            ):
                 time.sleep(1)
                 self._switch_to_battlefield_and_return()
                 time.sleep(0.5)
@@ -291,7 +295,7 @@ class RollingTradingMode(ITradingMode):
 
                 # 检查购买是否成功
                 delay_helper.sleep("after_buy")
-                print('执行检测购买失败')
+                print("执行检测购买失败")
                 if self.detector.check_purchase_failure():
                     print("购买失败！")
                     self._execute_refresh()
@@ -701,6 +705,7 @@ class TradingModeFactory:
 
 if __name__ == "__main__":
     from src.infrastructure.ocr_engine import TemplateOCREngine
+
     sc = ScreenCapture()
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)

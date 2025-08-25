@@ -7,18 +7,17 @@ import time
 from abc import abstractmethod
 from typing import List, Optional, Tuple
 
-import cv2
 import numpy as np
 
 try:
     from src.config.coordinates import CoordinateConfig
     from src.core.exceptions import BalanceDetectionException, PriceDetectionException
-    from src.core.interfaces import IPriceDetector, IOCREngine
+    from src.core.interfaces import IOCREngine, IPriceDetector
     from src.infrastructure.screen_capture import ScreenCapture
 except ImportError:
     from ..config.coordinates import CoordinateConfig
     from ..core.exceptions import BalanceDetectionException, PriceDetectionException
-    from ..core.interfaces import IPriceDetector, IOCREngine
+    from ..core.interfaces import IOCREngine, IPriceDetector
     from ..infrastructure.screen_capture import ScreenCapture
 
 
@@ -212,12 +211,13 @@ class RollingModeDetector(PriceDetector):
 
 if __name__ == "__main__":
     from src.infrastructure.ocr_engine import TemplateOCREngine
+
     sc = ScreenCapture()
     print(sc.width, sc.height)
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
-    res = detector.is_in_game_lobby()
-    print(res)
+    result = detector.is_in_game_lobby()
+    print(result)
     # test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
     # print(test_res)
     # test_res = detector._match_template("stuck_check2_teqingchu", "enter_teqingchu")
