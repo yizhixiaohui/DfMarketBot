@@ -8,21 +8,21 @@ delays:
     re_enter: 0.0
   rolling_mode:
     # 执行完刷新操作(按esc)后的等待时间
-    after_refresh: 0.01
+    after_refresh: 0.0
     # 鼠标挪到哈夫币详情页面后，等待检测前的延迟
     balance_detection: 0.3
     # 初始化完成后延迟的时间（初始化主要会检测一遍现在的哈夫币，用于计算收益）
     initialization: 0.4
     # 按L进入配装页，点击切换配装之前的延迟
-    before_option_switch: 0.01
+    before_option_switch: 0.0
     # 点击切换配装之后的延迟，延迟后才会检测价格，以防买到高价
-    after_option_switch: 0.05
+    after_option_switch: 0.08
     # 价格异常后重试的延迟，异常原因主要是配装时卡顿导致价格迟迟没有出现
     price_detection_retry: 0.005
     # 购买之前的延迟(二次检测场景会在检测前执行延迟)
     before_buy: 0.0
     # 识别到可购买后，再执行一次延迟进行二次价格检测，主要是为了防止刷新太快买到高价子弹
-    second_price_detection_retry: 0.03
+    second_price_detection_retry: 0.02
     # 点击购买按钮后，检测是否购买成功(也就是是否有弹窗)前的延迟，设置久一点让弹窗动画播完再检测
     after_buy: 2.0
     # 检测到购买失败(也就是有失败弹窗)后，按下esc退出后的延迟
@@ -80,7 +80,7 @@ delays:
     # 烽火行动页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
     before_open_mode_select_menu_tarkov_mode: 1.0
     # 战场模式页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
-    before_open_mode_select_menu_battlefield_mode: 2.0
+    before_open_mode_select_menu_battlefield_mode: 3.0
     # 按下esc打开切换菜单后，等待按下战场模式或烽火行动模式按钮前的延迟
     before_select_mode: 1.0
     # 按下行前备战按钮进入地图选择页前等待的延迟

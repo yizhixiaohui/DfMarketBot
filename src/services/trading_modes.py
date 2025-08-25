@@ -61,7 +61,6 @@ class HoardingTradingMode(ITradingMode):
         """停止交易模式"""
         self._should_stop = True
         print("屯仓模式收到停止信号")
-        event_bus.emit_overlay_text_updated("收到停止信号，正在安全退出...")
 
     def prepare(self) -> None:
         self.mouse_position = self.action_executor.get_mouse_position()
@@ -205,7 +204,6 @@ class RollingTradingMode(ITradingMode):
         """停止交易模式"""
         self._should_stop = True
         print("滚仓模式收到停止信号")
-        event_bus.emit_overlay_text_updated("收到停止信号，正在安全退出...")
 
     def prepare(self) -> None:
         self.last_balance = self._detect_balance()
@@ -357,6 +355,8 @@ class RollingTradingMode(ITradingMode):
                 self._execute_refresh()
                 time.sleep(1)
                 self._enter_action_window()
+            elif self.detector.is_in_game_lobby():
+                self._enter_action_window(self.detector.pei_zhuang_enabled())
             raise TradingException(f"滚仓模式交易失败: {e}") from e
 
     def _update_statistics(self):
@@ -636,12 +636,14 @@ class RollingTradingMode(ITradingMode):
         delay_helper.sleep("before_select_map")
         self._enter_action_window()
 
-    def _enter_action_window(self):
+    def _enter_action_window(self, fast_enter_button=False):
         """从主界面进入到行动界面"""
-        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["prepare_equipment_button"])
-        delay_helper.sleep("before_select_zero_dam")
-        self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["zero_dam_button"])
-        delay_helper.sleep("before_start_action")
+        if not fast_enter_button:
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["prepare_equipment_button"])
+            delay_helper.sleep("before_select_zero_dam")
+            if not self.detector.is_clicked_map():
+                self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["zero_dam_button"])
+            delay_helper.sleep("before_start_action")
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["start_action_button"])
 
     def get_market_data(self) -> Optional[MarketData]:

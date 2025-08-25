@@ -5,12 +5,15 @@ OCR引擎基础设施 - 基于模板匹配的图像识别
 """
 import os
 import threading
+import time
 from pathlib import Path
 from typing import Tuple
 
 import cv2
 import numpy as np
 import pyautogui
+
+from src.infrastructure.screen_capture import ScreenCapture
 
 try:
     from src.core.exceptions import OCRException
@@ -62,6 +65,7 @@ class TemplateOCREngine(IOCREngine):
                         template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
                         if template is not None:
                             _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                            # _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                             default_group[i] = binary
 
                 if default_group:
@@ -81,7 +85,8 @@ class TemplateOCREngine(IOCREngine):
                         if template_path.exists():
                             template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
                             if template is not None:
-                                _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
+                                _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                # _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
                                 group[i] = binary
 
                     if len(group) == 10:
@@ -95,6 +100,9 @@ class TemplateOCREngine(IOCREngine):
                 self._load_pic("equipment.png")
                 self._load_pic("enter_teqingchu.png", 50)
                 self._load_pic("equipment_scheme.png", 50)
+                self._load_pic("xing_qian_bei_zhan.png")
+                self._load_pic("start_action.png")
+                self._load_pic("pei_zhuang.png")
 
                 if not self._templates:
                     raise FileNotFoundError("未找到有效的数字模板文件")
@@ -263,5 +271,15 @@ class OCREngineFactory:
 
 
 if __name__ == "__main__":
-    a = "test.png"
-    print(a[:-4])
+    ocr = TemplateOCREngine()
+    sc = ScreenCapture()
+    start = time.time()
+    # screenshot = sc.capture_region([461, 739, 532, 762])
+    screenshot = cv2.imread("L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases\\11364360.png")
+    cv2.imshow("debug", screenshot)
+    cv2.waitKey()
+    res = ocr.image_to_string(screenshot)
+    print(res)
+    # for i in range(100):
+    #     ocr.image_to_string(screenshot)
+    # print("fps:", 100 / (time.time() - start))

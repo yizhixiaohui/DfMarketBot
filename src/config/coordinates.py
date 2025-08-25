@@ -42,6 +42,9 @@ class CoordinateConfig:
             # 检测是否没有L按下配装按钮导致卡死
             "stuck_check2_teqingchu": [128 / 2560, 1380 / 1440, 405 / 2560, 1420 / 1440],
             "stuck_check2_equipment_scheme": [347 / 2560, 1379 / 1440, 570 / 2560, 1430 / 1440],
+            "xing_qian_bei_zhan_area": [2110 / 2560, 1264 / 1440, 2310 / 2560, 1314 / 1440],
+            "start_action_area": [2120 / 2560, 889 / 1440, 2296 / 2560, 935 / 1440],
+            "pei_zhuang_area": [2017 / 2560, 1266 / 1440, 2126 / 2560, 1309 / 1440],
             "item_range": [84 / 2560, 84 / 1440],
             # 仓库前10行为等待售卖区域
             "wait_sell_item_area": [1651 / 2560, 177 / 1440, 2416 / 2560, 1028 / 1440],
@@ -79,7 +82,7 @@ class CoordinateConfig:
             # 切换烽火行动模式按钮
             "tarkov_mode_button": [336 / 2560, 384 / 1440],
             # 行前备战按钮
-            "prepare_equipment_button": [2199 / 2560, 1291 / 1440],
+            "prepare_equipment_button": [2100 / 2560, 1291 / 1440],
             # 选择零号大坝地图按钮
             "zero_dam_button": [1091 / 2560, 351 / 1440],
             # 开始行动按钮

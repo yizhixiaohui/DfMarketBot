@@ -117,6 +117,17 @@ class RollingModeDetector(PriceDetector):
             "stuck_check2_equipment_scheme", "equipment_scheme"
         )
 
+    def is_in_game_lobby(self) -> bool:
+        """检查循环是否卡死"""
+        return self._match_template("xing_qian_bei_zhan_area", "xing_qian_bei_zhan") or self.pei_zhuang_enabled()
+
+    def pei_zhuang_enabled(self):
+        return self._match_template("pei_zhuang_area", "pei_zhuang")
+
+    def is_clicked_map(self) -> bool:
+        """检查循环是否卡死"""
+        return self._match_template("start_action_area", "start_action")
+
     def check_sell_window(self) -> bool:
         """检查仓库出售页面是不是无法售卖（三角洲bug）"""
         return self._match_template("failure_check", "sell")
@@ -178,7 +189,7 @@ class RollingModeDetector(PriceDetector):
 
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
-        return self._detect_area("min_sell_price_count_area")
+        return self._detect_area("min_sell_price_count_area", 0)
 
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
@@ -194,7 +205,6 @@ class RollingModeDetector(PriceDetector):
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
-            print(coords)
             return self._detect_value(coords, abnormal_value=abnormal_value)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
@@ -206,7 +216,8 @@ if __name__ == "__main__":
     print(sc.width, sc.height)
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
-    detector.detect_balance()
+    res = detector.is_in_game_lobby()
+    print(res)
     # test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
     # print(test_res)
     # test_res = detector._match_template("stuck_check2_teqingchu", "enter_teqingchu")

@@ -2,10 +2,13 @@
 """
 屏幕捕获基础设施
 """
+import time
 from typing import List, Optional, Tuple
 
 import numpy as np
 import pyautogui
+
+from mss import mss
 
 
 class ScreenCapture:
@@ -35,12 +38,9 @@ class ScreenCapture:
         # 确保坐标有效
         x1, x2 = min(x1, x2), max(x1, x2)
         y1, y2 = min(y1, y2), max(y1, y2)
-
-        # 捕获屏幕区域
-        screenshot = pyautogui.screenshot(region=(x1, y1, x2 - x1, y2 - y1))
-
-        # 转换为numpy数组
-        return np.array(screenshot)
+        with mss() as sct:
+            # 捕获屏幕区域
+            return np.array(sct.grab({"left": x1, "top": y1, "width": x2 - x1, "height": y2 - y1}))
 
     def capture_window(self, window_title: str = None) -> np.ndarray:
         """捕获指定窗口的截图
@@ -66,3 +66,14 @@ class ScreenCapture:
         """
         # 在跨平台环境中，返回None表示不支持窗口定位
         return None
+
+
+if __name__ == '__main__':
+    import cv2
+    sc = ScreenCapture()
+    start = time.time()
+    count = 0
+    for i in range(100):
+        res = sc.capture_region([1628, 939, 1748, 971])
+    print("fps:", 100 / (time.time() - start))
+    print(count)
