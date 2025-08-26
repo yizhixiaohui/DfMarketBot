@@ -171,7 +171,10 @@ class RollingModeDetector(PriceDetector):
         res = self.ocr_engine.image_to_string(screenshot)
         if res == "":
             return 0, 0
-        return int(res[0]), int(res[1])
+        if "/" in res:
+            res = res.split("/")
+            return int(res[0]), int(res[1])
+        return int(res[0]), int(res[1:])
 
     def detect_sell_full(self) -> int:
         cur_num, max_num = self.detect_sell_num()

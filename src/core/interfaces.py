@@ -166,7 +166,7 @@ class IOCREngine(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_pixel_color(img: np.ndarray, x: int, y: int):
+    def get_pixel_color(image: np.ndarray, x: int, y: int):
         """检测固定点的像素值"""
 
 

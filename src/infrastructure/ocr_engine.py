@@ -26,6 +26,7 @@ except ImportError:
 
 class TemplateOCREngine(IOCREngine):
     """基于模板匹配的OCR引擎"""
+    _default_resolution = (1920, 1080)
 
     def __init__(self, templates_dir: str = None, resolution: Tuple[int, int] = None):
         if templates_dir is None:
@@ -35,6 +36,13 @@ class TemplateOCREngine(IOCREngine):
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                 f"templates/{resolution[0]}x{resolution[1]}",
             )
+            template_dir = Path(templates_dir)
+            if not template_dir.exists():
+                print("未找到模板文件，使用默认模板！")
+                templates_dir = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                    f"templates/{self._default_resolution[0]}x{self._default_resolution[1]}",
+                )
 
         self.templates_dir = Path(templates_dir)
         self.templates_dir.mkdir(parents=True, exist_ok=True)
@@ -58,18 +66,38 @@ class TemplateOCREngine(IOCREngine):
 
     def _load_templates(self):
         """加载所有数字模板"""
+
+        def preprocess_template(template_path: Path, prefix=""):
+            if not template_path.exists():
+                return None
+
+            template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
+            if template is None:
+                return None
+            base_thresh = 127
+            base_method = cv2.THRESH_BINARY
+            if prefix == "g":
+                base_thresh = 50
+            elif prefix != "":
+                base_thresh = 0
+                base_method += cv2.THRESH_OTSU
+
+            _, processed = cv2.threshold(template, base_thresh, 255, base_method)
+            contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL,
+                                           cv2.CHAIN_APPROX_SIMPLE)
+            if contours:
+                x, y, w, h = cv2.boundingRect(contours[0])
+                processed = processed[y:y + h, x:x + w]
+            return processed
+
         try:
             with self._lock:
                 # 加载默认数字模板 (0-9.png)
                 default_group = {}
                 for i in range(10):
-                    template_path = self.templates_dir / f"{i}.png"
-                    if template_path.exists():
-                        template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
-                        if template is not None:
-                            # _, binary = cv2.threshold(template, 127, 255, cv2.THRESH_BINARY)
-                            _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                            default_group[i] = binary
+                    binary = preprocess_template(self.templates_dir / f"{i}.png")
+                    if binary is not None:
+                        default_group[i] = binary
 
                 if default_group:
                     self._templates["default"] = default_group
@@ -84,25 +112,17 @@ class TemplateOCREngine(IOCREngine):
                 for prefix in sorted(font_prefixes):
                     group = {}
                     for i in range(10):
-                        template_path = self.templates_dir / f"{prefix}_{i}.png"
-                        if template_path.exists():
-                            template = cv2.imread(str(template_path), cv2.IMREAD_GRAYSCALE)
-                            if template is not None:
-                                if prefix == "g":
-                                    _, binary = cv2.threshold(template, 50, 255, cv2.THRESH_BINARY)
-                                else:
-                                    _, binary = cv2.threshold(template, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                                contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL,
-                                                               cv2.CHAIN_APPROX_SIMPLE)
-                                if contours:
-                                    x, y, w, h = cv2.boundingRect(contours[0])
-                                    binary = template[y:y + h, x:x + w]
-                                _, binary = cv2.threshold(binary, 0, 255,
-                                                                   cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                                group[i] = binary
+                        binary = preprocess_template(self.templates_dir / f"{prefix}_{i}.png", prefix)
+                        if binary is not None:
+                            group[i] = binary
 
                     if len(group) == 10:
                         self._templates[prefix] = group
+
+                # 斜杠特殊处理下
+                binary = preprocess_template(self.templates_dir / "w_slash.png", "w")
+                if binary is not None:
+                    self._templates["w"]["/"] = binary
 
                 # 加载失败检测模板
                 self._load_pic("option_failed.png")
@@ -129,13 +149,7 @@ class TemplateOCREngine(IOCREngine):
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
 
-            gray = self._image_to_gray(image)
-            # 二值化处理
-            # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            #
-            # # 形态学操作去除小噪声点
-            # kernel = np.ones((2, 2), np.uint8)
-            # gray = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+            processed = self._preprocess_image(image)
 
             digits_info = []
 
@@ -143,7 +157,7 @@ class TemplateOCREngine(IOCREngine):
             for font_name, templates in self._templates.items():
                 for digit, template in templates.items():
                     # 模板匹配
-                    result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
+                    result = cv2.matchTemplate(processed, template, cv2.TM_CCOEFF_NORMED)
                     locations = np.where(result >= 0.7)  # 匹配阈值
 
                     for pt in zip(*locations[::-1]):
@@ -214,10 +228,10 @@ class TemplateOCREngine(IOCREngine):
             raise OCRException(f"模板检测失败: {e}") from e
 
     @staticmethod
-    def get_pixel_color(img: np.ndarray, x: int, y: int):
+    def get_pixel_color(image: np.ndarray, x: int, y: int):
         """
         获取NumPy数组图像中指定坐标点的颜色值
-        :param img: NumPy数组形式的图像数据 (OpenCV格式)
+        :param image: NumPy数组形式的图像数据 (OpenCV格式)
         :param x: x坐标 (列)
         :param y: y坐标 (行)
         :return:
@@ -226,21 +240,32 @@ class TemplateOCREngine(IOCREngine):
             None (如果坐标超出范围)
         """
         # 检查图像是否有效
-        if not isinstance(img, np.ndarray):
+        if not isinstance(image, np.ndarray):
             print("错误: 输入必须是NumPy数组")
             return None
 
         # 检查坐标是否在图像范围内
-        height, width = img.shape[:2]
+        height, width = image.shape[:2]
         if x < 0 or x >= width or y < 0 or y >= height:
             print(f"坐标({x},{y})超出图片范围(宽{width},高{height})")
             return None
 
         # 获取颜色值
-        if len(img.shape) == 3:  # 彩色图像
-            return tuple(img[y, x])
+        if len(image.shape) == 3:  # 彩色图像
+            return tuple(image[y, x])
         # 灰度图像
-        return int(img[y, x])
+        return int(image[y, x])
+
+    def _preprocess_image(self, image):
+        """预处理输入图像"""
+        # 转换为灰度图
+        gray = self._image_to_gray(image)
+        # 二值化处理
+        # TODO 灰色字体在这里识别效果不太好，需要特殊处理
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
+
+        return binary
 
 
 class TemplateContoursOCREngine(TemplateOCREngine):
@@ -248,17 +273,6 @@ class TemplateContoursOCREngine(TemplateOCREngine):
     def __init__(self, templates_dir: str = None, resolution: Tuple[int, int] = None):
         super().__init__(templates_dir, resolution)
         self.confidence_threshold = 0.7
-
-    def _preprocess_image(self, image):
-        """预处理输入图像"""
-        # 转换为灰度图
-        gray = self._image_to_gray(image)
-
-        # 二值化处理
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
-
-        return binary
 
     @staticmethod
     def _find_digit_contours(binary_image):
@@ -402,7 +416,7 @@ class MockOCREngine(IOCREngine):
         return self.template_detected
 
     @staticmethod
-    def get_pixel_color(img: np.ndarray, x: int, y: int):
+    def get_pixel_color(image: np.ndarray, x: int, y: int):
         """检测像素点的颜色"""
         return 100, 100, 100
 
@@ -435,18 +449,35 @@ class OCREngineFactory:
 
 
 if __name__ == "__main__":
-    ocr = TemplateContoursOCREngine(resolution=(1920,1080))
-    # ocr = TemplateOCREngine(resolution=(1920,1080))
-    sc = ScreenCapture(resolution=(1920,1080))
+    # ocr = TemplateContoursOCREngine(resolution=(2560,1440))
+    ocr = TemplateOCREngine(resolution=(2560, 1440))
+    # ocr = TemplateContoursOCREngine(resolution=(1920,1080))
+    # ocr = TemplateOCREngine(resolution=(1920, 1080))
+    sc = ScreenCapture(resolution=(2560, 1440))
     start = time.time()
     # screenshot = sc.capture_region([461, 739, 532, 762])
-    screenshot = cv2.imread(
-        "L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases\\11364360.png"
-    )
-    # cv2.imshow("debug", screenshot)
-    # cv2.waitKey()
-    res = ocr.image_to_string(screenshot)
-    print(res)
-    for _ in range(100):
-        ocr.image_to_string(screenshot)
-    print("fps:", 100 / (time.time() - start))
+
+    # 遍历templates/bad_cases和templates/bad_cases_1440p目录
+    bad_cases_dirs = [
+        # "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases",
+        "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p"
+    ]
+
+    for dir_path in bad_cases_dirs:
+        print(f"Processing directory: {dir_path}")
+        for file_name in os.listdir(dir_path):
+            if file_name.endswith(".png"):
+                file_path = os.path.join(dir_path, file_name)
+                img = cv2.imread(file_path)
+                if img is not None:
+                    res = ocr.image_to_string(img)
+                    print(f"File: {file_name}, Result: {res}")
+                else:
+                    print(f"Failed to read image: {file_name}")
+
+    # screenshot = cv2.imread(
+    #     "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p/25612140.png"
+    # )
+    # for _ in range(100):
+    #     ocr.image_to_string(screenshot)
+    # print("fps:", 100 / (time.time() - start))
