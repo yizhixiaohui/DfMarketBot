@@ -6,6 +6,8 @@ import datetime
 import time
 from typing import Dict, Optional, Tuple
 
+import cv2
+
 try:
     from src.config.trading_config import ItemType, TradingConfig, TradingMode
     from src.core.event_bus import event_bus
@@ -292,6 +294,7 @@ class RollingTradingMode(ITradingMode):
                         return not self._should_stop
                 else:
                     self._execute_buy()
+                    pass
 
                 # 检查购买是否成功
                 delay_helper.sleep("after_buy")
@@ -712,5 +715,5 @@ if __name__ == "__main__":
     executor = ActionExecutor()
     test_mode = RollingTradingMode(detector, executor)
     test_mode.initialize(TradingConfig(), profit=300000, count=123456)
-    res = test_mode._wait_for_sell_window()
+    res = test_mode.detector.detect_sell_num()
     print(res)

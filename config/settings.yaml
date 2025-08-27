@@ -8,7 +8,7 @@ use_balance_calculation: true
 trading_mode: 0
 rolling_option: 2
 rolling_options:
-  - buy_price: 518
+  - buy_price: 528
     min_buy_price: 300
     buy_count: 4980
     fast_sell_threshold: 200000
@@ -20,7 +20,7 @@ rolling_options:
     min_buy_price: 1500
     buy_count: 4980
     fast_sell_threshold: 15000
-  - buy_price: 1600
+  - buy_price: 1800
     min_buy_price: 600
     buy_count: 4980
     fast_sell_threshold: 20000
@@ -29,6 +29,6 @@ screen_height: 1440
 auto_sell: true
 fast_sell: true
 log_level: INFO
-second_detect: true
+second_detect: false
 switch_to_battlefield: true
 switch_to_battlefield_count: 400

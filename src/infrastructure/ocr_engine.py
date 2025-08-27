@@ -78,16 +78,18 @@ class TemplateOCREngine(IOCREngine):
             base_method = cv2.THRESH_BINARY
             if prefix == "g":
                 base_thresh = 50
-            elif prefix != "":
+            # elif prefix != "":
+            else:
                 base_thresh = 0
                 base_method += cv2.THRESH_OTSU
 
             _, processed = cv2.threshold(template, base_thresh, 255, base_method)
-            contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL,
-                                           cv2.CHAIN_APPROX_SIMPLE)
-            if contours:
-                x, y, w, h = cv2.boundingRect(contours[0])
-                processed = processed[y:y + h, x:x + w]
+            if prefix != "":
+                contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL,
+                                               cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    x, y, w, h = cv2.boundingRect(contours[0])
+                    processed = processed[y:y + h, x:x + w]
             return processed
 
         try:
@@ -262,10 +264,10 @@ class TemplateOCREngine(IOCREngine):
         gray = self._image_to_gray(image)
         # 二值化处理
         # TODO 灰色字体在这里识别效果不太好，需要特殊处理
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         # _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
 
-        return binary
+        return gray
 
 
 class TemplateContoursOCREngine(TemplateOCREngine):
