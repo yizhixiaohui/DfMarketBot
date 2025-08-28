@@ -310,12 +310,12 @@ class RollingTradingMode(ITradingMode):
                         self._update_statistics()
                         delay_helper.sleep("after_buy_failed")
                         return True
-                    print("部分购买失败，执行售卖")
+                    print("部分购买成功，执行售卖")
                 else:
                     print("购买成功！")
-                    self.buy_success_count += 1
-                    delay_helper.sleep("after_buy_success")
-                    cur_balance = self._detect_balance()
+                self.buy_success_count += 1
+                delay_helper.sleep("after_buy_success")
+                cur_balance = self._detect_balance()
                 cost = self.last_balance - cur_balance
                 self.profit -= cost
                 self.append_to_sell_log(f"购买成功, 总花费: {cost}, 当前盈利: {self.profit}")

@@ -144,19 +144,27 @@ class TemplateOCREngine(IOCREngine):
         except Exception as e:
             raise OCRException(f"加载模板失败: {e}") from e
 
-    def image_to_string(self, image: np.ndarray) -> str:
+    def image_to_string(self, image: np.ndarray, binarize=True, font: str = "", thresh=127) -> str:
         """将图像转换为数字字符串"""
         try:
             # 确保图像是numpy数组
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
-
-            processed = self._preprocess_image(image)
-
+            processed = self._preprocess_image(image, binarize, thresh)
+            # cv2.imshow("debug", processed)
+            # cv2.waitKey()
             digits_info = []
 
+            templates = self._templates.items()
+            if font != "":
+                template = self._templates.get(font)
+                if template:
+                    templates = {font: template}.items()
+                else:
+                    print(f"未找到字体({font})，将使用全量匹配")
+
             # 对每个字体组进行模板匹配
-            for font_name, templates in self._templates.items():
+            for font_name, templates in templates:
                 for digit, template in templates.items():
                     # 模板匹配
                     result = cv2.matchTemplate(processed, template, cv2.TM_CCOEFF_NORMED)
@@ -258,16 +266,18 @@ class TemplateOCREngine(IOCREngine):
         # 灰度图像
         return int(image[y, x])
 
-    def _preprocess_image(self, image):
+    def _preprocess_image(self, image, binarize=True, thresh=127):
         """预处理输入图像"""
         # 转换为灰度图
-        gray = self._image_to_gray(image)
+        processed = self._image_to_gray(image)
         # 二值化处理
         # TODO 灰色字体在这里识别效果不太好，需要特殊处理
-        # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # _, binary = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY)
+        # _, processed = cv2.threshold(processed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        print(thresh)
+        if binarize:
+            _, processed = cv2.threshold(processed, thresh, 255, cv2.THRESH_BINARY)
 
-        return gray
+        return processed
 
 
 class TemplateContoursOCREngine(TemplateOCREngine):
@@ -368,12 +378,14 @@ class TemplateContoursOCREngine(TemplateOCREngine):
 
         return best_font, digit_results, avg_confidence
 
-    def image_to_string(self, image: np.ndarray) -> str:
+    def image_to_string(self, image: np.ndarray, binarize: bool = True, font: str = "") -> str:
         """
         识别图像中的连续数字
 
         Args:
-            image: 包含连续数字的图像
+            :param image: 包含连续数字的图像
+            :param font:
+            :param binarize:
 
         Returns:
             result: 识别到的数字字符串
@@ -409,7 +421,7 @@ class MockOCREngine(IOCREngine):
         self.recognized_text = "1234"  # 默认返回的文本
         self.template_detected = False
 
-    def image_to_string(self, image: np.ndarray) -> str:
+    def image_to_string(self, image: np.ndarray, binarize=True, font: str = "") -> str:
         """模拟OCR识别"""
         return self.recognized_text
 
@@ -462,7 +474,8 @@ if __name__ == "__main__":
     # 遍历templates/bad_cases和templates/bad_cases_1440p目录
     bad_cases_dirs = [
         # "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases",
-        "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p"
+        # "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p"
+        "L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases_1440p"
     ]
 
     for dir_path in bad_cases_dirs:
@@ -472,7 +485,7 @@ if __name__ == "__main__":
                 file_path = os.path.join(dir_path, file_name)
                 img = cv2.imread(file_path)
                 if img is not None:
-                    res = ocr.image_to_string(img)
+                    res = ocr.image_to_string(img, True, "w")
                     print(f"File: {file_name}, Result: {res}")
                 else:
                     print(f"Failed to read image: {file_name}")

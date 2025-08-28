@@ -157,7 +157,7 @@ class IOCREngine(ABC):
     """OCR引擎接口"""
 
     @abstractmethod
-    def image_to_string(self, image: np.ndarray) -> str:
+    def image_to_string(self, image: np.ndarray, binarize: bool = True, font: str = "", thresh=127) -> str:
         """将图像转换为字符串"""
 
     @abstractmethod
