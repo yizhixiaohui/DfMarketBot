@@ -6,8 +6,6 @@ import datetime
 import time
 from typing import Dict, Optional, Tuple
 
-import cv2
-
 try:
     from src.config.trading_config import ItemType, TradingConfig, TradingMode
     from src.core.event_bus import event_bus
@@ -294,7 +292,6 @@ class RollingTradingMode(ITradingMode):
                         return not self._should_stop
                 else:
                     self._execute_buy()
-                    pass
 
                 # 检查购买是否成功
                 delay_helper.sleep("after_buy")
@@ -546,7 +543,10 @@ class RollingTradingMode(ITradingMode):
         min_sell_price = self.detector.detect_min_sell_price()
         second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
-
+        if self.config.min_sell_price > 0 and min_sell_price < self.config.min_sell_price:
+            print(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
+            event_bus.emit_overlay_text_updated(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
+            raise ValueError(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}")
         # 使用当前配装的快速售卖阈值
         fast_sell_threshold = self._get_fast_sell_threshold()
 
@@ -715,5 +715,11 @@ if __name__ == "__main__":
     executor = ActionExecutor()
     test_mode = RollingTradingMode(detector, executor)
     test_mode.initialize(TradingConfig(), profit=300000, count=123456)
-    res = test_mode.detector.detect_sell_num()
+    # res = test_mode.detector.detect_min_sell_price()
+    # res = test_mode.detector.detect_second_min_sell_price()
+    # res = test_mode.detector.detect_min_sell_price_count()
+    # 售卖右侧区域
+    # res = test_mode.detector.detect_expected_revenue()
+    # res = test_mode.detector.detect_sell_num()
+    res = test_mode.detector.detect_price()
     print(res)

@@ -143,6 +143,16 @@ pytest -v
 - 使用pylint进行代码质量检查
 - 遵循PEP 8编码规范
 
+### UI开发
+
+```bash
+# 打开qt-designer
+pyqt5-tools.exe designer
+
+# ui文件转python代码
+pyuic5 -o GUI/AppGUI.py GUI/AppGUI.ui
+```
+
 ### 代码检查
 
 ```bash

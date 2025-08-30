@@ -26,6 +26,7 @@ except ImportError:
 
 class TemplateOCREngine(IOCREngine):
     """基于模板匹配的OCR引擎"""
+
     _default_resolution = (1920, 1080)
 
     def __init__(self, templates_dir: str = None, resolution: Tuple[int, int] = None):
@@ -85,11 +86,10 @@ class TemplateOCREngine(IOCREngine):
 
             _, processed = cv2.threshold(template, base_thresh, 255, base_method)
             if prefix != "":
-                contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL,
-                                               cv2.CHAIN_APPROX_SIMPLE)
+                contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 if contours:
                     x, y, w, h = cv2.boundingRect(contours[0])
-                    processed = processed[y:y + h, x:x + w]
+                    processed = processed[y : y + h, x : x + w]
             return processed
 
         try:
@@ -273,7 +273,6 @@ class TemplateOCREngine(IOCREngine):
         # 二值化处理
         # TODO 灰色字体在这里识别效果不太好，需要特殊处理
         # _, processed = cv2.threshold(processed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        print(thresh)
         if binarize:
             _, processed = cv2.threshold(processed, thresh, 255, cv2.THRESH_BINARY)
 
@@ -290,9 +289,7 @@ class TemplateContoursOCREngine(TemplateOCREngine):
     def _find_digit_contours(binary_image):
         """找到图像中的数字轮廓"""
         # 寻找轮廓
-        contours, _ = cv2.findContours(
-            binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         digit_contours = []
         for contour in contours:
@@ -345,7 +342,7 @@ class TemplateContoursOCREngine(TemplateOCREngine):
             digit_results = []
 
             for x, y, w, h in digit_regions:
-                roi = binary_image[y:y + h, x:x + w]
+                roi = binary_image[y : y + h, x : x + w]
 
                 best_digit = -1
                 best_confidence = 0
@@ -378,11 +375,12 @@ class TemplateContoursOCREngine(TemplateOCREngine):
 
         return best_font, digit_results, avg_confidence
 
-    def image_to_string(self, image: np.ndarray, binarize: bool = True, font: str = "") -> str:
+    def image_to_string(self, image: np.ndarray, binarize: bool = True, font: str = "", thresh=127) -> str:
         """
         识别图像中的连续数字
 
         Args:
+            :param thresh:
             :param image: 包含连续数字的图像
             :param font:
             :param binarize:
@@ -421,7 +419,7 @@ class MockOCREngine(IOCREngine):
         self.recognized_text = "1234"  # 默认返回的文本
         self.template_detected = False
 
-    def image_to_string(self, image: np.ndarray, binarize=True, font: str = "") -> str:
+    def image_to_string(self, image: np.ndarray, binarize=True, font: str = "", thresh: str = 127) -> str:
         """模拟OCR识别"""
         return self.recognized_text
 

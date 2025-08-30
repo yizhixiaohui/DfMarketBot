@@ -36,23 +36,27 @@ class PriceDetector(IPriceDetector):
         raise NotImplementedError("not implemented")
 
     def _detect_value(
-            self, coords: List[float], value_name: str = "价格", max_attempts: int = 30, abnormal_value=100,
-            binarize=True, font="", thresh=127
+        self,
+        coords: List[float],
+        abnormal_value=100,
+        binarize=True,
+        font="",
+        thresh=127,
     ) -> int:
         """通用的数值检测逻辑"""
-        for _ in range(max_attempts):
+        for _ in range(30):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
-                if value_name == "价格" and value < abnormal_value:  # 仅对价格进行异常过滤
-                    print(f"检测{value_name}({value})异常，跳过检测")
+                if value < abnormal_value:  # 仅对价格进行异常过滤
+                    print("ocr检测({value})异常，跳过检测")
                     continue
-                print(f"detected {value_name}:", value)
+                print("detected:", value)
                 return value
 
             time.sleep(0.005)
 
-        raise PriceDetectionException(f"{value_name}检测失败")
+        raise PriceDetectionException(f"ocr检测失败")
 
     def detect_price(self) -> int:
         """检测当前物品价格 - 使用模板方法模式"""
@@ -66,7 +70,7 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            return self._detect_value(coords, "余额")
+            return self._detect_value(coords, 0)
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}") from e
 
@@ -155,9 +159,9 @@ class RollingModeDetector(PriceDetector):
             for j in range(width):
                 color = self.ocr_engine.get_pixel_color(screenshot, current_pos[0], current_pos[1])
                 if not (
-                        valid_color[0] - color_toleration < color[0] < valid_color[0] + color_toleration
-                        and valid_color[1] - color_toleration < color[1] < valid_color[1] + color_toleration
-                        and valid_color[2] - color_toleration < color[2] < valid_color[2] + color_toleration
+                    valid_color[0] - color_toleration < color[0] < valid_color[0] + color_toleration
+                    and valid_color[1] - color_toleration < color[1] < valid_color[1] + color_toleration
+                    and valid_color[2] - color_toleration < color[2] < valid_color[2] + color_toleration
                 ):
                     print(f"检测到可售卖物品: 第{j}行第{i}个, 颜色: ({color[0]}, {color[1]}, {color[2]})")
                     return [coords[0] + current_pos[0], coords[1] + current_pos[1]]
@@ -169,7 +173,8 @@ class RollingModeDetector(PriceDetector):
     def detect_sell_num(self) -> Tuple[int, int]:
         coords = self.coordinates["rolling_mode"]["sell_full"]
         screenshot = self.screen_capture.capture_region(coords)
-        res = self.ocr_engine.image_to_string(screenshot)
+        font = "w"
+        res = self.ocr_engine.image_to_string(screenshot, font=font, binarize=False)
         if res == "":
             return 0, 0
         if "/" in res:
@@ -184,15 +189,19 @@ class RollingModeDetector(PriceDetector):
 
     def detect_min_sell_price(self) -> int:
         """检测当前售卖的最小价格"""
-        return self._detect_area("min_sell_price_area", font="w", thresh=50)
+        font = "w"
+        return self._detect_area("min_sell_price_area", font=font, thresh=50)
 
     def detect_second_min_sell_price(self) -> int:
         """检测当前售卖的最小价格"""
-        return self._detect_area("second_min_sell_price_area", font="w", thresh=50)
+        binarize = True
+        font = "w"
+        return self._detect_area("second_min_sell_price_area", binarize=binarize, font=font, thresh=50)
 
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
-        return self._detect_area("min_sell_price_count_area", 0, font="w", thresh=50)
+        font = "w"
+        return self._detect_area("min_sell_price_count_area", 0, binarize=False, font=font)
 
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
@@ -208,7 +217,9 @@ class RollingModeDetector(PriceDetector):
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
-            return self._detect_value(coords, abnormal_value=abnormal_value, binarize=binarize, font=font, thresh=thresh)
+            return self._detect_value(
+                coords, abnormal_value=abnormal_value, binarize=binarize, font=font, thresh=thresh
+            )
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 

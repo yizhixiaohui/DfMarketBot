@@ -169,6 +169,7 @@ class UIAdapter:
             "textEdit_unacceptable_price",
             "textEdit_hoarding_loop_gap",
             "textEdit_switch_to_battlefield_count",
+            "textEdit_min_sell_price",
         ]:
             if hasattr(self.ui, widget_name):
                 widget = getattr(self.ui, widget_name)
@@ -225,6 +226,9 @@ class UIAdapter:
             self.ui.textEdit_switch_to_battlefield_count.setPlainText(
                 str(config.get("switch_to_battlefield_count", 300))
             )
+
+        if hasattr(self.ui, "textEdit_min_sell_price"):
+            self.ui.textEdit_min_sell_price.setPlainText(str(int(config.get("min_sell_price", 0))))
 
         # 更新复选框
         if hasattr(self.ui, "is_convertible"):
@@ -297,6 +301,10 @@ class UIAdapter:
             if hasattr(self.ui, "textEdit_switch_to_battlefield_count"):
                 text = self.ui.textEdit_switch_to_battlefield_count.toPlainText().replace(",", "")
                 config["switch_to_battlefield_count"] = int(text) if text else 300
+
+            if hasattr(self.ui, "textEdit_min_sell_price"):
+                text = self.ui.textEdit_min_sell_price.toPlainText().replace(",", "")
+                config["min_sell_price"] = int(text) if text else 0
         except ValueError as e:
             print("UI配置参数错误:", e)
         # 物品类型
