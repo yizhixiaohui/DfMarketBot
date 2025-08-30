@@ -471,9 +471,8 @@ if __name__ == "__main__":
 
     # 遍历templates/bad_cases和templates/bad_cases_1440p目录
     bad_cases_dirs = [
-        # "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases",
-        # "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p"
-        "L:\\workspace\\github.com\\XiaoGu-G2020\\DeltaForceMarketBot\\templates\\bad_cases_1440p"
+        "../../templates/bad_cases",
+        "../../templates/bad_cases_1440p"
     ]
 
     for dir_path in bad_cases_dirs:
@@ -488,9 +487,7 @@ if __name__ == "__main__":
                 else:
                     print(f"Failed to read image: {file_name}")
 
-    # screenshot = cv2.imread(
-    #     "/Users/guanshihao/Workspace/code/github.com/doveeeee/DfMarketBot/templates/bad_cases_1440p/25612140.png"
-    # )
+    screenshot = cv2.imread("../../templates/bad_cases_1440p/25612140.png")
     # for _ in range(100):
     #     ocr.image_to_string(screenshot)
     # print("fps:", 100 / (time.time() - start))

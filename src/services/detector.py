@@ -7,7 +7,6 @@ import time
 from abc import abstractmethod
 from typing import List, Optional, Tuple
 
-import cv2
 import numpy as np
 
 try:
@@ -56,7 +55,7 @@ class PriceDetector(IPriceDetector):
 
             time.sleep(0.005)
 
-        raise PriceDetectionException(f"ocr检测失败")
+        raise PriceDetectionException("ocr检测失败")
 
     def detect_price(self) -> int:
         """检测当前物品价格 - 使用模板方法模式"""

@@ -5,7 +5,7 @@ a = Analysis(
     ['DFMarketBot.py'],
     pathex=[],
     binaries=[],
-    datas=[('templates/', 'templates'), ('config/settings.yaml', 'config')],
+    datas=[('templates/', 'templates'), ('config/settings.yaml', 'config'), ('config/delay_config.yaml', 'config')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
