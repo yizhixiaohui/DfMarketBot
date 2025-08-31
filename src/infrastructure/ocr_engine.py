@@ -189,7 +189,7 @@ class TemplateOCREngine(IOCREngine):
                     selected_width = self._templates[selected["font"]][selected["digit"]].shape[1]
                     max_width = max(template_width, selected_width)
 
-                    if abs(x - selected["x"]) < max_width * 0.7:  # 重叠阈值
+                    if abs(x - selected["x"]) < max_width * 0.6:  # 重叠阈值
                         overlap = True
                         break
 
@@ -272,9 +272,11 @@ class TemplateOCREngine(IOCREngine):
         processed = self._image_to_gray(image)
         # 二值化处理
         # TODO 灰色字体在这里识别效果不太好，需要特殊处理
-        # _, processed = cv2.threshold(processed, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         if binarize:
-            _, processed = cv2.threshold(processed, thresh, 255, cv2.THRESH_BINARY)
+            method = cv2.THRESH_BINARY
+            if thresh == 0:
+                method += cv2.THRESH_OTSU
+            _, processed = cv2.threshold(processed, thresh, 255, method)
 
         return processed
 
@@ -471,7 +473,7 @@ if __name__ == "__main__":
 
     # 遍历templates/bad_cases和templates/bad_cases_1440p目录
     bad_cases_dirs = [
-        "../../templates/bad_cases",
+        # "../../templates/bad_cases",
         "../../templates/bad_cases_1440p"
     ]
 
@@ -482,8 +484,11 @@ if __name__ == "__main__":
                 file_path = os.path.join(dir_path, file_name)
                 img = cv2.imread(file_path)
                 if img is not None:
-                    res = ocr.image_to_string(img, True, "w")
-                    print(f"File: {file_name}, Result: {res}")
+                    res = ocr.image_to_string(img)
+                    # print(f"File: {file_name}, Result: {res}")
+                    expected = file_name.split(".")[0].split("_")[0]
+                    if expected != res:
+                        print(f"file {file_name} detect failed: {res}")
                 else:
                     print(f"Failed to read image: {file_name}")
 

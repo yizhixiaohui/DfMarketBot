@@ -267,7 +267,7 @@ class RollingTradingMode(ITradingMode):
                 f"当前价={current_price}, 循环次数: {self.loop_count}"
             )
             event_bus.emit_overlay_text_updated(
-                f"当前价格[{current_price}, {current_price/option_config['buy_count']}] 目标价格[{target_price}] "
+                f"当前价格[{current_price}, {current_price / option_config['buy_count']}] 目标价格[{target_price}] "
                 f"总盈利[{self.profit}] 总购买数[{self.count}] 循环次数[{self.loop_count}] "
                 f"购买成功[{self.buy_success_count}] 购买失败[{self.buy_failed_count}]"
             )
@@ -340,7 +340,7 @@ class RollingTradingMode(ITradingMode):
                 delay_helper.sleep("buy_success_refresh_final")
                 self.last_balance = self._detect_balance()
                 event_bus.emit_overlay_text_updated(
-                    f"当前价格[{current_price}, {current_price/option_config['buy_count']}] 总购买数[{self.count}]"
+                    f"当前价格[{current_price}, {current_price / option_config['buy_count']}] 总购买数[{self.count}]"
                 )
                 delay_helper.sleep("after_get_mail_and_detect_balance")
             else:
@@ -499,11 +499,14 @@ class RollingTradingMode(ITradingMode):
 
     def _click_sell_item(self, item_pos: Tuple[int, int], sell_pos: Tuple[int, int]):
         """点击售卖物品"""
+        # self.action_executor.move_mouse(item_pos)
+        # delay_helper.sleep("after_move_to_sell_item")
+        # self.action_executor.click_position(item_pos, right_click=True)
+        # delay_helper.sleep("after_right_click_sell_item")
+        # self.action_executor.click_position(sell_pos)
         self.action_executor.move_mouse(item_pos)
         delay_helper.sleep("after_move_to_sell_item")
-        self.action_executor.click_position(item_pos, right_click=True)
-        delay_helper.sleep("after_right_click_sell_item")
-        self.action_executor.click_position(sell_pos)
+        self.action_executor.multi_key_press("alt", "d")
 
     def _wait_for_sell_window(self) -> bool:
         """等待售卖窗口出现"""
