@@ -549,6 +549,9 @@ class RollingTradingMode(ITradingMode):
         if self.config.min_sell_price > 0 and min_sell_price < self.config.min_sell_price:
             print(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
             event_bus.emit_overlay_text_updated(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
+            self._execute_refresh()
+            time.sleep(0.1)
+            self._execute_refresh()
             raise ValueError(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}")
         # 使用当前配装的快速售卖阈值
         fast_sell_threshold = self._get_fast_sell_threshold()
