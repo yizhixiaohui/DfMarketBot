@@ -4,9 +4,9 @@
 测试滚仓配置UI功能
 """
 import os
+import shutil
 import sys
 import tempfile
-import shutil
 
 import pytest
 
@@ -65,7 +65,7 @@ def test_config_integration():
         # 创建临时目录和配置文件
         temp_dir = tempfile.mkdtemp()
         temp_config_path = os.path.join(temp_dir, "test_config.yaml")
-        
+
         try:
             # 测试配置加载
             config_manager = TradingConfigManager(temp_config_path)
@@ -115,13 +115,14 @@ def test_fast_sell_threshold_ui():
 
     try:
         from PyQt5.QtWidgets import QApplication
+
         from GUI.RollingConfigUI import RollingConfigUI
         from src.config.config_manager import TradingConfigManager
 
         # 创建临时目录
         temp_dir = tempfile.mkdtemp()
         temp_config_path = os.path.join(temp_dir, "test_config.yaml")
-        
+
         try:
             # 创建应用程序实例（如果不存在）
             app = QApplication.instance()
@@ -218,6 +219,7 @@ def test_fast_sell_threshold_editing():
 
     try:
         from PyQt5.QtWidgets import QApplication, QTableWidgetItem
+
         from GUI.RollingConfigUI import RollingConfigUI
 
         # 创建应用程序实例（如果不存在）

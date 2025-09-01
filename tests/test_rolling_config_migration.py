@@ -5,15 +5,16 @@
 测试快速售卖阈值配置的迁移、序列化和验证逻辑
 """
 import os
+import shutil
 import sys
 import tempfile
-import shutil
+
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.config.trading_config import TradingConfig, TradingMode, ItemType
 from src.config.config_manager import TradingConfigManager
+from src.config.trading_config import ItemType, TradingConfig, TradingMode
 
 
 class TestRollingConfigMigration:

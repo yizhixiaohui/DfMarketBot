@@ -1,12 +1,13 @@
 # DFMarketBot
 
-DFMarketBot 是一个专为《三角洲行动》(Delta Force) 设计的抢子弹脚本。基于图像识别技术，通过模拟人工操作实现游戏内交易行的自动化购买功能。
-
 ![GitHub stars](https://img.shields.io/github/stars/doveeeee/DfMarketBot?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/doveeeee/DfMarketBot?style=social)
 ![GitHub issues](https://img.shields.io/github/issues/doveeeee/DfMarketBot)
 ![GitHub license](https://img.shields.io/github/license/doveeeee/DfMarketBot)
 ![Python version](https://img.shields.io/badge/python-3.9+-blue.svg)
+
+DFMarketBot 是一个专为《三角洲行动》(Delta Force) 设计的抢子弹脚本。基于图像识别技术，通过模拟人工操作实现游戏内交易行的自动化购买功能。
+
 
 > **免责声明**: 本项目仅供学习和研究目的使用。使用本工具可能违反游戏服务条款，请用户自行承担风险。作者不对因使用本工具而导致的任何后果负责。
 
@@ -15,22 +16,22 @@ DFMarketBot 是一个专为《三角洲行动》(Delta Force) 设计的抢子弹
 ### 寻求协作者，而非使用者
 
 > Note: 开发者专用，不提供新手支持
-> 
+>
 > 这是一个倒子弹脚本。作者因为时间有限，无法独自完成所有功能和维护。
-> 
+>
 > **开源目的很明确**： 寻找同样懂行的同学一起开发和维护它。如果你也玩这个游戏并且会写代码，欢迎一起来让它变得更强大。
-> 
+>
 > **文档只包含技术实现和配置说明。** 如果你需要基础的使用指导，这个项目可能不适合你。
-> 
+>
 > 我需要：
 >  - 也玩三角洲行动，知道如何倒子弹。
 >  - 会 Python，能看懂代码，能自己 Debug，最好会图像处理相关技术。
 >  - 想到什么好点子，愿意直接动手实现（提 PR），而不是光提意见。
-> 
+>
 > 这里没有：
 >  - 手把手教学：怎么搭环境、怎么装 Python 这类问题请自行解决。
 >  - 保姆级教程：文档默认你有基础的开发和学习能力。
-> 
+>
 > 交流群: 399343189
 
 ## ✨ 核心特性
@@ -114,6 +115,10 @@ TODO List:
 | `min_buy_price`       | 最低购买价格 | 300  | 低于此价格必买               |
 | `buy_count`           | 购买数量   | 4980 | 单次购买的数量               |
 | `fast_sell_threshold` | 快速卖出阈值 | 0    | 触发快速卖出(比最低柱子低一档)的价格阈值 |
+
+### 延迟配置
+
+所有的操作延迟都在 `config/delay_config.yaml` 中，配置管理已支持热更新，修改文件后再次按F8开启即可
 
 ## 🎮 使用说明
 

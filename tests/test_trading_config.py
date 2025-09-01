@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 
-from src.config.trading_config import TradingConfig, TradingMode, ItemType
+from src.config.trading_config import ItemType, TradingConfig, TradingMode
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

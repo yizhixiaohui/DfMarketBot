@@ -4,9 +4,9 @@
 系统完整性测试脚本
 """
 import os
+import shutil
 import sys
 import tempfile
-import shutil
 
 import pytest
 
@@ -116,7 +116,7 @@ def test_configuration():
         # 创建临时配置文件进行测试
         temp_dir = tempfile.mkdtemp()
         temp_config_path = os.path.join(temp_dir, "test_config.yaml")
-        
+
         try:
             # 创建配置管理器
             config_manager = TradingConfigManager(temp_config_path)
@@ -128,7 +128,7 @@ def test_configuration():
             print(f"  - 最大价格: {getattr(config, 'max_price', '未设置')}")
             assert config.trading_mode is not None
             assert config.ideal_price >= 0  # 允许为0，因为是默认值
-            assert config.max_price >= 0    # 允许为0，因为是默认值
+            assert config.max_price >= 0  # 允许为0，因为是默认值
 
         finally:
             # 清理临时文件
