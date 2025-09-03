@@ -237,6 +237,21 @@ class DelayConfigManager(BaseConfigManager[DelayConfig]):
                     "after_mail_get_click": 2.0,
                     # 邮箱界面领取完哈夫币，然后再次点击一下退出这个界面，之后的延迟
                     "after_confirm_mail_click": 1.0,
+                    # 切换大战场解除卡顿 #
+                    # 烽火行动页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
+                    "before_open_mode_select_menu_tarkov_mode": 1.0,
+                    # 战场模式页按下esc到主界面后，等待按下esc进入模式选择界面前的延迟
+                    "before_open_mode_select_menu_battlefield_mode": 3.0,
+                    # 按下esc打开切换菜单后，等待按下战场模式或烽火行动模式按钮前的延迟
+                    "before_select_mode": 1.0,
+                    # 按下行前备战按钮进入地图选择页前等待的延迟
+                    "before_select_map": 1.0,
+                    # 进入地图选择页后，选择零号大坝前等待的延迟
+                    "before_select_zero_dam": 1.5,
+                    # 选择零号大坝后，点击开始行动按钮前等待的延迟
+                    "before_start_action": 1.0,
+                    # 游戏闪退后，选择模式后进入特勤处后等待的延迟
+                    "after_enter_game_home": 8.0,
                 },
             }
         )

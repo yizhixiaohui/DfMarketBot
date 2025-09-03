@@ -28,6 +28,7 @@ disable=
     unused-argument,            # 允许未使用的参数（常见于回调函数）
     duplicate-code,             # 允许代码重复
     fixme,                      # 允许TODO/FIXME注释
+    c-extension-no-member,      # 允许c扩展包没有实现成员变量
 
 # 启用一些有用的检查
 enable=

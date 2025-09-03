@@ -6,22 +6,22 @@ hoarding_loop_interval: 150
 item_type: 0
 use_balance_calculation: true
 trading_mode: 0
-rolling_option: 2
+rolling_option: 0
 rolling_options:
-  - buy_price: 528
+  - buy_price: 478
     min_buy_price: 300
     buy_count: 4980
     fast_sell_threshold: 200000
-  - buy_price: 3000
-    min_buy_price: 1000
+  - buy_price: 3400
+    min_buy_price: 1500
     buy_count: 4980
     fast_sell_threshold: 5000
-  - buy_price: 3900
-    min_buy_price: 1500
+  - buy_price: 5200
+    min_buy_price: 2500
     buy_count: 4980
     fast_sell_threshold: 15000
   - buy_price: 1800
-    min_buy_price: 600
+    min_buy_price: 1200
     buy_count: 4980
     fast_sell_threshold: 20000
 screen_width: 2560
@@ -32,3 +32,4 @@ log_level: INFO
 second_detect: false
 switch_to_battlefield: true
 switch_to_battlefield_count: 400
+min_sell_price: 528

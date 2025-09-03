@@ -19,7 +19,8 @@ class ScreenCapture:
         else:
             self.width, self.height = resolution
 
-    def capture_region(self, coordinates: List[float]) -> np.ndarray:
+    @staticmethod
+    def capture_region(coordinates: List[float]) -> np.ndarray:
         """捕获指定区域的屏幕截图
 
         Args:
@@ -44,7 +45,8 @@ class ScreenCapture:
             # 捕获屏幕区域
             return np.array(sct.grab({"left": x1, "top": y1, "width": x2 - x1, "height": y2 - y1}))
 
-    def capture_window(self, window_title: str = None) -> np.ndarray:
+    @staticmethod
+    def capture_window() -> np.ndarray:
         """捕获指定窗口的截图
 
         Args:

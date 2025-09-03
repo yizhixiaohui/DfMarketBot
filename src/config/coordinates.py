@@ -88,6 +88,9 @@ class CoordinateConfig:
             # 开始行动按钮
             "start_action_button": [2198 / 2560, 911 / 1440],
         },
+        "app_ver_area": [1663 / 2560, 85 / 1440, 1766 / 2560, 135 / 1440],
+        # 进入游戏
+        "enter_game": [744 / 2560, 584 / 1440],
     }
 
     @classmethod

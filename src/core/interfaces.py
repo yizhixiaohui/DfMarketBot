@@ -164,6 +164,10 @@ class IOCREngine(ABC):
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板匹配"""
 
+    @abstractmethod
+    def find_template(self, image: np.ndarray, template_name: str) -> tuple:
+        """检测模板所在位置"""
+
     @staticmethod
     @abstractmethod
     def get_pixel_color(image: np.ndarray, x: int, y: int):

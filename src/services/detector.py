@@ -8,6 +8,7 @@ from abc import abstractmethod
 from typing import List, Optional, Tuple
 
 import numpy as np
+import win32gui
 
 try:
     from src.config.coordinates import CoordinateConfig
@@ -135,9 +136,16 @@ class RollingModeDetector(PriceDetector):
         """检查仓库出售页面是不是无法售卖（三角洲bug）"""
         return self._match_template("failure_check", "sell")
 
-    def _match_template(self, coords: str, template_name: str):
+    def check_game_start(self):
+        """检测重启后游戏是否已进入选模式页面"""
+        return self._match_template("app_ver_area", "app_ver", rolling_config=False)
+
+    def _match_template(self, coords: str, template_name: str, rolling_config: bool = True):
         try:
-            coords = self.coordinates["rolling_mode"][coords]
+            if rolling_config:
+                coords = self.coordinates["rolling_mode"][coords]
+            else:
+                coords = self.coordinates[coords]
             screenshot = self.screen_capture.capture_region(coords)
             return self.ocr_engine.detect_template(screenshot, template_name)
         except Exception as e:
@@ -222,6 +230,36 @@ class RollingModeDetector(PriceDetector):
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 
+    @staticmethod
+    def detect_window_exist(window_title="三角洲行动") -> (bool, Optional[int]):
+        """
+        检测指定标题的窗口是否存在
+
+        Args:
+            window_title: 窗口标题或部分标题
+
+        Returns:
+            bool: 窗口是否存在
+            handle: 窗口句柄（如果存在）
+        """
+
+        def callback(hwnd, wins):
+            if win32gui.IsWindowVisible(hwnd) and window_title in win32gui.GetWindowText(hwnd):
+                wins.append(hwnd)
+            return True
+
+        windows = []
+        win32gui.EnumWindows(callback, windows)
+
+        if windows:
+            return True, windows[0]
+        return False, None
+
+    def find_game_start_button(self):
+        """找到wegame启动按钮并返回点击坐标"""
+        screenshot = self.screen_capture.capture_window()
+        return self.ocr_engine.find_template(screenshot, "start_game")
+
 
 if __name__ == "__main__":
     from src.infrastructure.ocr_engine import TemplateOCREngine
@@ -230,7 +268,7 @@ if __name__ == "__main__":
     print(sc.width, sc.height)
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
-    result = detector.is_in_game_lobby()
+    result = detector.check_game_start()
     print(result)
     # test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
     # print(test_res)

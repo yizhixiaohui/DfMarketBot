@@ -136,6 +136,8 @@ class TemplateOCREngine(IOCREngine):
                 self._load_pic("equipment_scheme.png", 50)
                 self._load_pic("xing_qian_bei_zhan.png")
                 self._load_pic("start_action.png")
+                self._load_pic("start_game.png")
+                self._load_pic("app_ver.png")
                 self._load_pic("pei_zhuang.png")
 
                 if not self._templates:
@@ -219,9 +221,14 @@ class TemplateOCREngine(IOCREngine):
 
     def detect_template(self, image: np.ndarray, template_name: str) -> bool:
         """检测模板是否存在于图像中"""
+        x, y = self.find_template(image, template_name)
+        return x > 0 and y > 0
+
+    def find_template(self, image: np.ndarray, template_name: str) -> tuple:
+        """检测模板并返回坐标"""
         try:
             if self._pic_templates is None or self._pic_templates[template_name] is None:
-                return False
+                return 0, 0
             # 确保图像是numpy数组
             if not isinstance(image, np.ndarray):
                 image = np.array(image)
@@ -230,9 +237,9 @@ class TemplateOCREngine(IOCREngine):
 
             # 模板匹配
             result = cv2.matchTemplate(gray, self._pic_templates[template_name], cv2.TM_CCOEFF_NORMED)
-            _, max_val, _, _ = cv2.minMaxLoc(result)
+            _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
-            return max_val >= 0.7
+            return max_loc if max_val > 0.7 else (0, 0)
 
         except Exception as e:
             raise OCRException(f"模板检测失败: {e}") from e
@@ -429,6 +436,10 @@ class MockOCREngine(IOCREngine):
         """模拟模板检测"""
         return self.template_detected
 
+    def find_template(self, image: np.ndarray, template_name: str) -> tuple:
+        """模拟模板检测"""
+        return 1, 1
+
     @staticmethod
     def get_pixel_color(image: np.ndarray, x: int, y: int):
         """检测像素点的颜色"""
@@ -464,17 +475,17 @@ class OCREngineFactory:
 
 if __name__ == "__main__":
     # ocr = TemplateContoursOCREngine(resolution=(2560,1440))
-    ocr = TemplateOCREngine(resolution=(2560, 1440))
+    # ocr = TemplateOCREngine(resolution=(2560, 1440))
     # ocr = TemplateContoursOCREngine(resolution=(1920,1080))
-    # ocr = TemplateOCREngine(resolution=(1920, 1080))
-    sc = ScreenCapture(resolution=(2560, 1440))
+    ocr = TemplateOCREngine(resolution=(1920, 1080))
+    # sc = ScreenCapture(resolution=(2560, 1440))
     start = time.time()
     # screenshot = sc.capture_region([461, 739, 532, 762])
 
     # 遍历templates/bad_cases和templates/bad_cases_1440p目录
     bad_cases_dirs = [
-        # "../../templates/bad_cases",
-        "../../templates/bad_cases_1440p"
+        "../../templates/bad_cases",
+        # "../../templates/bad_cases_1440p"
     ]
 
     for dir_path in bad_cases_dirs:
@@ -492,7 +503,6 @@ if __name__ == "__main__":
                 else:
                     print(f"Failed to read image: {file_name}")
 
-    screenshot = cv2.imread("../../templates/bad_cases_1440p/25612140.png")
     # for _ in range(100):
     #     ocr.image_to_string(screenshot)
     # print("fps:", 100 / (time.time() - start))

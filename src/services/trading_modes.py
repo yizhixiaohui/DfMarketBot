@@ -3,8 +3,13 @@
 交易模式实现
 """
 import datetime
+import os
 import time
 from typing import Dict, Optional, Tuple
+
+import pyautogui
+
+from src.utils.window_helper import bring_window_to_front
 
 try:
     from src.config.trading_config import ItemType, TradingConfig, TradingMode
@@ -186,6 +191,7 @@ class RollingTradingMode(ITradingMode):
         self.loop_count = 0
         self.buy_failed_count = 0
         self.buy_success_count = 0
+        self.fail_count = 0
 
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化滚仓模式"""
@@ -193,6 +199,7 @@ class RollingTradingMode(ITradingMode):
         self.option_configs = config.rolling_options
         self.last_balance = None
         self._should_stop = False
+        self.fail_count = 0
         delay_helper.reload_config()
         delay_helper.set_mode(TradingMode.ROLLING)
         if kwargs.get("profit", None):
@@ -289,6 +296,7 @@ class RollingTradingMode(ITradingMode):
                             f"二次检测失败({current_price}, {second_detect_price})，跳过购买"
                         )
                         self._execute_refresh()
+                        self.fail_count = 0
                         return not self._should_stop
                 else:
                     self._execute_buy()
@@ -306,6 +314,7 @@ class RollingTradingMode(ITradingMode):
                         self.buy_failed_count += 1
                         self._update_statistics()
                         delay_helper.sleep("after_buy_failed")
+                        self.fail_count = 0
                         return True
                     print("部分购买成功，执行售卖")
                 else:
@@ -348,20 +357,31 @@ class RollingTradingMode(ITradingMode):
                 self._execute_refresh()
 
             self._update_statistics()
+            self.fail_count = 0
             return not self._should_stop  # 如果收到停止信号则返回False
 
         except Exception as e:
             if self.detector.check_stuck():
                 print("检测到点入装备界面，尝试脱离卡死")
                 self._execute_refresh()
+            elif self.detector.is_in_game_lobby():
+                print("检测到进入游戏大厅，尝试脱离卡死")
+                self._enter_action_window(self.detector.pei_zhuang_enabled())
             elif self.detector.check_stuck2():
+                print("检测到没有L按钮进入配装界面，尝试修复")
                 # 没有L按钮进入配装界面
                 self._execute_refresh()
                 time.sleep(1)
                 self._enter_action_window()
-            elif self.detector.is_in_game_lobby():
-                self._enter_action_window(self.detector.pei_zhuang_enabled())
-            raise TradingException(f"滚仓模式交易失败: {e}") from e
+            self.fail_count += 1
+            if self.fail_count > 10 and not self.detector.detect_window_exist()[0]:
+                print("检测到游戏闪退，尝试重启")
+                self.append_to_sell_log("游戏闪退，尝试重启")
+                if not self._restart_game():
+                    return False
+                self.append_to_sell_log("游戏重启成功！")
+                raise TradingException("游戏闪退！") from e
+            raise TradingException(f"滚仓模式交易失败({self.fail_count + 1}): {e}") from e
 
     def _update_statistics(self):
         self.current_market_data.profit = self.profit
@@ -546,6 +566,7 @@ class RollingTradingMode(ITradingMode):
         min_sell_price = self.detector.detect_min_sell_price()
         second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
+        print(f"detect min_sell_price: {min_sell_price}, config: {self.config.min_sell_price}")
         if self.config.min_sell_price > 0 and min_sell_price < self.config.min_sell_price:
             print(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
             event_bus.emit_overlay_text_updated(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
@@ -650,7 +671,11 @@ class RollingTradingMode(ITradingMode):
         self._enter_action_window()
 
     def _enter_action_window(self, fast_enter_button=False):
-        """从主界面进入到行动界面"""
+        """
+        从主界面进入到行动界面
+        :param fast_enter_button: 是否有快速配装按钮
+        :return:
+        """
         if not fast_enter_button:
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["prepare_equipment_button"])
             delay_helper.sleep("before_select_zero_dam")
@@ -686,6 +711,47 @@ class RollingTradingMode(ITradingMode):
         except Exception as e:
             print(f"写入sell.log文件失败: {e}")
             return False
+
+    def _restart_game(self):
+        for _ in range(10):
+            exists, hwnd = self.detector.detect_window_exist("WeGame")
+            if not exists:
+                print("游戏闪退，且wegame不在前台，等待wegame出现...")
+                os.system("start wegame://")
+                time.sleep(10)
+                continue
+            bring_window_to_front(hwnd)
+            time.sleep(1)
+            x, y = self.detector.find_game_start_button()
+            if x == 0 and y == 0:
+                print("游戏闪退，找到wegame窗口，但启动按钮未找到")
+                continue
+            time.sleep(0.3)
+            self.action_executor.click_position((x, y))
+            for _ in range(18):
+                if not self.detector.check_game_start():
+                    print("等待游戏启动...")
+                    time.sleep(10)
+                    continue
+                print(self.detector.coordinates["enter_game"])
+                # 截全屏时鼠标会挪到左上角，进而触发pyautogui的失效保护，所以这里要临时禁用一下
+                pyautogui.FAILSAFE = False
+                self.action_executor.click_position(self.detector.coordinates["enter_game"])
+                pyautogui.FAILSAFE = True
+                time.sleep(1)
+                for _ in range(3):
+                    self.action_executor.press_key(" ")
+                    time.sleep(1)
+                delay_helper.sleep("after_enter_game_home")
+                self.action_executor.press_key("tab")
+                time.sleep(1)
+                self._enter_action_window()
+                return True
+            print("游戏3分钟没有启动成功，退出循环")
+            self.append_to_sell_log("游戏3分钟没有启动成功，退出循环")
+            return False
+        self.append_to_sell_log("游戏闪退，且wegame不在前台，退出循环")
+        return False
 
 
 class TradingModeFactory:
@@ -727,5 +793,5 @@ if __name__ == "__main__":
     # 售卖右侧区域
     # res = test_mode.detector.detect_expected_revenue()
     # res = test_mode.detector.detect_sell_num()
-    res = test_mode.detector.detect_price()
+    res = test_mode._restart_game()
     print(res)
