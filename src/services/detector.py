@@ -62,7 +62,10 @@ class PriceDetector(IPriceDetector):
         """检测当前物品价格 - 使用模板方法模式"""
         try:
             coords = self.get_detection_coordinates()
-            return self._detect_value(coords)
+            thresh = 127
+            if self.screen_capture.width == 1920:
+                thresh = 80
+            return self._detect_value(coords, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 
@@ -197,22 +200,37 @@ class RollingModeDetector(PriceDetector):
     def detect_min_sell_price(self) -> int:
         """检测当前售卖的最小价格"""
         font = "w"
-        return self._detect_area("min_sell_price_area", font=font, thresh=50)
+        binarize = True
+        thresh = 50
+        if self.screen_capture.width == 1920:
+            font = "g"
+            binarize = False
+        return self._detect_area("min_sell_price_area", font=font, binarize=binarize, thresh=thresh)
 
     def detect_second_min_sell_price(self) -> int:
         """检测当前售卖的最小价格"""
         binarize = True
         font = "w"
-        return self._detect_area("second_min_sell_price_area", binarize=binarize, font=font, thresh=50)
+        thresh = 50
+        if self.screen_capture.width == 1920:
+            font = "g"
+            binarize = False
+        return self._detect_area("second_min_sell_price_area", binarize=binarize, font=font, thresh=thresh)
 
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
         font = "w"
+        if self.screen_capture.width == 1920:
+            font = "c"
         return self._detect_area("min_sell_price_count_area", 0, binarize=False, font=font)
 
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
-        res = self._detect_area("expected_revenue_area", binarize=False, font="w")
+        font = "w"
+        binarize = False
+        if self.screen_capture.width == 1920:
+            font = "g"
+        res = self._detect_area("expected_revenue_area", binarize=binarize, font=font)
         # 检测器会把售价边上的问号当成7，所以这里特殊处理一下... TODO: 以后再修
         return int((res - 7) / 10) if res % 10 == 7 else res
 
