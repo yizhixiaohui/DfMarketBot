@@ -438,6 +438,8 @@ class RollingTradingMode(ITradingMode):
             result = self._execute_single_sell_cycle(sell_time, sell_ratios[sell_time])
             if not result["success"]:
                 time.sleep(1)
+                if "无可售卖物品" in result["message"]:
+                    break
                 continue
 
             total_profit += result["revenue"]
