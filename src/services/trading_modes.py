@@ -438,7 +438,7 @@ class RollingTradingMode(ITradingMode):
             result = self._execute_single_sell_cycle(sell_time, sell_ratios[sell_time])
             if not result["success"]:
                 time.sleep(1)
-                if "无可售卖物品" in result["message"]:
+                if result["message"] == "无可售卖物品":
                     break
                 continue
 
@@ -471,10 +471,12 @@ class RollingTradingMode(ITradingMode):
                 "revenue": sell_info["revenue"],
                 "count": sell_info["count"],
                 "price": sell_info["price"],
+                "message": ""
             }
 
         except Exception as e:
-            return {"success": False, "error": str(e)}
+            print(f"售卖失败111：{str(e)}")
+            return {"success": False, "message": str(e)}
 
     def _perform_sell_operation(self, item_pos: Tuple[int, int], sell_ratio: float, cycle_index: int) -> Dict[str, any]:
         """执行单个售卖操作"""
@@ -666,6 +668,9 @@ class RollingTradingMode(ITradingMode):
         delay_helper.sleep("before_select_mode")
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["battlefield_mode_button"])
         delay_helper.sleep("before_open_mode_select_menu_battlefield_mode")
+        for _ in range(3):
+            self.action_executor.press_key(" ")
+            time.sleep(0.5)
         self._execute_refresh()
         delay_helper.sleep("before_select_mode")
         self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["tarkov_mode_button"])
@@ -795,5 +800,5 @@ if __name__ == "__main__":
     # 售卖右侧区域
     # res = test_mode.detector.detect_expected_revenue()
     # res = test_mode.detector.detect_sell_num()
-    res = test_mode._restart_game()
+    res = test_mode._execute_auto_sell()
     print(res)

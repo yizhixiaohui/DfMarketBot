@@ -244,7 +244,7 @@ class RollingModeDetector(PriceDetector):
         """
 
         def callback(hwnd, wins):
-            if win32gui.IsWindowVisible(hwnd) and window_title in win32gui.GetWindowText(hwnd):
+            if win32gui.IsWindowVisible(hwnd) and window_title == win32gui.GetWindowText(hwnd).strip():
                 wins.append(hwnd)
             return True
 
