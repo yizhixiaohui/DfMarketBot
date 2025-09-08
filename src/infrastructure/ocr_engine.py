@@ -14,7 +14,6 @@ import cv2
 import numpy as np
 import pyautogui
 
-from src.infrastructure.screen_capture import ScreenCapture
 
 try:
     from src.core.exceptions import OCRException

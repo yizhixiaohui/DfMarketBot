@@ -800,5 +800,5 @@ if __name__ == "__main__":
     # 售卖右侧区域
     # res = test_mode.detector.detect_expected_revenue()
     # res = test_mode.detector.detect_sell_num()
-    res = test_mode._execute_auto_sell()
+    res = test_mode.detector.detect_price()
     print(res)
