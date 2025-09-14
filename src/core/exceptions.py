@@ -38,3 +38,15 @@ class TradingException(DfMarketException):
 
 class OCRException(DfMarketException):
     """OCR异常"""
+
+
+class WindowDetectionException(DfMarketException):
+    """窗口检测相关异常"""
+
+
+class WindowSizeException(WindowDetectionException):
+    """窗口尺寸不支持异常"""
+
+
+class WindowNotFoundException(WindowDetectionException):
+    """窗口未找到异常"""

@@ -14,7 +14,6 @@ import cv2
 import numpy as np
 import pyautogui
 
-
 try:
     from src.core.exceptions import OCRException
     from src.core.interfaces import IOCREngine

@@ -19,8 +19,46 @@ class ScreenCapture:
         else:
             self.width, self.height = resolution
 
-    @staticmethod
-    def capture_region(coordinates: List[float]) -> np.ndarray:
+        # 窗口区域信息 (x, y, width, height)
+        self.window_region: Optional[Tuple[int, int, int, int]] = None
+
+    def set_window_region(self, x: int, y: int, width: int, height: int) -> None:
+        """设置窗口区域信息
+
+        Args:
+            x: 窗口左上角X坐标
+            y: 窗口左上角Y坐标
+            width: 窗口宽度
+            height: 窗口高度
+        """
+        self.window_region = (x, y, width, height)
+        self.width, self.height = width, height
+
+    def clear_window_region(self) -> None:
+        """清除窗口区域信息，回退到全屏模式"""
+        self.window_region = None
+        self.width, self.height = pyautogui.size()
+
+    def _convert_region(self, region: List[int]) -> List[int]:
+        """转换截图区域坐标
+
+        Args:
+            region: [x, y, width, height] 相对于窗口的坐标
+
+        Returns:
+            转换后的绝对屏幕坐标
+        """
+        if self.window_region:
+            x, y, w, h = region
+            return [
+                x + self.window_region[0],  # 窗口偏移X
+                y + self.window_region[1],  # 窗口偏移Y
+                w,
+                h,  # 尺寸保持不变
+            ]
+        return region
+
+    def capture_region(self, coordinates: List[float]) -> np.ndarray:
         """捕获指定区域的屏幕截图
 
         Args:
@@ -41,16 +79,23 @@ class ScreenCapture:
         # 确保坐标有效
         x1, x2 = min(x1, x2), max(x1, x2)
         y1, y2 = min(y1, y2), max(y1, y2)
+
+        # 转换为 [x, y, width, height] 格式
+        region = [x1, y1, x2 - x1, y2 - y1]
+
+        # 应用窗口偏移（如果设置了窗口区域）
+        converted_region = self._convert_region(region)
+
+        # 提取转换后的坐标
+        final_x, final_y, final_width, final_height = converted_region
+
         with mss() as sct:
             # 捕获屏幕区域
-            return np.array(sct.grab({"left": x1, "top": y1, "width": x2 - x1, "height": y2 - y1}))
+            return np.array(sct.grab({"left": final_x, "top": final_y, "width": final_width, "height": final_height}))
 
     @staticmethod
     def capture_window() -> np.ndarray:
         """捕获指定窗口的截图
-
-        Args:
-            window_title: 窗口标题，如果为None则捕获整个屏幕
 
         Returns:
             窗口截图的numpy数组
@@ -58,18 +103,6 @@ class ScreenCapture:
         # 捕获整个屏幕
         screenshot = pyautogui.screenshot()
         return np.array(screenshot)
-
-    def get_window_position(self, window_title: str) -> Optional[Tuple[int, int, int, int]]:
-        """获取窗口位置
-
-        Args:
-            window_title: 窗口标题
-
-        Returns:
-            (left, top, right, bottom) 绝对坐标，或None
-        """
-        # 在跨平台环境中，返回None表示不支持窗口定位
-        return None
 
 
 if __name__ == "__main__":

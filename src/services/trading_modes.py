@@ -471,7 +471,7 @@ class RollingTradingMode(ITradingMode):
                 "revenue": sell_info["revenue"],
                 "count": sell_info["count"],
                 "price": sell_info["price"],
-                "message": ""
+                "message": "",
             }
 
         except Exception as e:

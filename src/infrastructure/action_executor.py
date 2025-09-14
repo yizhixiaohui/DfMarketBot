@@ -27,13 +27,37 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         # 锁用于线程安全
         self._lock = threading.Lock()
 
+        # 窗口偏移量，用于窗口模式下的坐标转换
+        self.window_offset: Optional[Tuple[int, int]] = None
+
+    def set_window_offset(self, x: int, y: int) -> None:
+        """设置窗口偏移量，用于窗口模式下的坐标转换"""
+        self.window_offset = (x, y)
+        if self.debug:
+            print(f"设置窗口偏移量: ({x}, {y})")
+
+    def clear_window_offset(self) -> None:
+        """清除窗口偏移量，回到全屏模式"""
+        self.window_offset = None
+        if self.debug:
+            print("清除窗口偏移量，回到全屏模式")
+
+    def _convert_coordinates(self, x: float, y: float) -> Tuple[int, int]:
+        """将模板坐标转换为基于窗口位置的绝对屏幕坐标"""
+        if self.window_offset:
+            converted_x = int(x + self.window_offset[0])
+            converted_y = int(y + self.window_offset[1])
+            if self.debug:
+                print(f"坐标转换: ({x}, {y}) -> ({converted_x}, {converted_y})")
+            return converted_x, converted_y
+        return int(x), int(y)
+
     def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """点击指定坐标位置"""
         try:
             with self._lock:
-                x, y = position
-                # 确保坐标是整数
-                x, y = int(x), int(y)
+                # 应用窗口偏移量进行坐标转换
+                x, y = self._convert_coordinates(position[0], position[1])
 
                 # 移动鼠标并点击
                 pyautogui.moveTo(x, y)
@@ -111,7 +135,8 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         """移动鼠标到指定位置"""
         try:
             with self._lock:
-                x, y = int(position[0]), int(position[1])
+                # 应用窗口偏移量进行坐标转换
+                x, y = self._convert_coordinates(position[0], position[1])
                 pyautogui.moveTo(x, y)
                 if self.debug:
                     print(f"move to ({x}, {y})")
@@ -145,13 +170,44 @@ class MockActionExecutor(IActionExecutor):
     def __init__(self, log_actions: bool = True):
         self.log_actions = log_actions
         self.actions = []
+        # 窗口偏移量，用于窗口模式下的坐标转换
+        self.window_offset: Optional[Tuple[int, int]] = None
+
+    def set_window_offset(self, x: int, y: int) -> None:
+        """设置窗口偏移量，用于窗口模式下的坐标转换"""
+        self.window_offset = (x, y)
+        if self.log_actions:
+            print(f"模拟设置窗口偏移量: ({x}, {y})")
+
+    def clear_window_offset(self) -> None:
+        """清除窗口偏移量，回到全屏模式"""
+        self.window_offset = None
+        if self.log_actions:
+            print("模拟清除窗口偏移量，回到全屏模式")
+
+    def _convert_coordinates(self, x: float, y: float) -> Tuple[int, int]:
+        """将模板坐标转换为基于窗口位置的绝对屏幕坐标"""
+        if self.window_offset:
+            converted_x = int(x + self.window_offset[0])
+            converted_y = int(y + self.window_offset[1])
+            if self.log_actions:
+                print(f"模拟坐标转换: ({x}, {y}) -> ({converted_x}, {converted_y})")
+            return converted_x, converted_y
+        return int(x), int(y)
 
     def click_position(self, position: Tuple[float, float], right_click=False) -> None:
         """模拟点击位置"""
-        action = {"type": "click", "coordinates": position}
+        # 应用窗口偏移量进行坐标转换
+        converted_pos = self._convert_coordinates(position[0], position[1])
+        action = {
+            "type": "click",
+            "original_coordinates": position,
+            "converted_coordinates": converted_pos,
+            "right_click": right_click,
+        }
         self.actions.append(action)
         if self.log_actions:
-            print(f"模拟点击: {position}")
+            print(f"模拟点击: {position} -> {converted_pos}")
 
     def press_key(self, key: str) -> None:
         """模拟按键"""
@@ -176,10 +232,12 @@ class MockActionExecutor(IActionExecutor):
 
     def move_mouse(self, position: Tuple[float, float]) -> None:
         """模拟移动鼠标"""
-        action = {"type": "move", "position": position}
+        # 应用窗口偏移量进行坐标转换
+        converted_pos = self._convert_coordinates(position[0], position[1])
+        action = {"type": "move", "original_position": position, "converted_position": converted_pos}
         self.actions.append(action)
         if self.log_actions:
-            print(f"模拟移动鼠标: {position}")
+            print(f"模拟移动鼠标: {position} -> {converted_pos}")
 
     def get_mouse_position(self) -> Tuple[int, int]:
         """获取模拟鼠标位置"""
