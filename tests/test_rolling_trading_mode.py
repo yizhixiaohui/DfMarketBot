@@ -30,10 +30,11 @@ class TestRollingTradingMode(unittest.TestCase):
         # 创建测试配置
         self.test_config = TradingConfig()
         self.test_config.rolling_option = 0
+        self.test_config.min_sell_price = 500  # 全局最低卖价
         self.test_config.rolling_options = [
-            {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 100000},
-            {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0},
-            {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 500000},
+            {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 100000, "min_sell_price": 528},
+            {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0, "min_sell_price": 450},
+            {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 500000, "min_sell_price": 1700},
         ]
 
         # 初始化交易模式
@@ -90,6 +91,23 @@ class TestRollingTradingMode(unittest.TestCase):
 
         threshold = self.trading_mode._get_fast_sell_threshold()
         self.assertEqual(threshold, 0, "缺少快速售卖阈值字段应该返回默认值0")
+
+    def test_get_min_sell_price_valid_option(self):
+        """测试 _get_min_sell_price 方法返回正确的最低卖价 - 有效选项"""
+        # 测试第一个配装选项
+        self.trading_mode.config.rolling_option = 0
+        min_sell_price = self.trading_mode._get_min_sell_price()
+        self.assertEqual(min_sell_price, 528, "应该返回第一个配装的最低卖价")
+
+        # 测试第二个配装选项
+        self.trading_mode.config.rolling_option = 1
+        min_sell_price = self.trading_mode._get_min_sell_price()
+        self.assertEqual(min_sell_price, 450, "应该返回第二个配装的最低卖价")
+
+        # 测试第三个配装选项
+        self.trading_mode.config.rolling_option = 2
+        min_sell_price = self.trading_mode._get_min_sell_price()
+        self.assertEqual(min_sell_price, 1700, "应该返回第三个配装的最低卖价")
 
     @patch("src.services.trading_modes.delay_helper")
     def test_set_sell_price_with_fast_sell_enabled_above_threshold(self, mock_delay_helper):
@@ -239,8 +257,9 @@ class TestRollingTradingMode(unittest.TestCase):
         self.mock_detector.detect_second_min_sell_price.return_value = 10000
         self.mock_detector.detect_min_sell_price_count.return_value = 200000
 
-        # 设置当前配装为第一个（阈值100000）
+        # 设置当前配装为第一个，但将其最低卖价设为0以允许售卖
         self.trading_mode.config.rolling_option = 0
+        self.trading_mode.option_configs[0]["min_sell_price"] = 0  # 临时设置为0
 
         # 调用 _set_sell_price 方法，启用快速售卖
         result = self.trading_mode._set_sell_price(0.5, 0, fast_sell=True)

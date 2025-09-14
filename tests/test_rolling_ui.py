@@ -133,12 +133,12 @@ def test_fast_sell_threshold_ui():
             ui = RollingConfigUI()
 
             # 验证表格列数
-            assert ui.table.columnCount() == 5, f"表格应该有5列，实际有{ui.table.columnCount()}列"
+            assert ui.table.columnCount() == 6, f"表格应该有5列，实际有{ui.table.columnCount()}列"
             print("✓ 表格包含快速售卖阈值列")
 
             # 验证表头
             headers = [ui.table.horizontalHeaderItem(i).text() for i in range(ui.table.columnCount())]
-            expected_headers = ["选项", "购买价格", "最低价格", "购买数量", "快速售卖阈值"]
+            expected_headers = ["选项", "购买价格", "最低价格", "购买数量", "快速售卖阈值", "最低卖价"]
             assert headers == expected_headers, f"表头不匹配，期望{expected_headers}，实际{headers}"
             print("✓ 表头包含快速售卖阈值")
 

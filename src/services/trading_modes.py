@@ -557,6 +557,11 @@ class RollingTradingMode(ITradingMode):
         current_option = self.option_configs[self.config.rolling_option]
         return current_option.get("fast_sell_threshold", 0)
 
+    def _get_min_sell_price(self) -> int:
+        """获取当前配装的最低售卖价格"""
+        current_option = self.option_configs[self.config.rolling_option]
+        return current_option["min_sell_price"]
+
     def _set_sell_price(self, sell_ratio: float, cycle_index: int, fast_sell=False) -> int:
         """设置售卖价格"""
         if self._should_stop:
@@ -570,14 +575,17 @@ class RollingTradingMode(ITradingMode):
         min_sell_price = self.detector.detect_min_sell_price()
         second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
-        print(f"detect min_sell_price: {min_sell_price}, config: {self.config.min_sell_price}")
-        if self.config.min_sell_price > 0 and min_sell_price < self.config.min_sell_price:
-            print(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
-            event_bus.emit_overlay_text_updated(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}，跳过售卖")
+
+        # 使用当前配装的最低售卖价格
+        config_min_sell_price = self._get_min_sell_price()
+        print(f"detect min_sell_price: {min_sell_price}, config: {config_min_sell_price}")
+        if config_min_sell_price > 0 and min_sell_price < config_min_sell_price:
+            print(f"{min_sell_price}小于最小卖价{config_min_sell_price}，跳过售卖")
+            event_bus.emit_overlay_text_updated(f"{min_sell_price}小于最小卖价{config_min_sell_price}，跳过售卖")
             self._execute_refresh()
             time.sleep(0.1)
             self._execute_refresh()
-            raise ValueError(f"{min_sell_price}小于最小卖价{self.config.min_sell_price}")
+            raise ValueError(f"{min_sell_price}小于最小卖价{config_min_sell_price}")
         # 使用当前配装的快速售卖阈值
         fast_sell_threshold = self._get_fast_sell_threshold()
 

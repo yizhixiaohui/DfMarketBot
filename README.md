@@ -41,7 +41,7 @@ DFMarketBot 是一个专为《三角洲行动》(Delta Force) 设计的抢子弹
 - **滚仓模式自动售卖**：购买成功后自动售卖子弹
 - **自动切换大战场**：切换大战场以防卡顿(目前仅支持滚仓模式)
 - **余额检测**：使用哈夫币余额检测购买状态
-- **分辨率适配**：自动适配不同屏幕分辨率(1920x1080目前支持不太好)
+- **分辨率适配**：自动适配不同屏幕分辨率
 
 TODO List:
 
@@ -60,10 +60,11 @@ TODO List:
 ### 系统要求
 
 - **Python版本**: Python 3.7 或更高版本
-- **显示器**: 支持 2560x1440 分辨率(1920x1080目前支持不太好)
+- **显示器**: 支持 2560x1440 分辨率与 1920x1050分辨率
 - **游戏要求**:
-    - 《三角洲行动》需要以无边框模式运行，画面比例为16: 9
-    - 不能开启HDR
+    - 《三角洲行动》支持窗口模式和无边框窗口模式运行
+    - 画面比例为 16:9
+    - 不能开启 HDR
 
 ### 安装步骤
 
@@ -89,23 +90,25 @@ TODO List:
 
 ### 基础配置项
 
-| 配置项                           | 说明             | 示例值   | 备注                    |
-|-------------------------------|----------------|-------|-----------------------|
-| `trading_mode`                | 交易模式：0=屯仓，1=滚仓 | 0     | 核心配置项                 |
-| `ideal_price`                 | 理想购买价格         | 550   | 屯仓模式使用                |
-| `max_price`                   | 最高接受价格         | 748   | 屯仓模式使用                |
-| `hoarding_loop_interval`      | 屯仓模式检查间隔（毫秒）   | 150   | 数值越小检查越频繁             |
-| `rolling_loop_interval`       | 滚仓模式检查间隔（毫秒）   | 50    | 数值越小检查越频繁             |
-| `item_type`                   | 是否可兑换          | 0     | 影响识别模板选择              |
-| `rolling_option`              | 滚仓配置选项索引       | 2     | 对应rolling_options中的配置 |
-| `use_balance_calculation`     | 是否使用余额计算       | true  | 智能计算购买数量              |
-| `key_mode`                    | 钥匙卡模式          | false | 是否启用钥匙卡模式, 屯仓使用       |
-| `auto_sell`                   | 自动卖出           | true  | 是否自动卖出物品              |
-| `fast_sell`                   | 快速卖出           | true  | 是否启用快速卖出              |
-| `min_sell_price`              | 最低卖出价格         | 0     | 低于此价格不卖出              |
-| `second_detect`               | 二次检测           | false | 是否启用二次价格检测            |
-| `switch_to_battlefield`       | 切换到战场页面        | true  | 定期切换页面避免卡顿            |
-| `switch_to_battlefield_count` | 切换到战场页面的操作次数阈值 | 400   | 执行多少次操作后切换页面          |
+| 配置项                           | 说明                | 示例值   | 备注                    |
+|-------------------------------|-------------------|-------|-----------------------|
+| `trading_mode`                | 交易模式：0=屯仓，1=滚仓    | 0     | 核心配置项                 |
+| `ideal_price`                 | 理想购买价格            | 550   | 屯仓模式使用                |
+| `max_price`                   | 最高接受价格            | 748   | 屯仓模式使用                |
+| `hoarding_loop_interval`      | 屯仓模式检查间隔（毫秒）      | 150   | 数值越小检查越频繁             |
+| `rolling_loop_interval`       | 滚仓模式检查间隔（毫秒）      | 50    | 数值越小检查越频繁             |
+| `item_type`                   | 是否可兑换             | 0     | 影响识别模板选择              |
+| `rolling_option`              | 滚仓配置选项索引          | 2     | 对应rolling_options中的配置 |
+| `use_balance_calculation`     | 是否使用余额计算          | true  | 智能计算购买数量              |
+| `key_mode`                    | 钥匙卡模式             | false | 是否启用钥匙卡模式, 屯仓使用       |
+| `auto_sell`                   | 自动卖出              | true  | 是否自动卖出物品              |
+| `fast_sell`                   | 快速卖出              | true  | 是否启用快速卖出              |
+| `min_sell_price`              | 最低卖出价格            | 0     | 低于此价格不卖出              |
+| `second_detect`               | 二次检测              | false | 是否启用二次价格检测            |
+| `switch_to_battlefield`       | 切换到战场页面           | true  | 定期切换页面避免卡顿            |
+| `switch_to_battlefield_count` | 切换到战场页面的操作次数阈值    | 500   | 执行多少次操作后切换页面          |
+| `screen_width`                | 屏幕宽度              | 2560  | 自动检测，一般无需修改           |
+| `screen_height`               | 屏幕高度              | 1440  | 自动检测，一般无需修改           |
 
 ### 滚仓模式配置项 (rolling_options)
 
@@ -117,6 +120,7 @@ TODO List:
 | `min_buy_price`       | 最低购买价格 | 300  | 低于此价格必买               |
 | `buy_count`           | 购买数量   | 4980 | 单次购买的数量               |
 | `fast_sell_threshold` | 快速卖出阈值 | 0    | 触发快速卖出(比最低柱子低一档)的价格阈值 |
+| `min_sell_price`      | 最低卖价   | 0    | 当价格低于最低卖价时，将跳过本次售卖    |
 
 ### 延迟配置
 
@@ -146,7 +150,7 @@ TODO List:
 ## 📁 项目结构
 
 ```
-DeltaForceMarketBot/
+DFMarketBot/
 ├── DFMarketBot.py          # 主程序入口
 ├── run_v2.py              # 备用启动脚本
 ├── config/                # 配置文件目录
@@ -155,18 +159,21 @@ DeltaForceMarketBot/
 │   └── delay_config.yaml  # 延迟配置
 ├── src/                   # 核心源码 (分层架构)
 │   ├── core/             # 核心抽象层
-│   │   ├── event_bus.py  # 事件总线
-│   │   ├── interfaces.py # 接口定义
-│   │   └── exceptions.py # 异常定义
+│   │   ├── event_bus.py      # 事件总线系统
+│   │   ├── interfaces.py     # 标准化接口定义
+│   │   ├── exceptions.py     # 异常体系
+│   │   └── window_models.py  # 窗口数据模型
 │   ├── services/         # 业务逻辑层
-│   │   ├── trading_service.py # 交易服务
-│   │   ├── trading_modes.py   # 交易模式
+│   │   ├── trading_service.py # 交易服务核心
+│   │   ├── trading_modes.py   # 交易模式实现
+│   │   ├── window_service.py  # 窗口管理服务
 │   │   ├── strategy.py        # 交易策略
 │   │   └── detector.py        # 检测服务
 │   ├── infrastructure/   # 基础设施层
-│   │   ├── screen_capture.py  # 屏幕捕获
-│   │   ├── ocr_engine.py      # OCR引擎
-│   │   └── action_executor.py # 动作执行
+│   │   ├── screen_capture.py    # 屏幕捕获
+│   │   ├── ocr_engine.py        # OCR引擎
+│   │   ├── action_executor.py   # 动作执行
+│   │   └── window_detector.py   # 窗口检测器
 │   ├── config/          # 配置管理
 │   │   ├── config_manager.py  # 配置管理器
 │   │   ├── trading_config.py  # 交易配置
@@ -174,7 +181,9 @@ DeltaForceMarketBot/
 │   ├── ui/              # 用户界面层
 │   │   ├── adapter.py   # UI适配器
 │   │   └── overlay.py   # 透明覆盖层
-│   └── utils/           # 工具类
+│   └── utils/           # 工具类 
+│       ├── delay_helper.py    # 延迟助手
+│       └── window_helper.py   # 窗口助手
 ├── GUI/                 # PyQt5图形界面
 │   ├── AppGUI.py       # 主界面
 │   ├── AppGUI.ui       # UI设计文件
@@ -182,9 +191,12 @@ DeltaForceMarketBot/
 ├── templates/           # 图像识别模板
 │   ├── 1920x1080/      # 1080p模板
 │   ├── 2560x1440/      # 1440p模板
-│   └── bad_cases/      # 异常情况模板
-├── tests/              # 单元测试
-└── requirements.txt    # Python依赖
+├── tests/              # 完整测试套件
+│   ├── test_*.py       # 单元测试
+│   └── ocr_bad_cases/  # OCR测试用例
+├── requirements.txt    # Python依赖
+├── pyproject.toml      # 项目配置
+└── .pre-commit-config.yaml # 代码质量检查
 ```
 
 ## 🧪 测试与开发
