@@ -222,7 +222,8 @@ class RollingModeDetector(PriceDetector):
         font = "w"
         if self.screen_capture.width == 1920:
             font = "c"
-        return self._detect_area("min_sell_price_count_area",  binarize=False, font=font)
+
+        return self._detect_area("min_sell_price_count_area", binarize=False, font=font)
 
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
@@ -242,9 +243,7 @@ class RollingModeDetector(PriceDetector):
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
-            return self._detect_value(
-                coords, binarize=binarize, font=font, thresh=thresh
-            )
+            return self._detect_value(coords, binarize=binarize, font=font, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 

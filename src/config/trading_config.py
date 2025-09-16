@@ -62,10 +62,34 @@ class TradingConfig:
         # 设置默认滚仓选项配置
         if self.rolling_options is None:
             self.rolling_options = [
-                {"buy_price": 520, "min_buy_price": 300, "buy_count": 4980, "fast_sell_threshold": 0, "min_sell_price": 0},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0, "min_sell_price": 0},
-                {"buy_price": 450, "min_buy_price": 270, "buy_count": 4980, "fast_sell_threshold": 0, "min_sell_price": 0},
-                {"buy_price": 1700, "min_buy_price": 700, "buy_count": 1740, "fast_sell_threshold": 0, "min_sell_price": 0},
+                {
+                    "buy_price": 520,
+                    "min_buy_price": 300,
+                    "buy_count": 4980,
+                    "fast_sell_threshold": 0,
+                    "min_sell_price": 0,
+                },
+                {
+                    "buy_price": 450,
+                    "min_buy_price": 270,
+                    "buy_count": 4980,
+                    "fast_sell_threshold": 0,
+                    "min_sell_price": 0,
+                },
+                {
+                    "buy_price": 450,
+                    "min_buy_price": 270,
+                    "buy_count": 4980,
+                    "fast_sell_threshold": 0,
+                    "min_sell_price": 0,
+                },
+                {
+                    "buy_price": 1700,
+                    "min_buy_price": 700,
+                    "buy_count": 1740,
+                    "fast_sell_threshold": 0,
+                    "min_sell_price": 0,
+                },
             ]
 
         # 确保所有滚仓选项都包含必要字段（向后兼容性）
@@ -90,7 +114,7 @@ class TradingConfig:
                     option["fast_sell_threshold"] = 0  # 默认值为0，表示总是启用快速售卖
                 elif option["fast_sell_threshold"] < 0:
                     option["fast_sell_threshold"] = 0  # 负数重置为0
-                
+
                 # 确保包含 min_sell_price 字段
                 if "min_sell_price" not in option:
                     # 如果没有设置，使用全局的 min_sell_price 作为默认值
