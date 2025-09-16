@@ -38,7 +38,6 @@ class PriceDetector(IPriceDetector):
     def _detect_value(
         self,
         coords: List[float],
-        abnormal_value=100,
         binarize=True,
         font="",
         thresh=127,
@@ -48,9 +47,6 @@ class PriceDetector(IPriceDetector):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
-                if value < abnormal_value:  # 仅对价格进行异常过滤
-                    print("ocr检测({value})异常，跳过检测")
-                    continue
                 print("detected:", value)
                 return value
 
@@ -73,7 +69,7 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            return self._detect_value(coords, 0, font="w", thresh=100)
+            return self._detect_value(coords, font="w", thresh=100)
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}") from e
 
@@ -222,7 +218,7 @@ class RollingModeDetector(PriceDetector):
         font = "w"
         if self.screen_capture.width == 1920:
             font = "c"
-        return self._detect_area("min_sell_price_count_area", 0, binarize=False, font=font)
+        return self._detect_area("min_sell_price_count_area", binarize=False, font=font)
 
     def detect_expected_revenue(self) -> int:
         """检测当前售卖的期望收益"""
@@ -238,13 +234,11 @@ class RollingModeDetector(PriceDetector):
         """检测当前售卖总价"""
         return self._detect_area("total_sell_price_area", font="w", thresh=60)
 
-    def _detect_area(self, template, abnormal_value=100, binarize=True, font="", thresh=127) -> int:
+    def _detect_area(self, template, binarize=True, font="", thresh=127) -> int:
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
-            return self._detect_value(
-                coords, abnormal_value=abnormal_value, binarize=binarize, font=font, thresh=thresh
-            )
+            return self._detect_value(coords, binarize=binarize, font=font, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 
