@@ -574,7 +574,6 @@ class RollingTradingMode(ITradingMode):
         sell_y = min_sell_pos[1]
 
         min_sell_price = self.detector.detect_min_sell_price()
-        second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
 
         # 使用当前配装的最低售卖价格
@@ -604,7 +603,7 @@ class RollingTradingMode(ITradingMode):
             delay_helper.sleep("after_select_sell_text_price")
 
             # 快速售卖指定点击位置
-            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["btn_quickSell_area"])
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["btn_quick_sell_area"])
             delay_helper.sleep("after_sell_price_text_click")
 
             # 点击倒数第二根价格柱子获得最高卖价
@@ -612,9 +611,7 @@ class RollingTradingMode(ITradingMode):
             delay_helper.sleep("after_sell_price_text_click")
 
             # 获取当前售卖价格
-            price_area_coords = self.detector.coordinates["rolling_mode"]["sell_price_text_area"]
-            min_sell_price = self.detector._detect_value(price_area_coords, binarize=True,
-                                                         thresh=127, font='w')
+            min_sell_price = self.detector.detect_current_sell_price()
             delay_helper.sleep("after_sell_price_text_click")
 
         else:

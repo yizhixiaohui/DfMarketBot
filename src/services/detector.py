@@ -38,7 +38,6 @@ class PriceDetector(IPriceDetector):
     def _detect_value(
         self,
         coords: List[float],
-        # abnormal_value=100,
         binarize=True,
         font="",
         thresh=127,
@@ -48,9 +47,6 @@ class PriceDetector(IPriceDetector):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
-                # if value < abnormal_value:  # 仅对价格进行异常过滤
-                #     print("ocr检测({value})异常，跳过检测")
-                #     continue
                 print("detected:", value)
                 return value
 
@@ -207,16 +203,6 @@ class RollingModeDetector(PriceDetector):
             binarize = False
         return self._detect_area("min_sell_price_area", font=font, binarize=binarize, thresh=thresh)
 
-    def detect_second_min_sell_price(self) -> int:
-        """检测当前售卖的最小价格"""
-        binarize = True
-        font = "w"
-        thresh = 50
-        if self.screen_capture.width == 1920:
-            font = "g"
-            binarize = False
-        return self._detect_area("second_min_sell_price_area", binarize=binarize, font=font, thresh=thresh)
-
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
         font = "w"
@@ -234,6 +220,9 @@ class RollingModeDetector(PriceDetector):
         res = self._detect_area("expected_revenue_area", binarize=binarize, font=font)
         # 检测器会把售价边上的问号当成7，所以这里特殊处理一下... TODO: 以后再修
         return int((res - 7) / 10) if res % 10 == 7 else res
+
+    def detect_current_sell_price(self) -> int:
+        return self._detect_area("sell_price_text_area", font="w")
 
     def detect_total_sell_price_area(self) -> int:
         """检测当前售卖总价"""

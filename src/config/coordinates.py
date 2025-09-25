@@ -54,14 +54,12 @@ class CoordinateConfig:
             "item_sell_offset": [77 / 2560, 147 / 1440],
             "sell_button": [1965 / 2560, 939 / 1440],
             # 快速售卖指定点击位置坐标
-            "btn_quickSell_area": [1965 / 2560, 939 / 1440],
+            "btn_quick_sell_area": [1965 / 2560, 939 / 1440],
             "sell_return_button": [1280 / 2560, 1258 / 1440],
             # 当前最小价格的柱子所在位置
             "min_sell_price_button": [655 / 2560, 904 / 1440],
             # 用于检测当前最小价格的区域
             "min_sell_price_area": [615 / 2560, 986 / 1440, 710 / 2560, 1016 / 1440],
-            # 用于检测当前第二小价格的区域(第二根柱子)
-            "second_min_sell_price_area": [777 / 2560, 986 / 1440, 886 / 2560, 1013 / 1440],
             # 倒数第二根柱子指定点击位置
             "fast_sell_price_button": [1165 / 2560, 700 / 1440],
             # 检测最小价格数量的区域
