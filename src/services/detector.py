@@ -98,6 +98,17 @@ class HoardingModeDetector(PriceDetector):
             return self.coordinates["price_detection"]["convertible"]
         return self.coordinates["price_detection"]["non_convertible"]
 
+    def detect_price(self) -> int:
+        """检测当前物品价格 - 使用模板方法模式"""
+        try:
+            coords = self.get_detection_coordinates()
+            thresh = 127
+            if self.screen_capture.width == 1920:
+                thresh = 80
+            return self._detect_value(coords, thresh=thresh, binarize=False)
+        except Exception as e:
+            raise PriceDetectionException(f"价格检测异常: {e}") from e
+
 
 class RollingModeDetector(PriceDetector):
     """滚仓模式检测器"""
@@ -108,7 +119,8 @@ class RollingModeDetector(PriceDetector):
 
     def check_purchase_failure(self) -> bool:
         """检查购买是否失败"""
-        return self._match_template("failure_check", "option_failed")
+        return (self._match_template("failure_check", "option_failed")
+               or self._match_template("failure_check", "option_failed_2"))
 
     def check_stuck(self) -> bool:
         """检查循环是否卡死"""
@@ -226,12 +238,13 @@ class RollingModeDetector(PriceDetector):
 
     def detect_total_sell_price_area(self) -> int:
         """检测当前售卖总价"""
-        return self._detect_area("total_sell_price_area", font="w", thresh=60)
+        return self._detect_area("total_sell_price_area", font="w", thresh=80)
 
     def _detect_area(self, template, binarize=True, font="", thresh=127) -> int:
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
+            print(coords)
             return self._detect_value(coords, binarize=binarize, font=font, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e

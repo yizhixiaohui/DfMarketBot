@@ -126,6 +126,7 @@ class TemplateOCREngine(IOCREngine):
 
                 # 加载失败检测模板
                 self._load_pic("option_failed.png")
+                self._load_pic("option_failed_2.png")
                 # 加载售卖框模板
                 self._load_pic("sell.png")
                 # 加载装备模板

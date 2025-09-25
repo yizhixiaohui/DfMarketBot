@@ -42,13 +42,18 @@ class PyAutoGUIActionExecutor(IActionExecutor):
         if self.debug:
             print("清除窗口偏移量，回到全屏模式")
 
-    def _convert_coordinates(self, x: float, y: float) -> Tuple[int, int]:
+    def _convert_coordinates(self, x: float, y: float, reverse=False) -> Tuple[int, int]:
         """将模板坐标转换为基于窗口位置的绝对屏幕坐标"""
+        offset_x = self.window_offset[0]
+        offset_y = self.window_offset[1]
+        if reverse:
+            offset_x = -offset_x
+            offset_y = -offset_y
         if self.window_offset:
-            converted_x = int(x + self.window_offset[0])
-            converted_y = int(y + self.window_offset[1])
+            converted_x = int(x + offset_x)
+            converted_y = int(y + offset_y)
             if self.debug:
-                print(f"坐标转换: ({x}, {y}) -> ({converted_x}, {converted_y})")
+                print(f"坐标{'反向' if reverse else ''}转换: ({x}, {y}) -> ({converted_x}, {converted_y})")
             return converted_x, converted_y
         return int(x), int(y)
 
@@ -69,7 +74,7 @@ class PyAutoGUIActionExecutor(IActionExecutor):
                     print(f"click position ({x}, {y})")
 
         except Exception as e:
-            raise ActionExecutionException(f"点击位置({x}, {y})失败: {e}") from e
+            raise ActionExecutionException(f"点击位置失败: {e}") from e
 
     def press_key(self, key: str) -> None:
         """按下指定按键"""
@@ -146,7 +151,18 @@ class PyAutoGUIActionExecutor(IActionExecutor):
     def get_mouse_position(self) -> Point:
         """获取当前鼠标位置"""
         try:
-            return pyautogui.position()
+            pos = pyautogui.position()
+
+            # 如果有窗口偏移量，需要进行反向转换（从屏幕坐标转换回窗口相对坐标）
+            if self.window_offset:
+                converted_x, converted_y = self._convert_coordinates(pos.x, pos.y, reverse=True)
+                pos = Point(x=converted_x, y=converted_y)
+
+            if self.debug:
+                print(f"获取鼠标位置: ({pos.x}, {pos.y})")
+
+            return pos
+
         except Exception as e:
             raise ActionExecutionException(f"获取鼠标位置失败: {e}") from e
 
