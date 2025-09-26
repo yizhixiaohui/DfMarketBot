@@ -14,8 +14,8 @@ class CoordinateConfig:
     # 坐标配置
     COORDINATES = {
         "price_detection": {
-            "convertible": [2179 / 2560, 1078 / 1440, 2308 / 2560, 1102 / 1440],
-            "non_convertible": [2179 / 2560, 1156 / 1440, 2308 / 2560, 1178 / 1440],
+            "convertible": [2160 / 2560, 1070 / 1440, 2330 / 2560, 1110 / 1440],
+            "non_convertible": [2160 / 2560, 1150 / 1440, 2330 / 2560, 1180 / 1440],
         },
         "balance_active": [2200 / 2560, 70 / 1440],
         "balance_detection": [1912 / 2560, 360 / 1440, 2324 / 2560, 390 / 1440],
@@ -55,7 +55,7 @@ class CoordinateConfig:
             "sell_button": [1965 / 2560, 939 / 1440],
             # 快速售卖指定点击位置坐标
             "btn_quick_sell_area": [1965 / 2560, 939 / 1440],
-            "sell_price_text_area": [1672 / 2560, 838 / 1440, 1806 / 2560, 873 / 1440],
+            "sell_price_text_area": [1550 / 2560, 888 / 1440, 1950 / 2560, 830 / 1440],
             "sell_return_button": [1280 / 2560, 1258 / 1440],
             # 当前最小价格的柱子所在位置
             "min_sell_price_button": [655 / 2560, 904 / 1440],
@@ -70,7 +70,6 @@ class CoordinateConfig:
             "sell_num_right": [1937 / 2560, 749 / 1440],
             "sell_price_text": [1748 / 2560, 860 / 1440],
             "sell_full": [1948 / 2560, 678 / 1440, 2027 / 2560, 711 / 1440],
-            "sell_price_text_area": [1550 / 2560, 888 / 1440 ,1950 / 2560, 830 / 1440],
             "expected_revenue_area": [1642 / 2560, 910 / 1440, 1920 / 2560, 950 / 1440],
             "sell_detail_button": [1867 / 2560, 929 / 1440],
             "total_sell_price_area": [1844 / 2560, 707 / 1440, 2010 / 2560, 740 / 1440],
