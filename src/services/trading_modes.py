@@ -81,9 +81,13 @@ class HoardingTradingMode(ITradingMode):
                 print("检测到停止信号，退出交易周期")
                 return False
 
+            self._execute_enter()
             # 获取当前价格
             current_price = self.detector.detect_price()
-
+            if current_price < 100:
+                event_bus.emit_overlay_text_updated(f"当前价格({current_price})异常, 跳过本次购买")
+                return not self._should_stop
+            event_bus.emit_overlay_text_updated(f"当前价格: {current_price}")
             # 获取当前余额（如果需要）
             if self.config.use_balance_calculation and self.last_buy_quantity != 0:
                 self.current_balance = self._detect_balance()
@@ -115,6 +119,8 @@ class HoardingTradingMode(ITradingMode):
                 print("直接购买")
                 # 购买逻辑
                 quantity = self.strategy.get_buy_quantity(self.current_market_data)
+                event_bus.emit_overlay_text_updated(f"直接购买, 价格: {current_price}, 数量: {quantity}")
+
                 self._execute_buy(quantity)
                 self.last_buy_quantity = quantity
 
@@ -137,6 +143,7 @@ class HoardingTradingMode(ITradingMode):
             return not self._should_stop  # 如果收到停止信号则返回False
 
         except Exception as e:
+            self._execute_enter()
             raise TradingException(f"屯仓模式交易失败: {e}") from e
 
     def _detect_balance(self):
@@ -162,7 +169,6 @@ class HoardingTradingMode(ITradingMode):
     def _execute_refresh(self) -> None:
         """执行刷新操作"""
         self.action_executor.press_key("esc")
-        self._execute_enter()
         delay_helper.sleep("refresh_operation")
         print("执行价格刷新")
 
@@ -574,7 +580,6 @@ class RollingTradingMode(ITradingMode):
         sell_y = min_sell_pos[1]
 
         min_sell_price = self.detector.detect_min_sell_price()
-        second_min_sell_price = self.detector.detect_second_min_sell_price()
         min_sell_price_count = self.detector.detect_min_sell_price_count()
 
         # 使用当前配装的最低售卖价格
@@ -604,7 +609,7 @@ class RollingTradingMode(ITradingMode):
             delay_helper.sleep("after_select_sell_text_price")
 
             # 快速售卖指定点击位置
-            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["btn_quickSell_area"])
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["btn_quick_sell_area"])
             delay_helper.sleep("after_sell_price_text_click")
 
             # 点击倒数第二根价格柱子获得最高卖价
@@ -612,9 +617,7 @@ class RollingTradingMode(ITradingMode):
             delay_helper.sleep("after_sell_price_text_click")
 
             # 获取当前售卖价格
-            price_area_coords = self.detector.coordinates["rolling_mode"]["sell_price_text_area"]
-            min_sell_price = self.detector._detect_value(price_area_coords, binarize=True,
-                                                         thresh=127, font='w')
+            min_sell_price = self.detector.detect_current_sell_price()
             delay_helper.sleep("after_sell_price_text_click")
 
         else:
@@ -817,9 +820,12 @@ if __name__ == "__main__":
 
     sc = ScreenCapture()
     ocr = TemplateOCREngine()
-    detector = RollingModeDetector(sc, ocr)
+    # detector = RollingModeDetector(sc, ocr)
+    detector = HoardingModeDetector(sc, ocr)
     executor = ActionExecutor()
-    test_mode = RollingTradingMode(detector, executor)
+    # test_mode = RollingTradingMode(detector, executor)
+    test_mode = HoardingTradingMode(detector, executor)
+
     test_mode.initialize(TradingConfig(), profit=300000, count=123456)
     # res = test_mode.detector.detect_min_sell_price()
     # res = test_mode.detector.detect_second_min_sell_price()
@@ -827,5 +833,6 @@ if __name__ == "__main__":
     # 售卖右侧区域
     # res = test_mode.detector.detect_expected_revenue()
     # res = test_mode.detector.detect_sell_num()
-    res = test_mode.detector.detect_price()
+    # res = test_mode.detector.detect_price()
+    res = detector.detect_price()
     print(res)

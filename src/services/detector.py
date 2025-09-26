@@ -38,7 +38,6 @@ class PriceDetector(IPriceDetector):
     def _detect_value(
         self,
         coords: List[float],
-        # abnormal_value=100,
         binarize=True,
         font="",
         thresh=127,
@@ -48,9 +47,6 @@ class PriceDetector(IPriceDetector):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
-                # if value < abnormal_value:  # 仅对价格进行异常过滤
-                #     print("ocr检测({value})异常，跳过检测")
-                #     continue
                 print("detected:", value)
                 return value
 
@@ -102,6 +98,17 @@ class HoardingModeDetector(PriceDetector):
             return self.coordinates["price_detection"]["convertible"]
         return self.coordinates["price_detection"]["non_convertible"]
 
+    def detect_price(self) -> int:
+        """检测当前物品价格 - 使用模板方法模式"""
+        try:
+            coords = self.get_detection_coordinates()
+            thresh = 127
+            if self.screen_capture.width == 1920:
+                thresh = 80
+            return self._detect_value(coords, thresh=thresh, binarize=False)
+        except Exception as e:
+            raise PriceDetectionException(f"价格检测异常: {e}") from e
+
 
 class RollingModeDetector(PriceDetector):
     """滚仓模式检测器"""
@@ -112,7 +119,8 @@ class RollingModeDetector(PriceDetector):
 
     def check_purchase_failure(self) -> bool:
         """检查购买是否失败"""
-        return self._match_template("failure_check", "option_failed")
+        return (self._match_template("failure_check", "option_failed")
+               or self._match_template("failure_check", "option_failed_2"))
 
     def check_stuck(self) -> bool:
         """检查循环是否卡死"""
@@ -207,16 +215,6 @@ class RollingModeDetector(PriceDetector):
             binarize = False
         return self._detect_area("min_sell_price_area", font=font, binarize=binarize, thresh=thresh)
 
-    def detect_second_min_sell_price(self) -> int:
-        """检测当前售卖的最小价格"""
-        binarize = True
-        font = "w"
-        thresh = 50
-        if self.screen_capture.width == 1920:
-            font = "g"
-            binarize = False
-        return self._detect_area("second_min_sell_price_area", binarize=binarize, font=font, thresh=thresh)
-
     def detect_min_sell_price_count(self) -> int:
         """检测当前售卖的最小价格"""
         font = "w"
@@ -235,14 +233,18 @@ class RollingModeDetector(PriceDetector):
         # 检测器会把售价边上的问号当成7，所以这里特殊处理一下... TODO: 以后再修
         return int((res - 7) / 10) if res % 10 == 7 else res
 
+    def detect_current_sell_price(self) -> int:
+        return self._detect_area("sell_price_text_area", font="w")
+
     def detect_total_sell_price_area(self) -> int:
         """检测当前售卖总价"""
-        return self._detect_area("total_sell_price_area", font="w", thresh=60)
+        return self._detect_area("total_sell_price_area", font="w", thresh=80)
 
     def _detect_area(self, template, binarize=True, font="", thresh=127) -> int:
         """检测模板的区域, 并返回数值"""
         try:
             coords = self.coordinates["rolling_mode"][template]
+            print(coords)
             return self._detect_value(coords, binarize=binarize, font=font, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
